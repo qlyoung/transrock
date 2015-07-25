@@ -33,22 +33,42 @@ public class Agency {
         timezone;
     public final int agency_id;
 
-    public Agency(JSONObject providerObject) throws JSONException {
-        this.long_name = providerObject.getString("long_name");
-        this.language = providerObject.getString("language");
-        this.name = providerObject.getString("name");
-        this.short_name = providerObject.getString("short_name");
-        this.phone = providerObject.getString("phone");
-        this.url = providerObject.getString("url");
-        this.timezone = providerObject.getString("timezone");
-        this.agency_id = Integer.valueOf(providerObject.getString("agency_id"));
+    /* additional data */
+    public final boolean local;
 
-        JSONObject position = providerObject.getJSONObject("position");
+    /**
+     * Agency
+     * local = false
+     * @param ao agency object
+     * @throws JSONException
+     */
+    public Agency(JSONObject ao) throws JSONException {
+        this(ao, false);
+    }
+
+    /**
+     * Agency
+     * @param ao agency object
+     * @param local whether this agency is local to the current location
+     * @throws JSONException
+     */
+    public Agency(JSONObject ao, boolean local) throws JSONException {
+        // unpack returned object
+        this.long_name = ao.getString("long_name");
+        this.language = ao.getString("language");
+        this.name = ao.getString("name");
+        this.short_name = ao.getString("short_name");
+        this.phone = ao.getString("phone");
+        this.url = ao.getString("url");
+        this.timezone = ao.getString("timezone");
+        this.agency_id = Integer.valueOf(ao.getString("agency_id"));
+
+        JSONObject position = ao.getJSONObject("position");
         this.position = new Vector<>(2);
         this.position.add(position.getDouble("lat"));
         this.position.add(position.getDouble("lng"));
 
-        JSONArray bounding_box = providerObject.getJSONArray("bounding_box");
+        JSONArray bounding_box = ao.getJSONArray("bounding_box");
         JSONObject tl = bounding_box.getJSONObject(0);
         JSONObject br = bounding_box.getJSONObject(1);
         Vector<Double> topLeft = new Vector<>(2);
@@ -58,5 +78,8 @@ public class Agency {
         bottomRight.add(br.getDouble("lat"));
         bottomRight.add(br.getDouble("lng"));
         this.boundingBox = new BoundingBox(topLeft, bottomRight);
+
+        // set additional data
+        this.local = local;
     }
 }

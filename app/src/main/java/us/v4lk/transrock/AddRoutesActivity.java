@@ -68,38 +68,13 @@ public class AddRoutesActivity extends AppCompatActivity {
         return false;
     }
 
-
-
-    /**
-     * Wraps TransLoc call for agencies, loads in result to agency list when
-     * it returns
-     */
-    class FetchAgencies extends AsyncTask<Integer, Void, Agency[]> {
-
-        @Override
-        protected Agency[] doInBackground(Integer... params) {
-            int[] ids = new int[params.length];
-            for (int i = 0; i < params.length; i++) ids[i] = params[i];
-
-            return TransLocAPI.getAgencies(ids);
-        }
-
-        @Override
-        public void onPostExecute(Agency[] result) {
-            AgencyAdapter adapter = new AgencyAdapter(
-                    AddRoutesActivity.this,
-                    R.layout.agency_list_item,
-                    result);
-            agencyList.setAdapter(adapter);
-        }
-    }
-
     private void showRouteBottomSheet(Agency agency) {
         // capture root layout
         BottomSheetLayout root = (BottomSheetLayout) findViewById(R.id.addroute_bottomsheetlayout);
         ShowRoutes fr = new ShowRoutes(root);
         fr.execute(agency.agency_id);
     }
+
     /**
      *
      */
@@ -152,6 +127,30 @@ public class AddRoutesActivity extends AppCompatActivity {
 
             // show bottom sheet
             layout.showWithSheetView(bottomSheet);
+        }
+    }
+    /**
+     * Wraps TransLoc call for agencies, loads in result to agency list when
+     * it returns
+     */
+    class FetchAgencies extends AsyncTask<Integer, Void, Agency[]> {
+
+        @Override
+        protected Agency[] doInBackground(Integer... params) {
+            int[] ids = new int[params.length];
+            for (int i = 0; i < params.length; i++) ids[i] = params[i];
+
+            return TransLocAPI.getAgencies(ids);
+        }
+
+        @Override
+        public void onPostExecute(Agency[] result) {
+            AgencyAdapter adapter = new AgencyAdapter(
+                    AddRoutesActivity.this,
+                    R.layout.agency_list_item,
+                    result,
+                    0, 1);  //TODO: fix this shit
+            agencyList.setAdapter(adapter);
         }
     }
 

@@ -6,6 +6,7 @@ import org.json.JSONObject;
 
 public class Route {
 
+    /* direct route data from json */
     enum Direction { FORWARD, BACKWARD }
 
     class Segment {
@@ -60,4 +61,5 @@ public class Route {
         for (int i = 0; i < stps.length(); i++)
             stops[i] = stps.getString(i);
     }
+
 }

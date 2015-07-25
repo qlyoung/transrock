@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">TransRock</string>
+
+    <!-- activity title strings -->
+    <string name="title_activity_main">TransRock</string>
+    <string name="title_activity_map">TransRock</string>
+    <string name="title_activity_routelist">Routes</string>
+    <string name="title_activity_add_route">Add Routes</string>
+
+    <!-- miscellaneous strings -->
+    <string name="no_routes">You aren\'t tracking any routes right now.\nAdd some!</string>
+    <string name="routes">Routes</string>
+    <string name="select_agency">Select your transit provider(s) from the list below</string>
+    <string name="active">Active</string>
+    <string name="local">Local</string>
+    <string name="all">All</string>
+
+    <!-- menu strings -->
+    <string name="map_menu_center_location_title">Center map on my location</string>
+    <string name="map_menu_manage_routes_title">Manage routes</string>
+
+</resources>

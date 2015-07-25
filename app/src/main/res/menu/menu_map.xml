@@ -1,0 +1,23 @@
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="us.v4lk.transrock.MapActivity">
+
+    <!-- route management button -->
+    <item
+        android:id="@+id/map_menu_manage_routes"
+        android:icon="@mipmap/ic_directions_bus_white_24dp"
+        android:title="@string/map_menu_manage_routes_title"
+        android:orderInCategory="1"
+        app:showAsAction="ifRoom" />
+
+    <!-- my location button -->
+    <item
+        android:id="@+id/map_menu_center_location"
+        android:icon="@mipmap/ic_my_location_white_24dp"
+        android:title="@string/map_menu_center_location_title"
+        android:orderInCategory="2"
+        app:showAsAction="ifRoom" />
+
+</menu>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- nameblock -->
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_height="match_parent"
+        android:layout_width="wrap_content">
+
+        <!-- route longname -->
+        <TextView
+            android:id="@+id/route_longname"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:textSize="@dimen/abc_text_size_title_material" />
+
+        <!-- route agencyname -->
+        <TextView
+            android:id="@+id/route_agency"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:textSize="@dimen/abc_text_size_subhead_material" />
+
+    </LinearLayout>
+
+    <!-- TODO: horizontal control bar -->
+
+</LinearLayout>

@@ -5,7 +5,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -124,25 +123,41 @@ public class AddRoutesActivity extends AppCompatActivity {
      * Wraps TransLoc call for agencies, loads in result to agency list when
      * it returns
      */
-    class FetchAgencies extends AsyncTask<Integer, Void, Agency[]> {
+    class FetchAgencies extends AsyncTask<Void, Void, Agency[][]> {
 
         @Override
-        protected Agency[] doInBackground(Integer... params) {
-            int[] ids = new int[params.length];
-            for (int i = 0; i < params.length; i++) ids[i] = params[i];
+        protected Agency[][] doInBackground(Void... params) {
+            // block for location
+            while(!locationManager.isConnected());
+            Location loc = locationManager.getLocation();
 
-            return TransLocAPI.getAgencies(ids);
+            Agency[] active = null; //TODO: load in active routes from persistence
+            Agency[] local = TransLocAPI.getAgencies(loc, 10000); // get all agencies within 10 km
+            Agency[] all = TransLocAPI.getAgencies();
+
+            return new Agency[][] { local, all };
         }
 
         @Override
-        public void onPostExecute(Agency[] result) {
+        public void onPostExecute(Agency[][] result) {
+            int active = 0, //TODO: add in active
+                local  = result[0].length,
+                all    = result[1].length;
+
+            Agency[] cumulative = new Agency[active + local + all];
+            int i = 0;
+            for (Agency[] al : result) {
+                for (Agency a : al)
+                    cumulative[i++] = a;
+            }
+
             AgencyAdapter adapter = new AgencyAdapter(
                     AddRoutesActivity.this,
                     R.layout.agency_list_item,
-                    result,
-                    0, 1);  //TODO: fix this shit
+                    cumulative,
+                    active,
+                    local);
             agencyList.setAdapter(adapter);
         }
     }
-
 }

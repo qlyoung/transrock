@@ -1,5 +1,6 @@
 package us.v4lk.transrock.transloc;
 
+import android.location.Location;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -11,6 +12,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.Vector;
 
 /**
  * Encapsulates the TransLoc API.
@@ -58,14 +60,54 @@ public class TransLocAPI {
 
     }
 
+    /**
+     * Get agencies within the defined geoarea. Point-radius form.
+     *
+     * @param center center of the circle
+     * @param radius radius of circle in meters
+     * @return
+     */
+    public static Agency[] getAgencies(Location center, float radius) {
+
+        Agency[] agencies = getAgencies();
+        ArrayList<Agency> agenciesInArea = new ArrayList<>();
+
+        for (Agency a : agencies) {
+            double agencyLat = a.position.get(0);
+            double agencyLong = a.position.get(1);
+            float[] result = new float[1];
+            Location.distanceBetween(center.getLatitude(),
+                                     center.getLongitude(),
+                                     agencyLat,
+                                     agencyLong, result);
+
+            float distanceMeters = result[0];
+            if (distanceMeters < radius)
+                agenciesInArea.add(a);
+        }
+
+        Agency[] result = new Agency[agenciesInArea.size()];
+        agenciesInArea.toArray(result);
+
+        return result;
+    }
+
+    /**
+     * Get the routes for the given agency.
+     *
+     * @param id id of the agency to retrieve routes for
+     * @return array of routes for the agency
+     */
     public static Route[] getRoutes(int id) {
-        return null;
+        // encapsulate the single param in an array and call the more general overload
+        LinkedHashMap<Integer, Route[]> res = getRoutes(new int[] {id});
+        return res.get(id);
     }
     /**
      * Get the routes for a given agency.
      *
      * @param ids id's of agencies to retrieve routes for
-     * @return An array of routes.
+     * @return linkedhashmap with <agency, route[]>
      */
     public static LinkedHashMap<Integer, Route[]> getRoutes(int... ids) {
         // build request parameter

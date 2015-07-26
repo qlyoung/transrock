@@ -30,4 +30,6 @@ dependencies {
     compile 'com.pkmmte.view:circularimageview:1.1'
     // bottomsheet
     compile 'com.flipboard:bottomsheet-core:1.1.0'
+    // play services location
+    compile 'com.google.android.gms:play-services-location:7.5.0'
 }

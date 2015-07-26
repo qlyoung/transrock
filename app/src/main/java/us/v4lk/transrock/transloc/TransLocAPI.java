@@ -1,6 +1,5 @@
 package us.v4lk.transrock.transloc;
 
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -19,46 +18,111 @@ import java.util.LinkedHashMap;
  */
 public class TransLocAPI {
 
-    // cache of agencies
-    private static LinkedHashMap<Integer, Agency> agencyCache;
-    // cache of stops
-    private static LinkedHashMap<Integer, Stop[]> stopCache;
-    // cache of routes
-    private static LinkedHashMap<Integer, Route[]> routeCache;
+    /**
+     * Get specified agencies. If no agency id's are specified,
+     * all agencies will be returned.
+     *
+     * @param ids agency ids to retrieve
+     * @return the specified agencies, or all if none were specified
+     */
+    public static Agency[] getAgencies(int... ids) {
+        // if cache size == 0, cache all agencies
+        if (Cache.getAgencies().size() == 0) {
+            JSONObject response = callApi("/agencies.json");
 
+            try {
+                JSONArray data = response.getJSONArray("data");
+                ArrayList<Agency> agencies = new ArrayList<>();
+                for (int i = 0; i < data.length(); i++)
+                    agencies.add(new Agency(data.getJSONObject(i)));
+
+                Cache.cacheAgencies(agencies.toArray(new Agency[agencies.size()]));
+
+            } catch (Exception e) {
+                Log.e("TransRock", e.getMessage());
+            }
+        }
+
+        /* since the cache holds either all or no agencies, we can assume the cache hit rate
+         * will be 100% and just default to cached values */
+        LinkedHashMap<Integer, Agency> cachedAgencies = Cache.getAgencies(ids);
+
+        if (ids.length == 0)
+            return cachedAgencies.values().toArray(new Agency[cachedAgencies.size()]);
+        else {
+            Agency[] result  = new Agency[ids.length];
+            for (int i = 0; i < ids.length; i++)
+                result[i] = cachedAgencies.get(ids[i]);
+            return result;
+        }
+
+    }
+
+    public static Route[] getRoutes(int id) {
+        return null;
+    }
     /**
      * Get the routes for a given agency.
-     * @param agencyid The agency id.
+     *
+     * @param ids id's of agencies to retrieve routes for
      * @return An array of routes.
      */
-    public static Route[] getRoutes(int agencyid) {
-        JSONObject response = callApi("/routes.json?agencies=" + agencyid);
+    public static LinkedHashMap<Integer, Route[]> getRoutes(int... ids) {
+        // build request parameter
+        StringBuilder builder = new StringBuilder();
+        builder.append("/routes.json?agencies=");
+        for (int i : ids)
+            builder.append(i).append(',');
+        builder.deleteCharAt(builder.length() - 1); // delete trailing comma
+        String request = builder.toString();
 
-        // parse that shit
-        Route[] routes = null;
+        // call api
+        JSONObject response = callApi(request);
+
+        LinkedHashMap<Integer, Route[]> result = new LinkedHashMap<>(ids.length);
+
         try {
-            JSONArray routeList = response.getJSONObject("data").getJSONArray(String.valueOf(agencyid));
-            routes = new Route[routeList.length()];
-            for (int i = 0; i < routeList.length(); i++)
-                routes[i] = new Route(routeList.getJSONObject(i));
+            // get response datablock
+            JSONObject data = response.getJSONObject("data");
+
+            // extract routes for each agency block
+            for (int i : ids) {
+                JSONArray routelist = data.getJSONArray(String.valueOf(i));
+
+                Route[] routes = new Route[routelist.length()];
+                for (int j = 0; j < routelist.length(); j++)
+                    routes[j] = new Route(routelist.getJSONObject(j));
+
+                result.put(i, routes);
+            }
+
         } catch (JSONException e) {
             Log.d("TransRock", e.getMessage());
         }
 
-        return routes;
+        return result;
     }
     /**
      * Get a list of stops served by a given agency.
-     * @param agencyid The id of the agency.
+     * @param ids The id's of the agencies whose stops to get
      * @return An array of Stops.
      */
-    public static Stop[] getStops(int agencyid) {
-        JSONObject response = callApi("/stops.json?agencies=" + agencyid);
+    public static Stop[] getStops(int... ids) {
+        // build request parameter
+        StringBuilder builder = new StringBuilder();
+        builder.append("/stops.json?agencies=");
+        for (int i : ids)
+            builder.append(i + ",");
+        builder.deleteCharAt(builder.length() - 1); // delete trailing comma
+        String request = builder.toString();
 
-        // parse that shit
+        // call api
+        JSONObject response = callApi(request);
+
         Stop[] stops = null;
         try {
             JSONArray data = response.getJSONArray("data");
+
             stops = new Stop[data.length()];
             for (int i = 0; i < data.length(); i++)
                 stops[i] = new Stop(data.getJSONObject(i));
@@ -68,22 +132,8 @@ public class TransLocAPI {
         return stops;
     }
     /**
-     * Get specified agencies. If no agency id's are specified,
-     * all agencies will be returned.
-     * @param ids agency ids to retrieve
-     */
-    public static Agency[] getAgencies(int... ids) {
-        if (ids.length == 0) // return all agencies
-            return agencyCache.values().toArray(new Agency[agencyCache.size()]);
-        else {
-            Agency[] result = new Agency[ids.length];
-            for (int i = 0; i < ids.length; i++)
-                result[i] = agencyCache.get(i);
-            return result;
-        }
-    }
-    /**
      * Calls the api endpoint with the specified path.
+     *
      * @param relativePath the path to call the server with.
      * @return A JSONObject with the response. Includes API metadata.
      */
@@ -110,26 +160,5 @@ public class TransLocAPI {
 
         return response;
     }
-    /**
-     * Pulls and caches all agencies. The cache is always used
-     * to get agency data. This should be acceptable since it
-     * is rather unlikely that TransLoc, Inc. will gain a new
-     * client between API calls.
-     */
-    public static void initialize() {
-        JSONObject response = callApi("/agencies.json");
 
-        try {
-            JSONArray data = response.getJSONArray("data");
-            agencyCache = new LinkedHashMap<>(data.length());
-            for (int i = 0; i < data.length(); i++) {
-                Agency a = new Agency(data.getJSONObject(i));
-                agencyCache.put(a.agency_id, a);
-            }
-
-        } catch (Exception e) {
-            Log.e("TransRock", e.getMessage());
-        }
-        Log.d("TransRock", "faux breakpoint");
-    }
 }

@@ -1,9 +1,11 @@
 package us.v4lk.transrock;
 
+import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -18,10 +20,16 @@ import us.v4lk.transrock.transloc.Agency;
 import us.v4lk.transrock.transloc.Route;
 import us.v4lk.transrock.transloc.TransLocAPI;
 import us.v4lk.transrock.adapters.AgencyAdapter;
+import us.v4lk.transrock.util.LocationManager;
 
+/**
+ * Allows the user to select which routes they want to track.
+ * Routes are organized by agency.
+ */
 public class AddRoutesActivity extends AppCompatActivity {
 
     ListView agencyList;
+    LocationManager locationManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,9 +38,6 @@ public class AddRoutesActivity extends AppCompatActivity {
         // set content
         setContentView(R.layout.activity_add_routes);
 
-        // set bottom sheet properties
-        BottomSheetLayout layout = (BottomSheetLayout) findViewById(R.id.addroute_bottomsheetlayout);
-
         // set toolbar as action bar
         Toolbar toolbar = (Toolbar) findViewById(R.id.addroute_toolbar);
         setSupportActionBar(toolbar);
@@ -40,7 +45,7 @@ public class AddRoutesActivity extends AppCompatActivity {
         // capture listview
         agencyList = (ListView) findViewById(R.id.addroute_agency_list);
 
-        //set listener
+        // set listener
         AdapterView.OnItemClickListener agencyClickListener = new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -50,11 +55,13 @@ public class AddRoutesActivity extends AppCompatActivity {
         };
         agencyList.setOnItemClickListener(agencyClickListener);
 
+        // build location manager
+        locationManager = new LocationManager(this);
     }
     @Override
     protected void onStart() {
-        FetchAgencies ga = new FetchAgencies();
-        ga.execute();
+        FetchAgencies fa = new FetchAgencies();
+        fa.execute();
         super.onStart();
     }
     @Override
@@ -89,24 +96,8 @@ public class AddRoutesActivity extends AppCompatActivity {
 
         @Override
         protected Route[] doInBackground(Integer... params) {
-
-            int[] ids = new int[params.length];
-            for (int i = 0; i < params.length; i++) ids[i] = params[i];
-
-            /*
-            ProgressDialog dialog = ProgressDialog.show(
-                    AddRoutesActivity.this,
-                    null,
-                    "Fetching routes...",
-                    true);
-                    */
-
-            //TODO: make this actually use multiple ids
-            Route[] result = TransLocAPI.getRoutes(ids[0]);
-
-            // dialog.dismiss();
-
-            return result;
+            int id = params[0];
+            return TransLocAPI.getRoutes(id);
         }
         @Override
         protected void onPostExecute(Route[] routes) {

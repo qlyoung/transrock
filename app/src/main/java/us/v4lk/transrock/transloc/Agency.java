@@ -11,16 +11,6 @@ import java.util.Vector;
  */
 public class Agency {
 
-    class BoundingBox {
-        public final Vector<Double> topLeft;
-        public final Vector<Double> bottomRight;
-
-        public BoundingBox(Vector<Double> topLeft, Vector<Double> bottomRight) {
-            this.topLeft = topLeft;
-            this.bottomRight = bottomRight;
-        }
-    }
-
     public final Vector<Double> position;
     public final BoundingBox boundingBox;
     public final String

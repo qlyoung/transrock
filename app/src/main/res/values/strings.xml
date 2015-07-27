@@ -14,6 +14,14 @@
     <string name="active">Active</string>
     <string name="local">Local</string>
     <string name="all">All</string>
+    <string name="dismiss">Dismiss</string>
+
+    <!-- error strings -->
+    <string name="error_indeterminate">Something went wrong.</string>
+    <string name="error_network_disconnected">No network connection.</string>
+    <string name="error_network_timeout">Network timed out.</string>
+    <string name="error_network_unknown">Network error.</string>
+    <string name="error_bad_parse">Received unreadable response from server.</string>
 
     <!-- menu strings -->
     <string name="map_menu_center_location_title">Center map on my location</string>

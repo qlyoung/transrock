@@ -17,7 +17,7 @@ public class LocationManager implements GoogleApiClient.ConnectionCallbacks,
     private GoogleApiClient apiclient;
     private boolean connected = false;
 
-    private Location latest;
+    private static Location latest;
 
     public LocationManager(Context context) {
         apiclient = new GoogleApiClient.Builder(context)
@@ -44,6 +44,12 @@ public class LocationManager implements GoogleApiClient.ConnectionCallbacks,
         connected = false;
     }
 
+    /**
+     * Asks Google for latest location. Will return cached location if Google
+     * says our location is null.
+     *
+     * @return the latest location, or the cached location if we can't reach Google.
+     */
     public Location getLocation() {
         Location l = LocationServices.FusedLocationApi.getLastLocation(apiclient);
         if (l != null)

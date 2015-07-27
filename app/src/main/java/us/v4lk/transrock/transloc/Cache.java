@@ -19,8 +19,6 @@ public class Cache {
     private static LinkedHashMap<String, Stop> stopCache = new LinkedHashMap<>();
     // cache of routes <agency_id, routes>
     private static LinkedHashMap<Integer, Route[]> routeCache = new LinkedHashMap<>();
-    // cache of location
-    private static Location lastLocation;
 
     public static void cacheAgencies(Agency... agencies) {
         for (Agency a : agencies)
@@ -33,9 +31,6 @@ public class Cache {
     public static void cacheRoutes(int id, Route... routes) {
         //TODO: implement additive caching
         routeCache.put(id, routes);
-    }
-    public static void cacheLocation(Location location) {
-        lastLocation = location;
     }
 
     public static LinkedHashMap<Integer, Agency> getAgencies(int... ids) {
@@ -67,9 +62,6 @@ public class Cache {
             result.put(i, routeCache.get(i));
 
         return result;
-    }
-    public static Location getLastLocation() {
-        return lastLocation;
     }
 
 }

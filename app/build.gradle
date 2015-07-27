@@ -6,8 +6,8 @@ android {
 
     defaultConfig {
         applicationId "us.v4lk.transrock"
-        minSdkVersion 19
-        targetSdkVersion 19
+        minSdkVersion 16
+        targetSdkVersion 16
         versionCode 1
         versionName "1.0"
     }
@@ -28,7 +28,7 @@ dependencies {
     compile 'org.slf4j:slf4j-simple:1.6.1'
     // CircularImageView
     compile 'com.pkmmte.view:circularimageview:1.1'
-    // bottomsheet
+    // BottomSheetLayout
     compile 'com.flipboard:bottomsheet-core:1.1.0'
     // play services location
     compile 'com.google.android.gms:play-services-location:7.5.0'

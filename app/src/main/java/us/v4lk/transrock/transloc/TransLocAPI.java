@@ -1,5 +1,6 @@
 package us.v4lk.transrock.transloc;
 
+import android.accounts.NetworkErrorException;
 import android.location.Location;
 import android.util.Log;
 
@@ -7,15 +8,18 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.Vector;
+
+import us.v4lk.transrock.util.Util;
 
 /**
- * Encapsulates the TransLoc API.
+ * Encapsulates the TransLoc API. Implements transparent caching.
  * TODO: implement the rest of the API object classes and call functions
  */
 public class TransLocAPI {
@@ -27,7 +31,8 @@ public class TransLocAPI {
      * @param ids agency ids to retrieve
      * @return the specified agencies, or all if none were specified
      */
-    public static Agency[] getAgencies(int... ids) {
+    public static Agency[] getAgencies(int... ids)
+            throws NetworkErrorException, SocketTimeoutException, JSONException {
         // if cache size == 0, cache all agencies
         if (Cache.getAgencies().size() == 0) {
             JSONObject response = callApi("/agencies.json");
@@ -59,15 +64,15 @@ public class TransLocAPI {
         }
 
     }
-
     /**
      * Get agencies within the defined geoarea. Point-radius form.
      *
      * @param center center of the circle
      * @param radius radius of circle in meters
-     * @return
+     * @return all agencies in the specified geoarea
      */
-    public static Agency[] getAgencies(Location center, float radius) {
+    public static Agency[] getAgencies(Location center, float radius)
+            throws NetworkErrorException, SocketTimeoutException, JSONException {
 
         Agency[] agencies = getAgencies();
         ArrayList<Agency> agenciesInArea = new ArrayList<>();
@@ -91,14 +96,14 @@ public class TransLocAPI {
 
         return result;
     }
-
     /**
      * Get the routes for the given agency.
      *
      * @param id id of the agency to retrieve routes for
      * @return array of routes for the agency
      */
-    public static Route[] getRoutes(int id) {
+    public static Route[] getRoutes(int id)
+        throws NetworkErrorException, SocketTimeoutException, JSONException {
         // encapsulate the single param in an array and call the more general overload
         LinkedHashMap<Integer, Route[]> res = getRoutes(new int[] {id});
         return res.get(id);
@@ -109,7 +114,9 @@ public class TransLocAPI {
      * @param ids id's of agencies to retrieve routes for
      * @return linkedhashmap with <agency, route[]>
      */
-    public static LinkedHashMap<Integer, Route[]> getRoutes(int... ids) {
+    public static LinkedHashMap<Integer, Route[]> getRoutes(int... ids)
+        throws NetworkErrorException, SocketTimeoutException, JSONException {
+
         // build request parameter
         StringBuilder builder = new StringBuilder();
         builder.append("/routes.json?agencies=");
@@ -149,12 +156,13 @@ public class TransLocAPI {
      * @param ids The id's of the agencies whose stops to get
      * @return An array of Stops.
      */
-    public static Stop[] getStops(int... ids) {
+    public static Stop[] getStops(int... ids)
+        throws NetworkErrorException, SocketTimeoutException, JSONException {
         // build request parameter
         StringBuilder builder = new StringBuilder();
         builder.append("/stops.json?agencies=");
         for (int i : ids)
-            builder.append(i + ",");
+            builder.append(i).append(",");
         builder.deleteCharAt(builder.length() - 1); // delete trailing comma
         String request = builder.toString();
 
@@ -179,7 +187,8 @@ public class TransLocAPI {
      * @param relativePath the path to call the server with.
      * @return A JSONObject with the response. Includes API metadata.
      */
-    private static JSONObject callApi(String relativePath) {
+    private static JSONObject callApi(String relativePath)
+            throws NetworkErrorException, SocketTimeoutException, JSONException {
         // Fuck all the JSON parsers and shitty REST libraries, they can go fuck themselves.
         // Fuck writing shit introspecting dynamic generic converter adapter classes for fucked
         // up stupid JSON to object parses. I'll just parse this shit myself if you're going
@@ -192,13 +201,16 @@ public class TransLocAPI {
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestProperty("X-Mashape-Key", "HVy1utpe5Smsh8QVRRAES2GQu4pdp1Qx9gYjsnAoiFVQ0DZcXz");
             conn.setRequestProperty("Accept", "application/json");
+            conn.setConnectTimeout(Util.GLOBAL_NETWORK_TIMEOUT);
 
             // make the request and convert the response to a JSONObject
             conn.connect();
             InputStream response_body = conn.getInputStream();
             String responseBody = (new java.util.Scanner(response_body).useDelimiter("\\A")).next();
             response = new JSONObject(responseBody);
-        } catch (Exception e) {  Log.e("TransRock", e.getMessage()); }
+        } catch (IOException e) {
+            throw new NetworkErrorException("Unknown issue with network.");
+        }
 
         return response;
     }

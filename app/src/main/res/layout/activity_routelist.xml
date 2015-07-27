@@ -19,12 +19,12 @@
         android:id="@+id/routelist_noroutes_message"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/routelist_toolbar"
-        android:text="@string/no_routes"
-        android:layout_centerHorizontal="true"
-        android:textIsSelectable="false"
         android:layout_margin="20dp"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:text="@string/no_routes"
         android:textSize="@dimen/abc_text_size_medium_material"
+        android:textIsSelectable="false"
         android:gravity="center_horizontal" />
 
     <ListView

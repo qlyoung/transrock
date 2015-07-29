@@ -5,8 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:paddingTop="15dp"
-    android:paddingBottom="15dp"
+    android:paddingTop="16dp"
+    android:paddingBottom="16dp"
     android:paddingRight="@dimen/abc_list_item_padding_horizontal_material"
     android:paddingLeft="@dimen/abc_list_item_padding_horizontal_material" >
 
@@ -16,7 +16,7 @@
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingBottom="4dp"
+        android:paddingBottom="16dp"
         android:visibility="gone"
         android:clickable="true">
 
@@ -36,16 +36,29 @@
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:paddingTop="4dp">
+        android:layout_height="match_parent">
 
-        <com.pkmmte.view.CircularImageView
-            android:id="@+id/agency_list_item_badge"
+        <FrameLayout
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_marginEnd="8dp"
-            android:layout_gravity="center_vertical"
-            app:border="false" />
+            android:layout_marginEnd="8dp">
+
+            <com.pkmmte.view.CircularImageView
+                android:id="@+id/agency_list_item_badge"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                app:border="false" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:text="0"/>
+
+        </FrameLayout>
+
 
         <TextView
             android:id="@+id/agency_list_item_text"
@@ -57,5 +70,7 @@
             android:textSize="@dimen/abc_text_size_medium_material" />
 
     </LinearLayout>
+
+
 
 </LinearLayout>

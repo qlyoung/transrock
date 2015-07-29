@@ -18,12 +18,12 @@
             android:background="?attr/colorPrimary" />
 
         <ProgressBar
-            android:id="@+id/addroute_progressbar"
+            android:id="@+id/addroute_body_progressbar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
             android:layout_centerVertical="true"
-            android:indeterminate="true"/>
+            android:indeterminate="true" />
 
         <TextView
             android:id="@+id/addroute_error"
@@ -44,6 +44,17 @@
             android:layout_height="match_parent"
             android:layout_below="@id/addroute_toolbar"
             android:divider="@null"/>
+
+        <ProgressBar
+            android:id="@+id/addroute_toolbar_progressbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/addroute_toolbar"
+            android:layout_marginTop="-7dp"
+            android:indeterminate="true"
+            android:indeterminateBehavior="cycle"
+            android:visibility="gone"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal" />
 
     </RelativeLayout>
 

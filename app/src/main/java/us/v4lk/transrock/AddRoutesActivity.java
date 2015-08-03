@@ -35,6 +35,7 @@ import us.v4lk.transrock.transloc.Agency;
 import us.v4lk.transrock.transloc.Route;
 import us.v4lk.transrock.transloc.TransLocAPI;
 import us.v4lk.transrock.util.LocationManager;
+import us.v4lk.transrock.util.Storage;
 import us.v4lk.transrock.util.Util;
 
 /**
@@ -258,6 +259,19 @@ public class AddRoutesActivity extends AppCompatActivity {
 
         // show bottom sheet
         root.showWithSheetView(bottomSheet);
+
+        // set sheet to call save routes on dismissal
+        root.getSheetView().addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+            @Override
+            public void onViewAttachedToWindow(View v) { }
+            @Override
+            public void onViewDetachedFromWindow(View v) {
+                ListView routelist = (ListView) v.findViewById(R.id.bottomsheet_list);
+                //TODO: need to distinguish between adding routes and overwriting
+                Route[] selected = ((RouteSwitchAdapter) routelist.getAdapter()).getSelected();
+                Storage.commitRoutesToPrefs(selected, AddRoutesActivity.this);
+            }
+        });
     }
 
     private void showError(int errorStringResource) {
@@ -270,15 +284,16 @@ public class AddRoutesActivity extends AppCompatActivity {
         emv.setVisibility(View.VISIBLE);
     }
     private void showPopupError(int errorStringResource) {
-        AlertDialog.Builder dgb = new AlertDialog.Builder(this);
+        AlertDialog.Builder popup = new AlertDialog.Builder(this);
 
-        dgb.setMessage(getResources().getString(errorStringResource))
+        popup.setMessage(getResources().getString(errorStringResource))
            .setPositiveButton(R.string.dismiss, new DialogInterface.OnClickListener() {
                public void onClick(DialogInterface dialog, int id) {
                    dialog.dismiss();
                }
            });
 
-        dgb.show();
+        popup.show();
     }
+
 }

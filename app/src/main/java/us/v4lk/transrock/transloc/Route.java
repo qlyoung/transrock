@@ -32,6 +32,7 @@ public class Route {
     public final boolean is_active, is_hidden;
     public final String[] stops;
 
+
     public Route(JSONObject ro) throws JSONException {
         this.description = ro.getString("description");
         this.short_name = ro.getString("short_name");

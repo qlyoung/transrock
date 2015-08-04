@@ -54,12 +54,13 @@ public class AgencyAdapter extends ArrayAdapter<Agency> {
         // inflate new view if necessary
         if (convertView == null)
             convertView = inflater.inflate(R.layout.agency_list_item, null);
-
-        // make sure the header is set to GONE by default since listview recycles views
-        View header = convertView.findViewById(R.id.sectionheader);
-        header.setVisibility(View.GONE);
+        else { // clean it out
+            View header = convertView.findViewById(R.id.sectionheader);
+            header.setVisibility(View.GONE);
+        }
 
         // cue disgusting
+        View header = convertView.findViewById(R.id.sectionheader);
         if (position == 0) {
             if (numActive > 0) {
                 ((TextView) header.findViewById(R.id.sectionheader_label)).setText(R.string.active);

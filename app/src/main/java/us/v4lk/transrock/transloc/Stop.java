@@ -51,4 +51,17 @@ public class Stop {
         for(int i = 0; i < rts.length(); i++)
             routes[i] = rts.getString(i);
     }
+
+    /**
+     * Does equality comparison based on stop_id.
+     * @param o object to compare
+     * @return whether this stop is the same as the passed stop
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Stop))
+            return false;
+        Stop other = (Stop) o;
+        return other.stop_id == stop_id;
+    }
 }

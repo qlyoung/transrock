@@ -3,11 +3,9 @@ package us.v4lk.transrock;
 import android.accounts.NetworkErrorException;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -16,7 +14,6 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.Switch;
 import android.widget.TextView;
 
 import com.flipboard.bottomsheet.BottomSheetLayout;
@@ -24,10 +21,7 @@ import com.flipboard.bottomsheet.BottomSheetLayout;
 import org.json.JSONException;
 
 import java.net.SocketTimeoutException;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.ArrayList;
 
 import us.v4lk.transrock.adapters.AgencyAdapter;
 import us.v4lk.transrock.adapters.RouteSwitchAdapter;
@@ -99,7 +93,8 @@ public class AddRoutesActivity extends AppCompatActivity {
                         local = null,
                         all = null;
                 try {
-                    active = new Agency[0]; //TODO: load in active routes from persistence
+                    int[] stored = Storage.retrieveSavedAgencies(AddRoutesActivity.this);
+                    active = stored.length != 0 ? TransLocAPI.getAgencies(stored) : new Agency[0];
                     local = loc != null ? TransLocAPI.getAgencies(loc, 10000) : new Agency[0];
                     all = TransLocAPI.getAgencies();
                 } catch (SocketTimeoutException e) {
@@ -115,18 +110,19 @@ public class AddRoutesActivity extends AppCompatActivity {
                     this.cancel(true);
                 }
 
-                // concatenate all agencies into single array
+                // concatenate all agencies into single ordered array
+                // the order of cumulative is important for correct categorical sorting
                 Agency[][] cumulative = new Agency[][] { active, local, all };
-                Agency[] sum = new Agency[active.length + local.length + all.length];
-                int i = 0;
+                ArrayList<Agency> sum = new ArrayList<>(active.length + local.length + all.length);
                 for (Agency[] al : cumulative)
                     for (Agency a : al)
-                        sum[i++] = a;
+                        if (!sum.contains(a)) // don't add items twice
+                            sum.add(a);
 
                 numActive = active.length;
                 numLocal = local.length;
 
-                return sum;
+                return sum.toArray(new Agency[sum.size()]);
             }
             @Override
             public void onPostExecute(Agency[] result) {
@@ -255,8 +251,6 @@ public class AddRoutesActivity extends AppCompatActivity {
                 routes);
         routeList.setAdapter(adapter);
 
-        boolean l = root.isSheetShowing();
-
         // show bottom sheet
         root.showWithSheetView(bottomSheet);
 
@@ -266,10 +260,13 @@ public class AddRoutesActivity extends AppCompatActivity {
             public void onViewAttachedToWindow(View v) { }
             @Override
             public void onViewDetachedFromWindow(View v) {
-                ListView routelist = (ListView) v.findViewById(R.id.bottomsheet_list);
-                //TODO: need to distinguish between adding routes and overwriting
-                Route[] selected = ((RouteSwitchAdapter) routelist.getAdapter()).getSelected();
-                Storage.commitRoutesToPrefs(selected, AddRoutesActivity.this);
+                ListView rl = (ListView) v.findViewById(R.id.bottomsheet_list);
+                RouteSwitchAdapter adapter = (RouteSwitchAdapter) rl.getAdapter();
+                Route[] selected = adapter.getSelected();
+                Route[] deselected = adapter.getDeselected();
+                // update persistence
+                Storage.appendRoutesToPrefs(selected, AddRoutesActivity.this);
+                Storage.removeRoutesFromPrefs(deselected, AddRoutesActivity.this);
             }
         });
     }

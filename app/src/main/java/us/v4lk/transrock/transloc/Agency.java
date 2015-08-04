@@ -72,4 +72,17 @@ public class Agency {
         // set additional data
         this.local = local;
     }
+
+    /**
+     * Does equality comparison based on agency_id.
+     * @param o object to compare
+     * @return whether this agency is the same as the passed agency
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Agency))
+            return false;
+        Agency other = (Agency) o;
+        return other.agency_id == agency_id;
+    }
 }

@@ -25,9 +25,105 @@ import us.v4lk.transrock.util.Util;
 public class TransLocAPI {
 
     /**
+     * TransLocAPI cache
+     * >caching in memory
+     */
+    static class Cache {
+        //TODO: integrate transloc's rate limiting into cache invalidation rules
+
+        // cache of agencies <agency_id, agency>
+        private static LinkedHashMap<Integer, Agency> agencyCache = new LinkedHashMap<>();
+        // cache of stops <code, stop>
+        private static LinkedHashMap<String, Stop> stopCache = new LinkedHashMap<>();
+        // cache of routes <agency_id, routes>
+        private static LinkedHashMap<Integer, Route[]> routeCache = new LinkedHashMap<>();
+
+        /**
+         * Caches agencies, overwriting any previous entries for the same data.
+         * @param agencies agencies to cache
+         */
+        public static void cacheAgencies(Agency... agencies) {
+            for (Agency a : agencies)
+                agencyCache.put(a.agency_id, a);
+        }
+        /**
+         * Caches stops, overwriting any previous entries for the same data.
+         * @param stops stops to cache
+         */
+        public static void cacheStops(Stop... stops) {
+            for (Stop s : stops)
+                stopCache.put(s.code, s);
+        }
+        /**
+         * Caches routes, overwriting any previous entries for the same data.
+         * @param routes routes to cache
+         */
+        public static void cacheRoutes(int id, Route... routes) {
+            //TODO: implement additive caching
+            routeCache.put(id, routes);
+        }
+
+        /**
+         * Gets specified agencies, if they are cached. Agencies which were requested
+         * but not found in the cache will have a null value. If no agencies are
+         * specified, the entire agency cache will be returned.
+         * @param ids ids of agencies to get
+         * @return a hash map with agency ids as keys and corresponding agency objects as values
+         */
+        public static LinkedHashMap<Integer, Agency> getAgencies(int... ids) {
+            if (ids.length == 0)
+                return agencyCache;
+
+            LinkedHashMap<Integer, Agency> result = new LinkedHashMap<>(ids.length);
+            for (int i : ids)
+                result.put(i, agencyCache.get(i));
+
+            return result;
+        }
+        /**
+         * Gets specified stops, if they are cached. Stops which were requested
+         * but not found in the cache will have a null value. If no stops are
+         * specified, the entire stop cache will be returned.
+         * @param codes id codes of stops to get
+         * @return a hash map with stop code ids as keys and corresponding stop objects as values
+         */
+        public static LinkedHashMap<String, Stop> getStops(String... codes){
+            if (codes.length == 0)
+                return stopCache;
+
+            LinkedHashMap<String, Stop> result = new LinkedHashMap<>(codes.length);
+            for (String s : codes)
+                result.put(s, stopCache.get(s));
+
+            return result;
+        }
+        /**
+         * Gets specified routes, if they are cached. Routes which were requested
+         * but not found in the cache will have a null value. If no routes are
+         * specified, the entire route cache will be returned.
+         * @param ids ids of agencies whose routes should be fetched
+         * @return a hash map with agency ids as keys and corresponding route object arrays as values
+         */
+        public static LinkedHashMap<Integer, Route[]> getRoutes(int... ids) {
+            if (ids.length == 0)
+                return routeCache;
+
+            LinkedHashMap<Integer, Route[]> result = new LinkedHashMap<>(ids.length);
+            for (int i : ids)
+                result.put(i, routeCache.get(i));
+
+            return result;
+        }
+
+    }
+
+    /**
      * Get specified agencies. If no agency id's are specified,
      * all agencies will be returned.
-     *
+     * This method will attempt to read agencies from local cache. If the cache
+     * is empty, it will sidetrack and cache all agencies. Therefore this
+     * method should be called on application startup to accelerate performance
+     * later on.
      * @param ids agency ids to retrieve
      * @return the specified agencies, or all if none were specified
      */
@@ -66,7 +162,6 @@ public class TransLocAPI {
     }
     /**
      * Get agencies within the defined geoarea. Point-radius form.
-     *
      * @param center center of the circle
      * @param radius radius of circle in meters
      * @return all agencies in the specified geoarea
@@ -74,9 +169,11 @@ public class TransLocAPI {
     public static Agency[] getAgencies(Location center, float radius)
             throws NetworkErrorException, SocketTimeoutException, JSONException {
 
+        // get all agencies
         Agency[] agencies = getAgencies();
         ArrayList<Agency> agenciesInArea = new ArrayList<>();
 
+        // for each agency measure whether distance from location to agency is < radius
         for (Agency a : agencies) {
             double agencyLat = a.position.get(0);
             double agencyLong = a.position.get(1);
@@ -98,7 +195,6 @@ public class TransLocAPI {
     }
     /**
      * Get the routes for the given agency.
-     *
      * @param id id of the agency to retrieve routes for
      * @return array of routes for the agency
      */
@@ -110,9 +206,8 @@ public class TransLocAPI {
     }
     /**
      * Get the routes for a given agency.
-     *
      * @param ids id's of agencies to retrieve routes for
-     * @return linkedhashmap with <agency, route[]>
+     * @return hash map with agency ids as keys and corresponding route arrays as values
      */
     public static LinkedHashMap<Integer, Route[]> getRoutes(int... ids)
         throws NetworkErrorException, SocketTimeoutException, JSONException {
@@ -183,7 +278,6 @@ public class TransLocAPI {
     }
     /**
      * Calls the api endpoint with the specified path.
-     *
      * @param relativePath the path to call the server with.
      * @return A JSONObject with the response. Includes API metadata.
      */

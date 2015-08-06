@@ -21,9 +21,9 @@ import us.v4lk.transrock.transloc.Agency;
 public class AgencyAdapter extends ArrayAdapter<Agency> implements StickyListHeadersAdapter {
 
     ArrayList<Agency> active, local;
-    int SECTION_ID_ACTIVE = 0,
-        SECTION_ID_LOCAL = 1,
-        SECTION_ID_ALL = 2;
+    int HEADER_ID_ACTIVE = 0,
+        HEADER_ID_LOCAL = 1,
+        HEADER_ID_ALL = 2;
 
     /**
      * This adapter asks for numActive and numLocal agencies, which it uses
@@ -31,7 +31,6 @@ public class AgencyAdapter extends ArrayAdapter<Agency> implements StickyListHea
      * corresponding section header. The list must be sorted appropriately for
      * these sections to be meaningful, in the following order:
      * active, local, all
-     *
      * @param context application context.
      * @param resource list resource id
      * @param agencies array of agencies to adapt
@@ -53,7 +52,6 @@ public class AgencyAdapter extends ArrayAdapter<Agency> implements StickyListHea
                 local.add(agencies[i++]);
         }
     }
-
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
@@ -79,7 +77,6 @@ public class AgencyAdapter extends ArrayAdapter<Agency> implements StickyListHea
         return convertView;
     }
 
-    /* sticky headers interface implementation */
     /**
      * Gets a unique number identifying the header corresponding to the item at the given position.
      * @param position the position of the item whose header id to return
@@ -89,14 +86,17 @@ public class AgencyAdapter extends ArrayAdapter<Agency> implements StickyListHea
     public long getHeaderId(int position) {
         Agency agency = getItem(position);
 
+        // determine appropriate id for given position
+        int id;
         if (active.contains(agency))
-            return SECTION_ID_ACTIVE;
-        if (local.contains(agency))
-            return SECTION_ID_LOCAL;
+           id = HEADER_ID_ACTIVE;
+        else if (local.contains(agency))
+            id = HEADER_ID_LOCAL;
         else
-            return SECTION_ID_ALL;
-    }
+            id = HEADER_ID_ALL;
 
+        return id;
+    }
     /**
      * Gets the corresponding header view for the item at the given position.
      * This implementation does not recycle views since there are only 3 list sections.
@@ -107,22 +107,24 @@ public class AgencyAdapter extends ArrayAdapter<Agency> implements StickyListHea
      */
     @Override
     public View getHeaderView(int position, View view, ViewGroup viewGroup) {
-        Agency agency = getItem(position);
-
-        // determine header text
-        String headerText;
-        if (active.contains(agency)) headerText = "Active";
-        else if (local.contains(agency)) headerText = "Local";
-        else headerText = "All";
-
         // capture inflater
         LayoutInflater inflater = LayoutInflater.from(getContext());
 
-        // inflate section header
-        View v = inflater.inflate(R.layout.agency_section_header, null);
-        TextView header = (TextView) v.findViewById(R.id.agency_section_header_text);
-        header.setText(headerText);
+        // capture item
+        Agency agency = getItem(position);
 
-        return v;
+        // inflate section header
+        view = inflater.inflate(R.layout.agency_section_header, null);
+        TextView header = (TextView) view.findViewById(R.id.agency_section_header_text);
+
+        // set appropriate header text
+        if (active.contains(agency))
+            header.setText(R.string.active);
+        else if (local.contains(agency))
+            header.setText(R.string.local);
+        else
+            header.setText(R.string.all);
+
+        return view;
     }
 }

@@ -28,22 +28,14 @@ public class RouteSwitchAdapter extends ArrayAdapter<Route> {
     Set<Route> deselectedRoutes = new HashSet<>();
 
     /**
-     * Boilerplate adapter constructor.
-     * @param context application context.
-     * @param resource list resource id
+     * @param context application context
+     * @param resource resource id for layout of desired list item
      * @param routes array of routes to return views for
      */
     public RouteSwitchAdapter(Context context, int resource, Route[] routes) {
         super(context, resource, routes);
     }
 
-    /**
-     * Rturn a view for the nth item in the source collection
-     * @param position the position of the item in the array
-     * @param convertView view to inflate into; may be null
-     * @param parent parent that this view will eventually be attached to; may be null
-     * @return a view representing the nth item in the source collection
-     */
     @Override
     public View getView(final int position, View convertView, ViewGroup parent) {
         // capture inflater and item
@@ -67,7 +59,7 @@ public class RouteSwitchAdapter extends ArrayAdapter<Route> {
         name.setText(r.long_name);
 
         // set the switch's checked value to checked if the route has been selected, or if it
-        // is in storage and is not scheduled for removal
+        // is in storage and has not been manually deselected by the user
         Switch s = (Switch) convertView.findViewById(R.id.route_switch_item_switch);
         boolean selected = selectedRoutes.contains(r);
         boolean deselected = deselectedRoutes.contains(r);
@@ -104,9 +96,17 @@ public class RouteSwitchAdapter extends ArrayAdapter<Route> {
         return convertView;
     }
 
+    /**
+     * Gets the routes that the user has manually selected in this list.
+     * @return user's manually selected routes
+     */
     public Route[] getSelected() {
         return selectedRoutes.toArray(new Route[selectedRoutes.size()]);
     }
+    /**
+     * Gets the routes that the user has manually deselected in this list.
+     * @return user's manually deselected routes
+     */
     public Route[] getDeselected() {
         return deselectedRoutes.toArray(new Route[deselectedRoutes.size()]);
     }

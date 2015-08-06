@@ -19,22 +19,14 @@ import us.v4lk.transrock.transloc.Route;
 public class RouteAdapter extends ArrayAdapter<Route> {
 
     /**
-     * Boilerplate adapter constructor.
      * @param context application context.
-     * @param resource list resource id
+     * @param resource resource id for layout of desired list item
      * @param routes array of routes to return views for
      */
     public RouteAdapter(Context context, int resource, Route[] routes) {
         super(context, resource, routes);
     }
 
-    /**
-     * Rturn a view for the nth item in the source collection
-     * @param position the position of the item in the array
-     * @param convertView view to inflate into; may be null
-     * @param parent parent that this view will eventually be attached to; may be null
-     * @return a view representing the nth item in the source collection
-     */
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         LayoutInflater inflater = LayoutInflater.from(getContext());

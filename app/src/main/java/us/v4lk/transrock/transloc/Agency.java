@@ -7,7 +7,7 @@ import org.json.JSONObject;
 import java.util.Vector;
 
 /**
- * A transit provider.
+ * A transit agency.
  */
 public class Agency {
 
@@ -23,26 +23,11 @@ public class Agency {
         timezone;
     public final int agency_id;
 
-    /* additional data */
-    public final boolean local;
-
     /**
-     * Agency
-     * local = false
-     * @param ao agency object
+     * @param ao JSON object from TransLoc API representing Agency.
      * @throws JSONException
      */
     public Agency(JSONObject ao) throws JSONException {
-        this(ao, false);
-    }
-
-    /**
-     * Agency
-     * @param ao agency object
-     * @param local whether this agency is local to the current location
-     * @throws JSONException
-     */
-    public Agency(JSONObject ao, boolean local) throws JSONException {
         // unpack returned object
         this.long_name = ao.getString("long_name");
         this.language = ao.getString("language");
@@ -68,9 +53,6 @@ public class Agency {
         bottomRight.add(br.getDouble("lat"));
         bottomRight.add(br.getDouble("lng"));
         this.boundingBox = new BoundingBox(topLeft, bottomRight);
-
-        // set additional data
-        this.local = local;
     }
 
     /**

@@ -4,6 +4,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+/**
+ * A route.
+ */
 public class Route {
 
     /* direct route data from json */
@@ -32,7 +35,10 @@ public class Route {
     public final boolean is_active, is_hidden;
     public final String[] stops;
 
-
+    /**
+     * @param ro JSON object from TransLoc API representing Route.
+     * @throws JSONException
+     */
     public Route(JSONObject ro) throws JSONException {
         this.description = ro.getString("description");
         this.short_name = ro.getString("short_name");

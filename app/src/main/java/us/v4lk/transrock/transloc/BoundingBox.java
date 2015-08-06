@@ -3,7 +3,8 @@ package us.v4lk.transrock.transloc;
 import java.util.Vector;
 
 /**
- * Created by qly on 7/25/15.
+ * Simple class with two double-precision vectors of magnitude 2.
+ * Defines a rectangular geoarea in terms of latitude/longitude.
  */
 class BoundingBox {
     public final Vector<Double> topLeft;

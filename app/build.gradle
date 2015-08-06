@@ -20,7 +20,7 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    // appcompat and design compat
     compile 'com.android.support:appcompat-v7:22.2.1'
     compile 'com.android.support:design:22.2.0'
     // osmdroid + deps
@@ -32,4 +32,8 @@ dependencies {
     compile 'com.flipboard:bottomsheet-core:1.1.0'
     // play services location
     compile 'com.google.android.gms:play-services-location:7.5.0'
+    // sticky list headers
+    compile 'se.emilsjolander:stickylistheaders:2.7.0'
+    // all jars in libs folder
+    compile fileTree(include: ['*.jar'], dir: 'libs')
 }

@@ -4,73 +4,39 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:paddingTop="16dp"
+    android:orientation="horizontal"
     android:paddingBottom="16dp"
-    android:paddingRight="@dimen/abc_list_item_padding_horizontal_material"
-    android:paddingLeft="@dimen/abc_list_item_padding_horizontal_material" >
+    android:paddingTop="16dp">
 
-    <LinearLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/sectionheader"
-        android:orientation="vertical"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:paddingBottom="16dp"
-        android:visibility="gone"
-        android:clickable="true">
+    <FrameLayout
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginEnd="8dp">
+
+        <com.pkmmte.view.CircularImageView
+            android:id="@+id/agency_list_item_badge"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            app:border="false" />
 
         <TextView
-            android:id="@+id/sectionheader_label"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-        <View
-            android:layout_height="1px"
-            android:layout_width="match_parent"
-            android:paddingBottom="4dp"
-            android:background="@color/color_accent" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <FrameLayout
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginEnd="8dp">
-
-            <com.pkmmte.view.CircularImageView
-                android:id="@+id/agency_list_item_badge"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center"
-                app:border="false" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:gravity="center"
-                android:text="0"/>
-
-        </FrameLayout>
-
-
-        <TextView
-            android:id="@+id/agency_list_item_text"
-            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:gravity="center_vertical"
-            android:layout_gravity="center_vertical"
-            android:textSize="@dimen/abc_text_size_medium_material" />
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:text="0" />
 
-    </LinearLayout>
+    </FrameLayout>
 
 
+    <TextView
+        android:id="@+id/agency_list_item_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="8dp"
+        android:gravity="center_vertical"
+        android:textSize="@dimen/abc_text_size_medium_material" />
 
 </LinearLayout>

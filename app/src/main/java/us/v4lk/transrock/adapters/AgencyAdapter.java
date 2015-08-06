@@ -9,43 +9,52 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+
+import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.transloc.Agency;
 
 /**
  * Adapts agency --> layout/agency_list_item.
  */
-public class AgencyAdapter extends ArrayAdapter<Agency> {
+public class AgencyAdapter extends ArrayAdapter<Agency> implements StickyListHeadersAdapter {
 
-    private int numActive, numLocal;
+    ArrayList<Agency> active, local;
+    int SECTION_ID_ACTIVE = 0,
+        SECTION_ID_LOCAL = 1,
+        SECTION_ID_ALL = 2;
 
     /**
-     * Boilerplate adapter constructor.
-     *
      * This adapter asks for numActive and numLocal agencies, which it uses
-     * to place section headers at the appropriate place. Setting either or both
-     * to <=0 will hide the corresponding section header. The list must be sorted
-     * appropriately for these sections to be meaningful.
+     * to setup section headers. Setting either or both to 0 will hide the
+     * corresponding section header. The list must be sorted appropriately for
+     * these sections to be meaningful, in the following order:
+     * active, local, all
      *
      * @param context application context.
      * @param resource list resource id
-     * @param agencies array of agencies to return views for
+     * @param agencies array of agencies to adapt
      * @param numActive number of active agencies
      * @param numLocal number of local agencies
      */
     public AgencyAdapter(Context context, int resource, Agency[] agencies, int numActive, int numLocal) {
         super(context, resource, agencies);
-        this.numActive = Math.max(numActive, 0);
-        this.numLocal = Math.max(numLocal, 0);
+
+        // build list of active & local agencies to reference later for headers
+        active = new ArrayList<>(numActive);
+        local = new ArrayList<>(numLocal);
+
+        if (agencies != null) {
+            int i = 0;
+            for (int j = 0; j < numActive; j++)
+                active.add(agencies[i++]);
+            for (int j = 0; j < numLocal; j++)
+                local.add(agencies[i++]);
+        }
     }
 
-    /**
-     * Return a view for the nth item in the source collection
-     * @param position the position of the item in the array
-     * @param convertView view to inflate into; may be null
-     * @param parent parent that this view will eventually be attached to; may be null
-     * @return a view representing the nth item in the source collection
-     */
+
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         // capture inflater
@@ -54,34 +63,6 @@ public class AgencyAdapter extends ArrayAdapter<Agency> {
         // inflate new view if necessary
         if (convertView == null)
             convertView = inflater.inflate(R.layout.agency_list_item, null);
-        else { // clean it out
-            View header = convertView.findViewById(R.id.sectionheader);
-            header.setVisibility(View.GONE);
-        }
-
-        // cue disgusting
-        View header = convertView.findViewById(R.id.sectionheader);
-        if (position == 0) {
-            if (numActive > 0) {
-                ((TextView) header.findViewById(R.id.sectionheader_label)).setText(R.string.active);
-                header.setVisibility(View.VISIBLE);
-            }
-            else if (numLocal > 0) {
-                ((TextView) header.findViewById(R.id.sectionheader_label)).setText(R.string.local);
-                header.setVisibility(View.VISIBLE);
-            }
-        }
-        else {
-            if (numActive > 0 && numLocal > 0 && position == numActive) {
-                ((TextView) header.findViewById(R.id.sectionheader_label)).setText(R.string.local);
-                header.setVisibility(View.VISIBLE);
-            }
-
-            if ((numLocal > 0 || numActive > 0) && position == numLocal + numActive ) {
-                ((TextView) header.findViewById(R.id.sectionheader_label)).setText(R.string.all);
-                header.setVisibility(View.VISIBLE);
-            }
-        }
 
         // capture badge and text views
         ImageView badge = (ImageView) convertView.findViewById(R.id.agency_list_item_badge);
@@ -98,4 +79,50 @@ public class AgencyAdapter extends ArrayAdapter<Agency> {
         return convertView;
     }
 
+    /* sticky headers interface implementation */
+    /**
+     * Gets a unique number identifying the header corresponding to the item at the given position.
+     * @param position the position of the item whose header id to return
+     * @return an arbitrary unique integer identifying the header
+     */
+    @Override
+    public long getHeaderId(int position) {
+        Agency agency = getItem(position);
+
+        if (active.contains(agency))
+            return SECTION_ID_ACTIVE;
+        if (local.contains(agency))
+            return SECTION_ID_LOCAL;
+        else
+            return SECTION_ID_ALL;
+    }
+
+    /**
+     * Gets the corresponding header view for the item at the given position.
+     * This implementation does not recycle views since there are only 3 list sections.
+     * @param position the position of the item whose header to return
+     * @param view the recycled header
+     * @param viewGroup the ViewGroup the returned view will be attached to
+     * @return the header view for the specified item
+     */
+    @Override
+    public View getHeaderView(int position, View view, ViewGroup viewGroup) {
+        Agency agency = getItem(position);
+
+        // determine header text
+        String headerText;
+        if (active.contains(agency)) headerText = "Active";
+        else if (local.contains(agency)) headerText = "Local";
+        else headerText = "All";
+
+        // capture inflater
+        LayoutInflater inflater = LayoutInflater.from(getContext());
+
+        // inflate section header
+        View v = inflater.inflate(R.layout.agency_section_header, null);
+        TextView header = (TextView) v.findViewById(R.id.agency_section_header_text);
+        header.setText(headerText);
+
+        return v;
+    }
 }

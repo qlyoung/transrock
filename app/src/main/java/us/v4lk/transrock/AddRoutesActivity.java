@@ -23,6 +23,7 @@ import org.json.JSONException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 
+import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
 import us.v4lk.transrock.adapters.AgencyAdapter;
 import us.v4lk.transrock.adapters.RouteSwitchAdapter;
 import us.v4lk.transrock.transloc.Agency;
@@ -39,7 +40,7 @@ import us.v4lk.transrock.util.Util;
 public class AddRoutesActivity extends AppCompatActivity {
 
     BottomSheetLayout root;
-    ListView agencyList;
+    StickyListHeadersListView agencyList;
     ProgressBar bodyProgressBar, toolbarProgressBar;
     LocationManager locationManager;
 
@@ -60,7 +61,7 @@ public class AddRoutesActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         // capture views
-        agencyList = (ListView) findViewById(R.id.addroute_agency_list);
+        agencyList = (StickyListHeadersListView) findViewById(R.id.addroute_agency_list);
         bodyProgressBar = (ProgressBar) findViewById(R.id.addroute_body_progressbar);
         toolbarProgressBar = (ProgressBar) findViewById(R.id.addroute_toolbar_progressbar);
 
@@ -135,6 +136,7 @@ public class AddRoutesActivity extends AppCompatActivity {
                         numLocal);
                 agencyList.setAdapter(adapter);
 
+                // hide body progress spinner
                 bodyProgressBar.setVisibility(View.GONE);
             }
             @Override

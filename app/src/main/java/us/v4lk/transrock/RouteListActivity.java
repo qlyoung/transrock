@@ -51,6 +51,10 @@ public class RouteListActivity extends AppCompatActivity {
             routeList.setVisibility(View.GONE);
     }
     @Override
+    protected void onStart() {
+        super.onStart();
+    }
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_routelist, menu);
@@ -58,8 +62,6 @@ public class RouteListActivity extends AppCompatActivity {
     }
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-
-
         return false;
     }
 

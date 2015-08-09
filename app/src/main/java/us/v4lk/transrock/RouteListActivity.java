@@ -13,6 +13,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.flipboard.bottomsheet.BottomSheetLayout;
+import com.mikepenz.materialdrawer.Drawer;
+import com.mikepenz.materialdrawer.DrawerBuilder;
 import com.orhanobut.hawk.Hawk;
 
 import java.util.HashSet;
@@ -29,6 +31,7 @@ import us.v4lk.transrock.util.Util;
 public class RouteListActivity extends AppCompatActivity {
 
     ListView routeList;
+    Drawer drawer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,8 +44,11 @@ public class RouteListActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.routelist_toolbar);
         setSupportActionBar(toolbar);
 
-        // enable home button
-        getSupportActionBar().setHomeButtonEnabled(true);
+        // add drawer
+        drawer = new DrawerBuilder()
+                        .withActivity(this)
+                        .withToolbar(toolbar)
+                        .build();
 
         // capture listview
         routeList = (ListView) findViewById(R.id.routelist);

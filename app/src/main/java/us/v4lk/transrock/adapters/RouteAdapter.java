@@ -2,12 +2,7 @@ package us.v4lk.transrock.adapters;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Rect;
-import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,8 +10,6 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import com.pkmmte.view.CircularImageView;
-
-import java.util.Set;
 
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.transloc.Route;
@@ -45,12 +38,17 @@ public class RouteAdapter extends ArrayAdapter<Route> {
 
         CircularImageView badge = (CircularImageView) convertView.findViewById(R.id.route_list_item_badge);
         TextView longname = (TextView) convertView.findViewById(R.id.route_list_item_longname);
-        TextView agencyname = (TextView) convertView.findViewById(R.id.route_list_item_agency);
+        TextView shortname = (TextView) convertView.findViewById(R.id.route_list_item_shortname);
 
+        // setup views
         Bitmap color = Util.colorToBitmap(Color.parseColor("#" + item.color), 50, 50);
         badge.setImageBitmap(color);
         longname.setText(item.long_name);
-        agencyname.setText(String.valueOf(item.agency_id));
+        String sn = item.short_name;
+        if (!sn.isEmpty())
+            shortname.setText(sn);
+        else
+            shortname.setVisibility(View.GONE);
 
         convertView.setTag(getItem(position));
 

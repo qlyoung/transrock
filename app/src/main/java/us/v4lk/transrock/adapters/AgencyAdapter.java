@@ -1,6 +1,7 @@
 package us.v4lk.transrock.adapters;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,6 +15,7 @@ import java.util.ArrayList;
 import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.transloc.Agency;
+import us.v4lk.transrock.util.Util;
 
 /**
  * Adapts agency --> layout/agency_list_item.
@@ -67,8 +69,8 @@ public class AgencyAdapter extends ArrayAdapter<Agency> implements StickyListHea
         TextView text = (TextView) convertView.findViewById(R.id.agency_list_item_text);
 
         // set badge and text views
-        Drawable d = getContext().getResources().getDrawable(R.drawable.bluesquare);
-        badge.setImageDrawable(d);
+        int color = getContext().getResources().getColor(R.color.agency_badge);
+        badge.setImageBitmap(Util.colorToBitmap(color, 50, 50));
         text.setText(getItem(position).long_name);
 
         // tag list item with the object it is sourced from

@@ -71,7 +71,7 @@ public class Util {
     }
     /**
      * Converts a color to a bitmap of given size.
-     * @param color da color
+     * @param color color int
      * @param width da width of da bitmap
      * @param height da height of da bitmap
      * @return da bitmap
@@ -87,4 +87,5 @@ public class Util {
 
         return colorBitmap;
     }
+
 }

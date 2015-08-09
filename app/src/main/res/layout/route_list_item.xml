@@ -33,7 +33,7 @@
         android:paddingBottom="4dp" />
 
     <TextView
-        android:id="@+id/route_list_item_agency"
+        android:id="@+id/route_list_item_shortname"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"

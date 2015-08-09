@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- app theme colors -->
-    <color name="color_primary">#263238</color>
+    <color name="color_primary">#212121</color>
     <color name="color_primary_dark">#5D4037</color>
     <color name="color_primary_light">#D7CCC8</color>
     <color name="color_accent">#03A9F4</color>
@@ -10,6 +10,9 @@
     <color name="color_icons">#FFFFFF</color>
     <color name="color_divider">#B6B6B6</color>
     <color name="transparent">#00000000</color>
+
+    <!-- badge colors -->
+    <color name="agency_badge">#0091EA</color>
 
     <!-- material drawer colors -->
     <color name="material_drawer_background">#303030</color>

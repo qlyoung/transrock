@@ -23,11 +23,14 @@ import us.v4lk.transrock.util.Util;
  */
 public class RouteSwitchAdapter extends ArrayAdapter<Route> {
 
-    // dynamic list of which routes are selected,
-    // updated by corresponding view's switch being
-    // flipped on / off
+    // dynamic list of which routes are selected / deselected
+    // updated by corresponding view's switch being flipped on / off
     Set<Route> selectedRoutes = new HashSet<>();
     Set<Route> deselectedRoutes = new HashSet<>();
+
+    // stored routes, so we don't have Hawk fetch them from Sqlite every time
+    Set<Route> savedRoutes = Hawk.get(Util.ROUTES_STORAGE_KEY, new HashSet<Route>());
+
 
     /**
      * @param context application context
@@ -65,7 +68,7 @@ public class RouteSwitchAdapter extends ArrayAdapter<Route> {
         Switch s = (Switch) convertView.findViewById(R.id.route_switch_item_switch);
         boolean selected = selectedRoutes.contains(r);
         boolean deselected = deselectedRoutes.contains(r);
-        boolean stored = Hawk.get(Util.ROUTES_STORAGE_KEY, new HashSet<Route>()).contains(r);
+        boolean stored = savedRoutes.contains(r);
         boolean checked = selected || (stored && !deselected);
         s.setChecked(checked);
 

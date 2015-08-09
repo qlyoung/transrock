@@ -78,7 +78,6 @@ public class RouteListActivity extends AppCompatActivity {
                 return super.onOptionsItemSelected(item);
         }
     }
-
     @Override
     protected void onResume() {
         updateRoutelist();
@@ -89,7 +88,6 @@ public class RouteListActivity extends AppCompatActivity {
         Intent intent = new Intent(this, AddRoutesActivity.class);
         startActivity(intent);
     }
-
     private void updateRoutelist() {
         // get routes from db
         Set<Route> routes = Hawk.get(Util.ROUTES_STORAGE_KEY, new HashSet<Route>());

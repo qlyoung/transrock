@@ -41,6 +41,9 @@ public class RouteListActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.routelist_toolbar);
         setSupportActionBar(toolbar);
 
+        // enable home button
+        getSupportActionBar().setHomeButtonEnabled(true);
+
         // capture listview
         routeList = (ListView) findViewById(R.id.routelist);
 
@@ -61,7 +64,13 @@ public class RouteListActivity extends AppCompatActivity {
     }
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        return false;
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     @Override

@@ -1,7 +1,13 @@
 package us.v4lk.transrock.adapters;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Rect;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +20,7 @@ import java.util.Set;
 
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.transloc.Route;
+import us.v4lk.transrock.util.Util;
 
 /**
  * Adapts route --> layout/route_list_item.
@@ -40,7 +47,8 @@ public class RouteAdapter extends ArrayAdapter<Route> {
         TextView longname = (TextView) convertView.findViewById(R.id.route_list_item_longname);
         TextView agencyname = (TextView) convertView.findViewById(R.id.route_list_item_agency);
 
-        badge.setBackgroundColor(Color.parseColor("#" + item.color));
+        Bitmap color = Util.colorToBitmap(Color.parseColor("#" + item.color), 50, 50);
+        badge.setImageBitmap(color);
         longname.setText(item.long_name);
         agencyname.setText(String.valueOf(item.agency_id));
 

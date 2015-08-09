@@ -4,9 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context="us.v4lk.transrock.RouteListActivity"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:textAlignment="center"
-    android:transitionGroup="true">
+    android:layout_height="match_parent">
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/routelist_toolbar"
@@ -23,9 +21,9 @@
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
         android:text="@string/no_routes"
+        android:gravity="center_horizontal"
         android:textSize="@dimen/abc_text_size_medium_material"
         android:textIsSelectable="false"
-        android:gravity="center_horizontal"
         android:visibility="gone"/>
 
     <ListView
@@ -33,6 +31,9 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/routelist_toolbar"
+        android:paddingStart="@dimen/activity_horizontal_margin"
+        android:paddingEnd="@dimen/activity_horizontal_margin"
+        android:paddingTop="@dimen/navigation_padding_bottom"
         android:divider="@null"/>
 
     <android.support.design.widget.FloatingActionButton

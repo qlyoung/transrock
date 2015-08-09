@@ -1,6 +1,10 @@
 package us.v4lk.transrock.util;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
@@ -47,7 +51,6 @@ public class Util {
             return false;
         }
     }
-
     /**
      * Returns a list of the agencies that the specified routes belong to.
      * @return list of unique integer agency ids
@@ -66,5 +69,22 @@ public class Util {
 
         return result;
     }
+    /**
+     * Converts a color to a bitmap of given size.
+     * @param color da color
+     * @param width da width of da bitmap
+     * @param height da height of da bitmap
+     * @return da bitmap
+     */
+    public static Bitmap colorToBitmap(int color, int width, int height) {
+        ColorDrawable cd = new ColorDrawable(color);
+        cd.setBounds(0, 0, width, height);
 
+        Bitmap colorBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(colorBitmap);
+        cd.setBounds(0, 0, width, height);
+        cd.draw(canvas);
+
+        return colorBitmap;
+    }
 }

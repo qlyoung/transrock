@@ -59,6 +59,8 @@ public class AddRoutesActivity extends AppCompatActivity {
         // set toolbar as action bar, enable back button
         Toolbar toolbar = (Toolbar) findViewById(R.id.addroute_toolbar);
         setSupportActionBar(toolbar);
+
+        // enable home button
         getSupportActionBar().setHomeButtonEnabled(true);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 

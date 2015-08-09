@@ -29,7 +29,6 @@
 
     </FrameLayout>
 
-
     <TextView
         android:id="@+id/agency_list_item_text"
         android:layout_width="match_parent"

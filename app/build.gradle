@@ -38,4 +38,6 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     // tha hawk
     compile 'com.orhanobut:hawk:1.18'
+    // material drawer
+    compile('com.mikepenz:materialdrawer:3.1.2@aar') { transitive = true }
 }

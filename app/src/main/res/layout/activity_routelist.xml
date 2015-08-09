@@ -25,7 +25,8 @@
         android:text="@string/no_routes"
         android:textSize="@dimen/abc_text_size_medium_material"
         android:textIsSelectable="false"
-        android:gravity="center_horizontal" />
+        android:gravity="center_horizontal"
+        android:visibility="gone"/>
 
     <ListView
         android:id="@+id/routelist"

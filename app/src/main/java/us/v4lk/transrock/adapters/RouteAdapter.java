@@ -10,6 +10,8 @@ import android.widget.TextView;
 
 import com.pkmmte.view.CircularImageView;
 
+import java.util.Set;
+
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.transloc.Route;
 
@@ -21,10 +23,9 @@ public class RouteAdapter extends ArrayAdapter<Route> {
     /**
      * @param context application context.
      * @param resource resource id for layout of desired list item
-     * @param routes array of routes to return views for
      */
-    public RouteAdapter(Context context, int resource, Route[] routes) {
-        super(context, resource, routes);
+    public RouteAdapter(Context context, int resource) {
+        super(context, resource);
     }
 
     @Override
@@ -41,7 +42,7 @@ public class RouteAdapter extends ArrayAdapter<Route> {
 
         badge.setBackgroundColor(Color.parseColor("#" + item.color));
         longname.setText(item.long_name);
-        agencyname.setText(item.agency_id);
+        agencyname.setText(String.valueOf(item.agency_id));
 
         convertView.setTag(getItem(position));
 

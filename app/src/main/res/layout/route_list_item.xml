@@ -1,37 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="horizontal"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:paddingBottom="16dp"
+    android:paddingTop="16dp">
 
     <com.pkmmte.view.CircularImageView
         android:id="@+id/route_list_item_badge"
         android:layout_width="40dp"
         android:layout_height="40dp" />
 
-    <!-- nameblock -->
-    <LinearLayout
-        android:orientation="vertical"
-        android:layout_height="match_parent"
-        android:layout_width="wrap_content">
+    <Switch
+        android:id="@+id/route_list_item_switch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:padding="@dimen/abc_switch_padding"/>
 
-        <!-- route longname -->
-        <TextView
-            android:id="@+id/route_list_item_longname"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:textSize="@dimen/abc_text_size_title_material" />
+    <TextView
+        android:id="@+id/route_list_item_longname"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@id/route_list_item_badge"
+        android:layout_toStartOf="@id/route_list_item_switch"
+        android:textSize="@dimen/abc_text_size_title_material"
+        android:paddingBottom="4dp" />
 
-        <!-- route agencyname -->
-        <TextView
-            android:id="@+id/route_list_item_agency"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:textSize="@dimen/abc_text_size_subhead_material" />
+    <TextView
+        android:id="@+id/route_list_item_agency"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/route_list_item_longname"
+        android:layout_toEndOf="@id/route_list_item_badge"
+        android:layout_toStartOf="@id/route_list_item_switch"
+        android:textSize="@dimen/abc_text_size_subhead_material" />
 
-    </LinearLayout>
+
 
     <!-- TODO: horizontal control bar -->
 
-</LinearLayout>
+</RelativeLayout>

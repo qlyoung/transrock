@@ -9,12 +9,14 @@ import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import com.orhanobut.hawk.Hawk;
+
 import java.util.HashSet;
 import java.util.Set;
 
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.transloc.Route;
-import us.v4lk.transrock.util.Storage;
+import us.v4lk.transrock.util.Util;
 
 /**
  * Adapts route --> layout/route_switch_item.
@@ -63,7 +65,7 @@ public class RouteSwitchAdapter extends ArrayAdapter<Route> {
         Switch s = (Switch) convertView.findViewById(R.id.route_switch_item_switch);
         boolean selected = selectedRoutes.contains(r);
         boolean deselected = deselectedRoutes.contains(r);
-        boolean stored = Storage.contains(r, getContext());
+        boolean stored = Hawk.get(Util.ROUTES_STORAGE_KEY, new HashSet<Route>()).contains(r);
         boolean checked = selected || (stored && !deselected);
         s.setChecked(checked);
 

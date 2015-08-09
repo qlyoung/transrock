@@ -13,12 +13,17 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.flipboard.bottomsheet.BottomSheetLayout;
+import com.orhanobut.hawk.Hawk;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import us.v4lk.transrock.adapters.RouteAdapter;
 import us.v4lk.transrock.adapters.RouteSwitchAdapter;
 import us.v4lk.transrock.transloc.Agency;
 import us.v4lk.transrock.transloc.Route;
 import us.v4lk.transrock.transloc.TransLocAPI;
+import us.v4lk.transrock.util.Util;
 
 
 public class RouteListActivity extends AppCompatActivity {
@@ -39,16 +44,10 @@ public class RouteListActivity extends AppCompatActivity {
         // capture listview
         routeList = (ListView) findViewById(R.id.routelist);
 
-        // TODO: query db to retrieve user's routes here
-        Route[] routes = null;
+        // setup empty adapter
+        routeList.setAdapter(new RouteAdapter(this, R.layout.route_list_item));
 
-        // populate list with user's routes, or hide list if there are none
-        if (routes != null) {
-            // populate list
-
-            routeList.setAdapter(new RouteAdapter(this, R.layout.route_list_item, routes));
-        } else
-            routeList.setVisibility(View.GONE);
+        updateRoutelist();
     }
     @Override
     protected void onStart() {
@@ -67,12 +66,34 @@ public class RouteListActivity extends AppCompatActivity {
 
     @Override
     protected void onResume() {
-        //TODO: reload (potentially) updated routelist from db
+        updateRoutelist();
         super.onResume();
     }
 
     public void addRoute(View v) {
         Intent intent = new Intent(this, AddRoutesActivity.class);
         startActivity(intent);
+    }
+
+    private void updateRoutelist() {
+        // get routes from db
+        Set<Route> routes = Hawk.get(Util.ROUTES_STORAGE_KEY, new HashSet<Route>());
+
+        // clear adapter
+        RouteAdapter adapter = (RouteAdapter) routeList.getAdapter();
+        adapter.clear();
+
+        // populate list with user's routes, or hide list if there are none
+        if (routes.size() != 0) {
+            adapter.addAll(routes);
+            routeList.setVisibility(View.VISIBLE);
+            findViewById(R.id.routelist_noroutes_message).setVisibility(View.GONE);
+        }
+        else {
+            routeList.setVisibility(View.GONE);
+            findViewById(R.id.routelist_noroutes_message).setVisibility(View.VISIBLE);
+        }
+
+        adapter.notifyDataSetChanged();
     }
 }

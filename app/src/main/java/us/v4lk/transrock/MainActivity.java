@@ -8,6 +8,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.orhanobut.hawk.Hawk;
+import com.orhanobut.hawk.HawkBuilder;
+import com.orhanobut.hawk.LogLevel;
 
 import us.v4lk.transrock.transloc.TransLocAPI;
 import us.v4lk.transrock.util.LocationManager;
@@ -54,6 +57,13 @@ public class MainActivity extends AppCompatActivity {
             try { Thread.sleep(2000); } catch (Exception e) { }
             // try to cache location
             manager.getLocation();
+
+            // initialize storage
+            Hawk.init(MainActivity.this)
+                .setEncryptionMethod(HawkBuilder.EncryptionMethod.NO_ENCRYPTION)
+                .setStorage(HawkBuilder.newSqliteStorage(MainActivity.this))
+                .setLogLevel(LogLevel.FULL)
+                .build();
 
             return null;
         }

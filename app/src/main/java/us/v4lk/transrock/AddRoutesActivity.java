@@ -17,11 +17,14 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.flipboard.bottomsheet.BottomSheetLayout;
+import com.orhanobut.hawk.Hawk;
 
 import org.json.JSONException;
 
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
 import us.v4lk.transrock.adapters.AgencyAdapter;
@@ -30,7 +33,6 @@ import us.v4lk.transrock.transloc.Agency;
 import us.v4lk.transrock.transloc.Route;
 import us.v4lk.transrock.transloc.TransLocAPI;
 import us.v4lk.transrock.util.LocationManager;
-import us.v4lk.transrock.util.Storage;
 import us.v4lk.transrock.util.Util;
 
 /**
@@ -90,12 +92,19 @@ public class AddRoutesActivity extends AppCompatActivity {
                 // get last location;
                 Location loc = locationManager.getLocation();
 
+                // get agency ids of stored routes
+                Set<Route> routes = Hawk.get(Util.ROUTES_STORAGE_KEY);
+                int[] storedAgencyIds = Util.getAgencyIds(routes.toArray(new Route[routes.size()]));
+
                 Agency[] active = null,
                         local = null,
                         all = null;
+
                 try {
-                    int[] stored = Storage.retrieveSavedAgencies(AddRoutesActivity.this);
-                    active = stored.length != 0 ? TransLocAPI.getAgencies(stored) : new Agency[0];
+                    // fetch the various routes from the various sources
+                    active = storedAgencyIds.length != 0 ?
+                            TransLocAPI.getAgencies(storedAgencyIds) :
+                            new Agency[0];
                     local = loc != null ? TransLocAPI.getAgencies(loc, 10000) : new Agency[0];
                     all = TransLocAPI.getAgencies();
                 } catch (SocketTimeoutException e) {
@@ -266,9 +275,15 @@ public class AddRoutesActivity extends AppCompatActivity {
                 RouteSwitchAdapter adapter = (RouteSwitchAdapter) rl.getAdapter();
                 Route[] selected = adapter.getSelected();
                 Route[] deselected = adapter.getDeselected();
+
                 // update persistence
-                Storage.appendRoutesToPrefs(selected, AddRoutesActivity.this);
-                Storage.removeRoutesFromPrefs(deselected, AddRoutesActivity.this);
+                Set<Route> routes = Hawk.get(Util.ROUTES_STORAGE_KEY, new HashSet<Route>());
+                for (Route r : selected)
+                    routes.add(r);
+                for (Route r : deselected)
+                    routes.remove(r);
+
+                Hawk.put(Util.ROUTES_STORAGE_KEY, routes);
             }
         });
     }

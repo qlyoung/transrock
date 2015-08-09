@@ -69,17 +69,19 @@ public class Route {
             stops[i] = stps.getString(i);
     }
 
-    /**
-     * Does equality comparison based on route_id.
-     * @param o object to compare
-     * @return whether this route is the same as the passed route
-     */
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof Route))
-            return false;
-        Route other = (Route) o;
-        return other.route_id == route_id;
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Route route = (Route) o;
+
+        return route_id.equals(route.route_id);
+
     }
 
+    @Override
+    public int hashCode() {
+        return route_id.hashCode();
+    }
 }

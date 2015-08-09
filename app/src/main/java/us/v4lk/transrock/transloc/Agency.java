@@ -55,16 +55,19 @@ public class Agency {
         this.boundingBox = new BoundingBox(topLeft, bottomRight);
     }
 
-    /**
-     * Does equality comparison based on agency_id.
-     * @param o object to compare
-     * @return whether this agency is the same as the passed agency
-     */
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof Agency))
-            return false;
-        Agency other = (Agency) o;
-        return other.agency_id == agency_id;
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Agency agency = (Agency) o;
+
+        return agency_id == agency.agency_id;
+
+    }
+
+    @Override
+    public int hashCode() {
+        return agency_id;
     }
 }

@@ -36,4 +36,6 @@ dependencies {
     compile 'se.emilsjolander:stickylistheaders:2.7.0'
     // all jars in libs folder
     compile fileTree(include: ['*.jar'], dir: 'libs')
+    // tha hawk
+    compile 'com.orhanobut:hawk:1.18'
 }

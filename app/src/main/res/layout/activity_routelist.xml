@@ -31,8 +31,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/routelist_toolbar"
-        android:paddingStart="@dimen/activity_horizontal_margin"
-        android:paddingEnd="@dimen/activity_horizontal_margin"
+        android:paddingStart="@dimen/spec_activity_horizontal_margin"
+        android:paddingEnd="@dimen/spec_activity_horizontal_margin"
         android:paddingTop="@dimen/navigation_padding_bottom"
         android:divider="@null"/>
 
@@ -43,7 +43,7 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
         android:onClick="addRoute"
-        android:src="@mipmap/ic_add_white_24dp"
+        android:src="@drawable/ic_add_white_24dp"
         android:layout_margin="24dp"
         app:elevation="6dp"/>
 

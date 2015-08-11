@@ -28,7 +28,7 @@ public class RouteSwitchAdapter extends ArrayAdapter<Route> {
     Set<Route> selectedRoutes = new HashSet<>();
     Set<Route> deselectedRoutes = new HashSet<>();
 
-    // stored routes, so we don't have Hawk fetch them from Sqlite every time
+    // stored routes, so we don't have Hawk fetch them from the database every time
     Set<Route> savedRoutes = Hawk.get(Util.ROUTES_STORAGE_KEY, new HashSet<Route>());
 
 

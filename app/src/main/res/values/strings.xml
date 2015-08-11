@@ -3,7 +3,7 @@
 
     <!-- activity title strings -->
     <string name="title_activity_main">TransRock</string>
-    <string name="title_activity_map">TransRock</string>
+    <string name="title_activity_map">Transit Map</string>
     <string name="title_activity_routelist">Routes</string>
     <string name="title_activity_add_route">Add Routes</string>
 
@@ -23,8 +23,11 @@
     <string name="error_network_unknown">Network error.</string>
     <string name="error_bad_parse">Received unreadable response from server.</string>
 
-    <!-- menu strings -->
+    <!-- action menu strings -->
     <string name="map_menu_center_location_title">Center map on my location</string>
-    <string name="map_menu_manage_routes_title">Manage routes</string>
+
+    <!-- main menu strings -->
+    <string name="main_menu_transit_map">Transit Map</string>
+    <string name="main_menu_routes">Routes</string>
 
 </resources>

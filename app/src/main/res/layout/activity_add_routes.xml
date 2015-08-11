@@ -44,8 +44,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_below="@id/addroute_toolbar"
-            android:paddingLeft="@dimen/activity_horizontal_margin"
-            android:paddingRight="@dimen/activity_horizontal_margin"
+            android:paddingLeft="@dimen/spec_activity_horizontal_margin"
+            android:paddingRight="@dimen/spec_activity_horizontal_margin"
             android:paddingTop="@dimen/navigation_padding_bottom"
             android:divider="@null"/>
 

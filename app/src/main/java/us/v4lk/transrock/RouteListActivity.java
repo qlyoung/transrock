@@ -45,10 +45,7 @@ public class RouteListActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         // add drawer
-        drawer = new DrawerBuilder()
-                        .withActivity(this)
-                        .withToolbar(toolbar)
-                        .build();
+        drawer = Util.buildMainMenu(this, toolbar);
 
         // capture listview
         routeList = (ListView) findViewById(R.id.routelist);

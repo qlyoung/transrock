@@ -1,14 +1,21 @@
 package us.v4lk.transrock.util;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.support.v7.widget.Toolbar;
+import android.view.View;
+import android.widget.AdapterView;
 
-import com.orhanobut.hawk.Hawk;
+import com.mikepenz.materialdrawer.Drawer;
+import com.mikepenz.materialdrawer.DrawerBuilder;
+import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
+import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -16,6 +23,9 @@ import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.Set;
 
+import us.v4lk.transrock.MapActivity;
+import us.v4lk.transrock.R;
+import us.v4lk.transrock.RouteListActivity;
 import us.v4lk.transrock.transloc.Route;
 
 /**
@@ -76,6 +86,7 @@ public class Util {
      * @param height da height of da bitmap
      * @return da bitmap
      */
+
     public static Bitmap colorToBitmap(int color, int width, int height) {
         ColorDrawable cd = new ColorDrawable(color);
         cd.setBounds(0, 0, width, height);
@@ -87,5 +98,42 @@ public class Util {
 
         return colorBitmap;
     }
+    public static Drawer buildMainMenu(final Activity activity, Toolbar toolbar) {
+        // add drawer
+        Drawer drawer = new DrawerBuilder()
+                .withActivity(activity)
+                .withToolbar(toolbar)
+                .withHeader(R.layout.drawer_header)
+                .addDrawerItems(
+                        new SecondaryDrawerItem()
+                                .withIcon(R.drawable.ic_map_white_24dp)
+                                .withName(R.string.main_menu_transit_map),
+                        new SecondaryDrawerItem()
+                                .withIcon(R.drawable.ic_directions_bus_white_24dp)
+                                .withName(R.string.main_menu_routes)
+                )
+                .withTranslucentStatusBar(false)
+                .build();
 
+        drawer.setOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
+            @Override
+            public boolean onItemClick(AdapterView<?> adapterView, View view, int i, long l, IDrawerItem iDrawerItem) {
+                Intent intent = null;
+                switch(i) {
+                    case 0:
+                        intent = new Intent(activity, MapActivity.class);
+                        activity.startActivity(intent);
+                        break;
+                    case 1:
+                        intent = new Intent(activity, RouteListActivity.class);
+                        break;
+                }
+                activity.startActivity(intent);
+
+                return false;
+            }
+        });
+
+        return drawer;
+    }
 }

@@ -1,17 +1,8 @@
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context="us.v4lk.transrock.RouteListActivity"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/routelist_toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:minHeight="?attr/actionBarSize"
-        android:background="?attr/colorPrimary" />
 
     <TextView
         android:id="@+id/routelist_noroutes_message"
@@ -30,7 +21,6 @@
         android:id="@+id/routelist"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/routelist_toolbar"
         android:paddingStart="@dimen/spec_activity_horizontal_margin"
         android:paddingEnd="@dimen/spec_activity_horizontal_margin"
         android:paddingTop="@dimen/navigation_padding_bottom"

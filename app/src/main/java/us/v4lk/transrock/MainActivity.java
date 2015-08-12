@@ -1,77 +1,84 @@
 package us.v4lk.transrock;
 
+import android.app.Fragment;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.Intent;
-import android.os.AsyncTask;
-import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
+import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.orhanobut.hawk.Hawk;
-import com.orhanobut.hawk.HawkBuilder;
-import com.orhanobut.hawk.LogLevel;
+import com.mikepenz.materialdrawer.Drawer;
+import com.mikepenz.materialdrawer.DrawerBuilder;
+import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
+import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 
-import us.v4lk.transrock.transloc.TransLocAPI;
-import us.v4lk.transrock.util.LocationManager;
+import us.v4lk.transrock.fragments.MapFragment;
+import us.v4lk.transrock.fragments.RoutesFragment;
+import us.v4lk.transrock.util.Util;
 
-/**
- * Shows a splash screen and decides which activity should be started next.
- */
 public class MainActivity extends AppCompatActivity {
 
+    Drawer drawer;
+    Toolbar toolbar;
+    Fragment current;
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // set content
+        // set content view
         setContentView(R.layout.activity_main);
-    }
-    @Override
-    protected void onStart() {
-        super.onStart();
-        StarterUpper su = new StarterUpper();
-        su.execute();
-    }
 
-    private void startMapActivity() {
-        Intent intent = new Intent(this, MapActivity.class);
-        startActivity(intent);
-    }
+        // set toolbar as action bar
+        toolbar = (Toolbar) findViewById(R.id.main_toolbar);
+        setSupportActionBar(toolbar);
 
-    /**
-     * Tries to cache agencies and the current location.
-     */
-    class StarterUpper extends AsyncTask<Void, Void, Void> {
-        @Override
-        protected Void doInBackground(Void... params) {
-            // cache agencies
-            try { TransLocAPI.getAgencies(); }
-            // it isn't crucial if the api errors here, so we don't bother checking exceptions
-            catch (Exception e) { Log.e("TransRock", e.getMessage()); }
-
-            // initialize a location manager
-            LocationManager manager = new LocationManager(MainActivity.this);
-            // wait a few seconds for api to connect
-            // TODO: fix this so that if the api connects sooner it doesn't wait
-            try { Thread.sleep(2000); } catch (Exception e) { }
-            // try to cache location
-            manager.getLocation();
-
-            // initialize storage
-            Hawk.init(MainActivity.this)
-                .setEncryptionMethod(HawkBuilder.EncryptionMethod.NO_ENCRYPTION)
-                .setStorage(HawkBuilder.newSqliteStorage(MainActivity.this))
-                .setLogLevel(LogLevel.FULL)
+        // make drawer
+        drawer = new DrawerBuilder()
+                .withActivity(this)
+                .withToolbar(toolbar)
+                .withHeader(R.layout.drawer_header)
+                .addDrawerItems(
+                        new SecondaryDrawerItem()
+                                .withIcon(R.drawable.ic_map_white_24dp)
+                                .withName(R.string.main_menu_transit_map),
+                        new SecondaryDrawerItem()
+                                .withIcon(R.drawable.ic_directions_bus_white_24dp)
+                                .withName(R.string.main_menu_routes)
+                )
+                .withTranslucentStatusBar(false)
+                .withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
+                    @Override
+                    public boolean onItemClick(AdapterView<?> adapterView, View view, int i, long l, IDrawerItem iDrawerItem) {
+                        switch(i) {
+                            case 0:
+                                setContentFragment(new MapFragment(), R.string.title_activity_map);
+                                break;
+                            case 1:
+                                setContentFragment(new RoutesFragment(), R.string.title_activity_routelist);
+                                break;
+                        }
+                        return false;
+                    }
+                })
                 .build();
 
-            return null;
-        }
+        setContentFragment(new MapFragment(), R.string.title_activity_map);
+    }
 
-        @Override
-        protected void onPostExecute(Void aVoid) { // nice one, google.
-            MainActivity.this.startMapActivity();
-        }
+    private void setContentFragment(Fragment content, int newActivityTitle) {
+        FragmentManager manager = getFragmentManager();
+        FragmentTransaction transaction = manager.beginTransaction();
+        transaction.replace(R.id.main_root, content);
+        transaction.commit();
+        current = content;
+
+        toolbar.setTitle(newActivityTitle);
     }
 
 }

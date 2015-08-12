@@ -2,6 +2,7 @@
     <string name="app_name">TransRock</string>
 
     <!-- activity title strings -->
+    <string name="title_activity_splash">TransRock</string>
     <string name="title_activity_main">TransRock</string>
     <string name="title_activity_map">Transit Map</string>
     <string name="title_activity_routelist">Routes</string>

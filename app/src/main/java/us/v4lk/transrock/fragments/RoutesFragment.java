@@ -24,7 +24,7 @@ import us.v4lk.transrock.transloc.Route;
 import us.v4lk.transrock.util.Util;
 
 /**
- * Created by qly on 8/11/15.
+ * Route list fragment.
  */
 public class RoutesFragment extends Fragment {
 

@@ -19,7 +19,7 @@ import us.v4lk.transrock.R;
 import us.v4lk.transrock.util.LocationManager;
 
 /**
- * Created by qly on 8/11/15.
+ * Map fragment.
  */
 public class MapFragment extends Fragment {
 

@@ -7,7 +7,7 @@ import org.json.JSONObject;
 import java.util.Vector;
 
 /**
- * Created by qly on 5/31/15.
+ * A stop.
  */
 public class Stop {
 

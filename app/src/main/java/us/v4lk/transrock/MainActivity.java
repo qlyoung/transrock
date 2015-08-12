@@ -21,6 +21,10 @@ import us.v4lk.transrock.fragments.MapFragment;
 import us.v4lk.transrock.fragments.RoutesFragment;
 import us.v4lk.transrock.util.Util;
 
+/**
+ * Main activity. Switches content fragments using a
+ * nav drawer.
+ */
 public class MainActivity extends AppCompatActivity {
 
     Drawer drawer;

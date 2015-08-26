@@ -112,7 +112,7 @@
     <orderEntry type="library" exported="" name="appcompat-v7-22.2.1" level="project" />
     <orderEntry type="library" exported="" name="play-services-location-7.5.0" level="project" />
     <orderEntry type="library" exported="" name="bottomsheet-core-1.1.0" level="project" />
-    <orderEntry type="library" exported="" name="osmdroid-android-4.2" level="project" />
+    <orderEntry type="library" exported="" name="osmdroid-android-4.3" level="project" />
     <orderEntry type="library" exported="" name="play-services-base-7.5.0" level="project" />
     <orderEntry type="library" exported="" name="slf4j-simple-1.6.1" level="project" />
     <orderEntry type="library" exported="" name="design-22.2.0" level="project" />

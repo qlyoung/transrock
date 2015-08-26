@@ -24,7 +24,7 @@ dependencies {
     compile 'com.android.support:appcompat-v7:22.2.1'
     compile 'com.android.support:design:22.2.0'
     // osmdroid + deps
-    compile 'org.osmdroid:osmdroid-android:4.2'
+    compile 'org.osmdroid:osmdroid-android:4.3'
     compile 'org.slf4j:slf4j-simple:1.6.1'
     // CircularImageView
     compile 'com.pkmmte.view:circularimageview:1.1'

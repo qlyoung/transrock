@@ -46,7 +46,6 @@
             android:layout_below="@id/addroute_toolbar"
             android:paddingLeft="@dimen/spec_activity_horizontal_margin"
             android:paddingRight="@dimen/spec_activity_horizontal_margin"
-            android:paddingTop="@dimen/navigation_padding_bottom"
             android:divider="@null"/>
 
         <ProgressBar

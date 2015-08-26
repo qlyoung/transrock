@@ -50,9 +50,6 @@ public class SplashActivity extends AppCompatActivity {
 
             // initialize a location manager
             LocationManager manager = new LocationManager(SplashActivity.this);
-            // wait a few seconds for api to connect
-            // TODO: fix this so that if the api connects sooner it doesn't wait
-            try { Thread.sleep(2000); } catch (Exception e) { }
             // try to cache location
             manager.getLocation();
 

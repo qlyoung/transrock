@@ -1,5 +1,6 @@
 package us.v4lk.transrock.fragments;
 
+import android.app.Activity;
 import android.app.Fragment;
 import android.location.Location;
 import android.os.Bundle;
@@ -22,6 +23,8 @@ import us.v4lk.transrock.util.LocationManager;
  * Map fragment.
  */
 public class MapFragment extends Fragment {
+
+    final int MAP_ZOOM_LEVEL = 20;
 
     LocationManager locationManager;
     MapView map;
@@ -50,7 +53,16 @@ public class MapFragment extends Fragment {
 
         // location manager
         locationManager = new LocationManager(getActivity());
+
+        centerAndZoomOnLocation();
     }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+
+    }
+
     @Override
     public void onPause() {
         super.onPause();
@@ -72,10 +84,12 @@ public class MapFragment extends Fragment {
 
     public boolean centerAndZoomOnLocation() {
         Location l = locationManager.getLocation();
+
         if (l != null) {
             GeoPoint center = new GeoPoint(l.getLatitude(), l.getLongitude());
-            map.getController().setCenter(center);
-            map.getController().setZoom(20);
+            map.getController().setZoom(MAP_ZOOM_LEVEL);
+            map.getController().animateTo(center);
+
             return true;
         } else return false;
     }

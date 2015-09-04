@@ -20,7 +20,13 @@ import us.v4lk.transrock.transloc.Route;
  */
 public class Util {
 
+    /**
+     * Global network timeout.
+     */
     public static final int GLOBAL_NETWORK_TIMEOUT = 3000;
+    /**
+     * Hawk key to access saved routes.
+     */
     public static final String ROUTES_STORAGE_KEY = "routes";
 
     /**

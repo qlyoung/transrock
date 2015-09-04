@@ -11,6 +11,7 @@
         android:layout_margin="20dp"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
+        android:paddingBottom="15dp"
         android:text="@string/no_routes"
         android:gravity="center_horizontal"
         android:textSize="@dimen/abc_text_size_medium_material"

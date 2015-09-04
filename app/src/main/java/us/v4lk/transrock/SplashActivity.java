@@ -32,11 +32,6 @@ public class SplashActivity extends AppCompatActivity {
         su.execute();
     }
 
-    private void startMapActivity() {
-        Intent intent = new Intent(this, MainActivity.class);
-        startActivity(intent);
-    }
-
     /**
      * Tries to cache agencies and the current location.
      */
@@ -65,7 +60,8 @@ public class SplashActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(Void aVoid) { // nice one, google.
-            SplashActivity.this.startMapActivity();
+            Intent intent = new Intent(SplashActivity.this, MainActivity.class);
+            startActivity(intent);
         }
     }
 

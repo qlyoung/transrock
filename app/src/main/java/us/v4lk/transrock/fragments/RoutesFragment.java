@@ -19,8 +19,9 @@ import java.util.Set;
 
 import us.v4lk.transrock.AddRoutesActivity;
 import us.v4lk.transrock.R;
-import us.v4lk.transrock.adapters.RouteAdapter;
+import us.v4lk.transrock.adapters.StoredRouteAdapter;
 import us.v4lk.transrock.transloc.Route;
+import us.v4lk.transrock.util.StoredRoute;
 import us.v4lk.transrock.util.Util;
 
 /**
@@ -63,13 +64,12 @@ public class RoutesFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
 
         // setup empty adapter
-        routeList.setAdapter(new RouteAdapter(getActivity(), R.layout.route_list_item));
-        // populate routelist
-        updateRoutelist();
+        routeList.setAdapter(new StoredRouteAdapter(getActivity(), R.layout.route_list_item));
     }
     @Override
     public void onPause() {
         super.onPause();
+        persistRoutelist();
     }
     @Override
     public void onResume() {
@@ -82,15 +82,18 @@ public class RoutesFragment extends Fragment {
         inflater.inflate(R.menu.menu_routelist, menu);
     }
 
+    /**
+     * Loads in routes from persistence
+     */
     private void updateRoutelist() {
         // get routes from db
-        Set<Route> routes = Hawk.get(Util.ROUTES_STORAGE_KEY, new HashSet<Route>());
+        Set<StoredRoute> routes = Hawk.get(Util.ROUTES_STORAGE_KEY, new HashSet<StoredRoute>());
 
         // clear adapter
-        RouteAdapter adapter = (RouteAdapter) routeList.getAdapter();
+        StoredRouteAdapter adapter = (StoredRouteAdapter) routeList.getAdapter();
         adapter.clear();
 
-        // populate list with user's routes, or hide list if there are none
+        // populate list with stored routes, or hide list if there are none
         if (routes.size() != 0) {
             adapter.addAll(routes);
             routeList.setVisibility(View.VISIBLE);
@@ -104,4 +107,14 @@ public class RoutesFragment extends Fragment {
         adapter.notifyDataSetChanged();
     }
 
+    /**
+     * Writes routes to persistence
+     */
+    private void persistRoutelist() {
+        Set<StoredRoute> modifiedRoutes = new HashSet<>(routeList.getAdapter().getCount());
+        for (int i = 0; i < routeList.getAdapter().getCount(); i++)
+            modifiedRoutes.add((StoredRoute) routeList.getAdapter().getItem(i));
+
+        Hawk.put(Util.ROUTES_STORAGE_KEY, modifiedRoutes);
+    }
 }

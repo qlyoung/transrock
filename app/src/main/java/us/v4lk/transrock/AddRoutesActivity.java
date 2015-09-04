@@ -23,6 +23,7 @@ import org.json.JSONException;
 
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -33,6 +34,7 @@ import us.v4lk.transrock.transloc.Agency;
 import us.v4lk.transrock.transloc.Route;
 import us.v4lk.transrock.transloc.TransLocAPI;
 import us.v4lk.transrock.util.LocationManager;
+import us.v4lk.transrock.util.StoredRoute;
 import us.v4lk.transrock.util.Util;
 
 /**
@@ -95,8 +97,14 @@ public class AddRoutesActivity extends AppCompatActivity {
                 Location loc = locationManager.getLocation();
 
                 // get agency ids of stored routes
-                Set<Route> routes = Hawk.get(Util.ROUTES_STORAGE_KEY);
-                int[] storedAgencyIds = Util.getAgencyIds(routes.toArray(new Route[routes.size()]));
+                Set<StoredRoute> storedRoutes = Hawk.get(Util.ROUTES_STORAGE_KEY, new HashSet<StoredRoute>());
+
+                // convert StoredRoutes to Routes
+                Route[] routes = new Route[storedRoutes.size()];
+                int i = 0;
+                for (StoredRoute storedRoute : storedRoutes)
+                    routes[i++] = storedRoute.getRoute();
+                int[] storedAgencyIds = Util.getAgencyIds(routes);
 
                 Agency[] active = null,
                         local = null,
@@ -275,17 +283,20 @@ public class AddRoutesActivity extends AppCompatActivity {
             public void onViewDetachedFromWindow(View v) {
                 ListView rl = (ListView) v.findViewById(R.id.bottomsheet_list);
                 RouteSwitchAdapter adapter = (RouteSwitchAdapter) rl.getAdapter();
-                Route[] selected = adapter.getSelected();
-                Route[] deselected = adapter.getDeselected();
 
-                // update persistence
-                Set<Route> routes = Hawk.get(Util.ROUTES_STORAGE_KEY, new HashSet<Route>());
-                for (Route r : selected)
-                    routes.add(r);
-                for (Route r : deselected)
-                    routes.remove(r);
+                // get list of routes + selection value from adapter
+                HashMap<StoredRoute, Boolean> modifiedRoutes = adapter.getResults();
+                // get stored routes
+                Set<StoredRoute> storedRoutes = Hawk.get(Util.ROUTES_STORAGE_KEY, new HashSet<StoredRoute>());
+                // remove all of the routes in the list from storage, if they're present
+                storedRoutes.removeAll(modifiedRoutes.keySet());
+                // add back the routes that are selected
+                for (StoredRoute dr : modifiedRoutes.keySet())
+                    if (modifiedRoutes.get(dr))
+                        storedRoutes.add(dr);
 
-                Hawk.put(Util.ROUTES_STORAGE_KEY, routes);
+                // commit this new list to storage
+                Hawk.put(Util.ROUTES_STORAGE_KEY, storedRoutes);
             }
         });
     }

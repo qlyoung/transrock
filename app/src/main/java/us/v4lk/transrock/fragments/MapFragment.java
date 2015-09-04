@@ -1,6 +1,5 @@
 package us.v4lk.transrock.fragments;
 
-import android.app.Activity;
 import android.app.Fragment;
 import android.location.Location;
 import android.os.Bundle;
@@ -54,15 +53,8 @@ public class MapFragment extends Fragment {
         // location manager
         locationManager = new LocationManager(getActivity());
 
-        centerAndZoomOnLocation();
+        centerAndZoomOnLocation(false);
     }
-
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-
-    }
-
     @Override
     public void onPause() {
         super.onPause();
@@ -75,20 +67,28 @@ public class MapFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.map_menu_center_location:
-                centerAndZoomOnLocation();
+                centerAndZoomOnLocation(true);
                 break;
         }
 
         return true;
     }
 
-    public boolean centerAndZoomOnLocation() {
+    /**
+     * Centers the map on the current location
+     * @param animate whether the map should animate or jump directly
+     * @return false if the location could not be accessed
+     */
+    public boolean centerAndZoomOnLocation(boolean animate) {
         Location l = locationManager.getLocation();
 
         if (l != null) {
             GeoPoint center = new GeoPoint(l.getLatitude(), l.getLongitude());
             map.getController().setZoom(MAP_ZOOM_LEVEL);
-            map.getController().animateTo(center);
+            if (animate)
+                map.getController().animateTo(center);
+            else
+                map.getController().setCenter(center);
 
             return true;
         } else return false;

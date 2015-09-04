@@ -11,26 +11,22 @@ import android.widget.TextView;
 
 import com.orhanobut.hawk.Hawk;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.transloc.Route;
+import us.v4lk.transrock.util.StoredRoute;
 import us.v4lk.transrock.util.Util;
 
 /**
  * Adapts route --> layout/route_switch_item.
  */
-public class RouteSwitchAdapter extends ArrayAdapter<Route> {
+public class RouteSwitchAdapter extends ArrayAdapter<StoredRoute> {
 
-    // dynamic list of which routes are selected / deselected
-    // updated by corresponding view's switch being flipped on / off
-    Set<Route> selectedRoutes = new HashSet<>();
-    Set<Route> deselectedRoutes = new HashSet<>();
-
-    // stored routes, so we don't have Hawk fetch them from the database every time
-    Set<Route> savedRoutes = Hawk.get(Util.ROUTES_STORAGE_KEY, new HashSet<Route>());
-
+    // map that maps this adapter's data items to its view selection value
+    HashMap<StoredRoute, Boolean> routes;
 
     /**
      * @param context application context
@@ -38,14 +34,33 @@ public class RouteSwitchAdapter extends ArrayAdapter<Route> {
      * @param routes array of routes to return views for
      */
     public RouteSwitchAdapter(Context context, int resource, Route[] routes) {
-        super(context, resource, routes);
+        super(context, resource);
+
+        // for each route passed, check if we have a stored route, and if so add that one
+        HashSet<StoredRoute> storedRoutes = Hawk.get(Util.ROUTES_STORAGE_KEY, new HashSet<StoredRoute>());
+        this.routes = new HashMap<>();
+        for (Route r : routes) {
+            boolean foundStored = false;
+            for (StoredRoute sr : storedRoutes) {
+                if (sr.getRoute().hashCode() == r.hashCode()) {
+                    this.routes.put(sr, true);
+                    foundStored = true;
+                    break;
+                }
+            }
+            if (!foundStored) // otherwise, wrap the network-fetched route and add it
+                this.routes.put(new StoredRoute(r, false), false);
+        }
+
+        this.clear();
+        this.addAll(this.routes.keySet());
     }
 
     @Override
     public View getView(final int position, View convertView, ViewGroup parent) {
         // capture inflater and item
         LayoutInflater inflater = LayoutInflater.from(getContext());
-        final Route r = getItem(position);
+        final StoredRoute sr = getItem(position);
 
         // if this view is not a recycled view, inflate a new one
         if (convertView == null)
@@ -55,36 +70,27 @@ public class RouteSwitchAdapter extends ArrayAdapter<Route> {
             TextView name = (TextView) convertView.findViewById(R.id.route_switch_item_text);
             name.setText(null);
 
+            // clear listener from switch so we can set initial value without initiating random shit
             Switch s = (Switch) convertView.findViewById(R.id.route_switch_item_switch);
             s.setOnCheckedChangeListener(null);
         }
 
         // grab the text view and set it to the item name
-        TextView name = (TextView) convertView.findViewById(R.id.route_switch_item_text);
-        name.setText(r.long_name);
+        TextView longName = (TextView) convertView.findViewById(R.id.route_switch_item_text);
+        longName.setText(sr.getRoute().long_name);
 
         // set the switch's checked value to checked if the route has been selected, or if it
         // is in storage and has not been manually deselected by the user
-        Switch s = (Switch) convertView.findViewById(R.id.route_switch_item_switch);
-        boolean selected = selectedRoutes.contains(r);
-        boolean deselected = deselectedRoutes.contains(r);
-        boolean stored = savedRoutes.contains(r);
-        boolean checked = selected || (stored && !deselected);
-        s.setChecked(checked);
+        final Switch routeSwitch = (Switch) convertView.findViewById(R.id.route_switch_item_switch);
+        routeSwitch.setChecked(routes.get(sr));
 
         // if switch clicked to positive, add item to selected list & remove from deselected
         // if switched to negative, remove from selected list & add to deselected
-        s.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        routeSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    selectedRoutes.add(r);
-                    deselectedRoutes.remove(r);
-                }
-                else {
-                    selectedRoutes.remove(r);
-                    deselectedRoutes.add(r);
-                }
+                // update the map
+                routes.put(sr, isChecked);
             }
         });
 
@@ -93,8 +99,7 @@ public class RouteSwitchAdapter extends ArrayAdapter<Route> {
         convertView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Switch s = (Switch) v.findViewById(R.id.route_switch_item_switch);
-                s.toggle();
+                routeSwitch.toggle();
             }
         });
 
@@ -102,18 +107,10 @@ public class RouteSwitchAdapter extends ArrayAdapter<Route> {
     }
 
     /**
-     * Gets the routes that the user has manually selected in this list.
-     * @return user's manually selected routes
+     * @return the map of routes to selection value
      */
-    public Route[] getSelected() {
-        return selectedRoutes.toArray(new Route[selectedRoutes.size()]);
-    }
-    /**
-     * Gets the routes that the user has manually deselected in this list.
-     * @return user's manually deselected routes
-     */
-    public Route[] getDeselected() {
-        return deselectedRoutes.toArray(new Route[deselectedRoutes.size()]);
+    public HashMap<StoredRoute, Boolean> getResults() {
+        return routes;
     }
 
 }

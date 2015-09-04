@@ -11,45 +11,41 @@ import android.widget.TextView;
 
 import com.orhanobut.hawk.Hawk;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Set;
 
 import us.v4lk.transrock.R;
-import us.v4lk.transrock.transloc.Route;
-import us.v4lk.transrock.util.StoredRoute;
+import us.v4lk.transrock.util.TransrockRoute;
 import us.v4lk.transrock.util.Util;
 
 /**
- * Adapts route --> layout/route_switch_item.
+ * Adapts StoredRoute --> layout/route_switch_item.
+ * Includes convenience constructor that accepts Route[], and will
+ * transform to
  */
-public class RouteSwitchAdapter extends ArrayAdapter<StoredRoute> {
+public class RouteSwitchAdapter extends ArrayAdapter<TransrockRoute> {
 
-    // map that maps this adapter's data items to its view selection value
-    HashMap<StoredRoute, Boolean> routes;
+    /**
+     * map that maps this adapter's data items to its view selection value
+     */
+    HashMap<TransrockRoute, Boolean> routes;
 
     /**
      * @param context application context
      * @param resource resource id for layout of desired list item
-     * @param routes array of routes to return views for
+     * @param routes collection of routes to return views for
      */
-    public RouteSwitchAdapter(Context context, int resource, Route[] routes) {
+    public RouteSwitchAdapter(Context context, int resource, Collection<? extends TransrockRoute> routes) {
         super(context, resource);
 
-        // for each route passed, check if we have a stored route, and if so add that one
-        HashSet<StoredRoute> storedRoutes = Hawk.get(Util.ROUTES_STORAGE_KEY, new HashSet<StoredRoute>());
         this.routes = new HashMap<>();
-        for (Route r : routes) {
-            boolean foundStored = false;
-            for (StoredRoute sr : storedRoutes) {
-                if (sr.getRoute().hashCode() == r.hashCode()) {
-                    this.routes.put(sr, true);
-                    foundStored = true;
-                    break;
-                }
-            }
-            if (!foundStored) // otherwise, wrap the network-fetched route and add it
-                this.routes.put(new StoredRoute(r, false), false);
+        HashSet<TransrockRoute> storedRoutes = Hawk.get(Util.ROUTES_STORAGE_KEY, new HashSet<TransrockRoute>());
+
+        // for each route passed, check if it's stored and set the appropriate bool in the map
+        for (TransrockRoute sr : routes) {
+            boolean alreadyStored = storedRoutes.contains(sr);
+            this.routes.put(sr, alreadyStored);
         }
 
         this.clear();
@@ -60,7 +56,7 @@ public class RouteSwitchAdapter extends ArrayAdapter<StoredRoute> {
     public View getView(final int position, View convertView, ViewGroup parent) {
         // capture inflater and item
         LayoutInflater inflater = LayoutInflater.from(getContext());
-        final StoredRoute sr = getItem(position);
+        final TransrockRoute sr = getItem(position);
 
         // if this view is not a recycled view, inflate a new one
         if (convertView == null)
@@ -109,7 +105,7 @@ public class RouteSwitchAdapter extends ArrayAdapter<StoredRoute> {
     /**
      * @return the map of routes to selection value
      */
-    public HashMap<StoredRoute, Boolean> getResults() {
+    public HashMap<TransrockRoute, Boolean> getResults() {
         return routes;
     }
 

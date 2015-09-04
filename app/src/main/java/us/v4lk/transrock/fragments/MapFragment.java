@@ -19,10 +19,13 @@ import us.v4lk.transrock.R;
 import us.v4lk.transrock.util.LocationManager;
 
 /**
- * Map fragment.
+ * Map fragment. Draws routes and lets the user move around the map.
  */
 public class MapFragment extends Fragment {
 
+    /**
+     * map zoom level
+     */
     final int MAP_ZOOM_LEVEL = 20;
 
     LocationManager locationManager;
@@ -44,15 +47,16 @@ public class MapFragment extends Fragment {
         map.setTileSource(TileSourceFactory.MAPQUESTOSM);
         map.setMultiTouchControls(true);
 
+        // return whatever should be the root of this fragment's view hierarchy
         return root;
     }
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        // location manager
+        // initialize location manager
         locationManager = new LocationManager(getActivity());
-
+        // center map on current location without animating
         centerAndZoomOnLocation(false);
     }
     @Override
@@ -66,6 +70,7 @@ public class MapFragment extends Fragment {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            // if location button selected, animate & zoom to current location
             case R.id.map_menu_center_location:
                 centerAndZoomOnLocation(true);
                 break;

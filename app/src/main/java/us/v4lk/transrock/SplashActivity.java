@@ -14,7 +14,7 @@ import us.v4lk.transrock.transloc.TransLocAPI;
 import us.v4lk.transrock.util.LocationManager;
 
 /**
- * Shows a splash screen and decides which activity should be started next.
+ * Shows a splash screen, loads some resources and starts MainActivity
  */
 public class SplashActivity extends AppCompatActivity {
 
@@ -60,6 +60,7 @@ public class SplashActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(Void aVoid) { // nice one, google.
+            // launch main activity
             Intent intent = new Intent(SplashActivity.this, MainActivity.class);
             startActivity(intent);
         }

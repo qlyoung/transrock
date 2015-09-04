@@ -10,14 +10,15 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
 
 /**
- * Created by qly on 7/25/15.
+ * Wrapper for Play Services Location API. Mostly exists so I don't have
+ * to clutter my activities with API callbacks.
+ * This class will save the last location it was able to get from Google
+ * and return that if it can't get a better location immediately.
  */
 public class LocationManager implements GoogleApiClient.ConnectionCallbacks,
                                         GoogleApiClient.OnConnectionFailedListener {
 
     private GoogleApiClient apiclient;
-    private boolean connected = false;
-
     private static Location latest;
 
     public LocationManager(Context context) {
@@ -35,20 +36,27 @@ public class LocationManager implements GoogleApiClient.ConnectionCallbacks,
     public void onConnectionSuspended(int i) {
         //TODO: i don't even know what goes here
     }
+    /**
+     * Called when the API client establishes a connection and can receive requests.
+     * Here, the latest known location is immediately fetched and this class's static
+     * cache is updated with it.
+     * @param bundle
+     */
     @Override
     public void onConnected(Bundle bundle) {
-        connected = true;
         latest = LocationServices.FusedLocationApi.getLastLocation(apiclient);
     }
+    /**
+     * Called when the API client disconnects.
+     * @param connectionResult
+     */
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
-        connected = false;
     }
 
     /**
      * Asks Google for latest location. Will return cached location if Google
      * says our location is null.
-     *
      * @return the latest location, or the cached location if we can't reach Google.
      */
     public Location getLocation() {
@@ -58,7 +66,10 @@ public class LocationManager implements GoogleApiClient.ConnectionCallbacks,
 
         return latest;
     }
+    /**
+     * @return whether or not the API client is currently connected
+     */
     public boolean isConnected() {
-        return connected;
+        return apiclient.isConnected();
     }
 }

@@ -14,47 +14,50 @@ import android.widget.TextView;
 import com.pkmmte.view.CircularImageView;
 
 import us.v4lk.transrock.R;
-import us.v4lk.transrock.util.StoredRoute;
+import us.v4lk.transrock.util.TransrockRoute;
 import us.v4lk.transrock.util.Util;
 
 /**
- * Adapts StoredRoute --> layout/route_list_item.
+ * Adapts TransrockRoute --> layout/route_list_item.
  */
-public class StoredRouteAdapter extends ArrayAdapter<StoredRoute> {
+public class TransrockRouteAdapter extends ArrayAdapter<TransrockRoute> {
 
     /**
      * @param context application context.
-     * @param resource resource id for layout of desired list item
+     * @param resource resource id for list item layout
      */
-    public StoredRouteAdapter(Context context, int resource) {
+    public TransrockRouteAdapter(Context context, int resource) {
         super(context, resource);
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
+        // capture layout inflater
         LayoutInflater inflater = LayoutInflater.from(getContext());
-        final StoredRoute storedRoute = getItem(position);
+        final TransrockRoute transrockRoute = getItem(position);
 
+        // inflate new view if necessary
         if (convertView == null)
             convertView = inflater.inflate(R.layout.route_list_item, null);
         else {
-            // clear listener from switch so we can set initial value without initiating random shit
+            // clear listener from switch so we can use setChecked to set initial check state
+            // without initiating random shit
             Switch routeActivationSwitch = (Switch) convertView.findViewById(R.id.route_list_item_switch);
             routeActivationSwitch.setOnCheckedChangeListener(null);
         }
 
         // badge
         CircularImageView badge = (CircularImageView) convertView.findViewById(R.id.route_list_item_badge);
-        Bitmap color = Util.colorToBitmap(Color.parseColor("#" + storedRoute.getRoute().color), 50, 50);
+        Bitmap color = Util.colorToBitmap(Color.parseColor("#" + transrockRoute.getRoute().color), 50, 50);
         badge.setImageBitmap(color);
 
         // long name
         TextView longName = (TextView) convertView.findViewById(R.id.route_list_item_longname);
-        longName.setText(storedRoute.getRoute().long_name);
+        longName.setText(transrockRoute.getRoute().long_name);
 
         // short name if present (hidden otherwise)
         TextView shortName = (TextView) convertView.findViewById(R.id.route_list_item_shortname);
-        String sn = storedRoute.getRoute().short_name;
+        String sn = transrockRoute.getRoute().short_name;
         if (!sn.isEmpty())
             shortName.setText(sn);
         else
@@ -62,11 +65,12 @@ public class StoredRouteAdapter extends ArrayAdapter<StoredRoute> {
 
         // activation switch
         final Switch routeActivationSwitch = (Switch) convertView.findViewById(R.id.route_list_item_switch);
-        routeActivationSwitch.setChecked(storedRoute.isActive());
+        routeActivationSwitch.setChecked(transrockRoute.isActive());
         routeActivationSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                storedRoute.setActive(isChecked);
+                // change activation state
+                transrockRoute.setActive(isChecked);
             }
         });
 
@@ -79,9 +83,18 @@ public class StoredRouteAdapter extends ArrayAdapter<StoredRoute> {
             }
         });
 
-        convertView.setTag(storedRoute);
-
         return convertView;
+    }
+
+    /**
+     * @return all routes backing this adapter, ordered by position
+     */
+    public TransrockRoute[] getAll() {
+        TransrockRoute[] all = new TransrockRoute[this.getCount()];
+        for (int i = 0; i < this.getCount(); i++)
+            all[i] = this.getItem(i);
+
+        return all;
     }
 
 }

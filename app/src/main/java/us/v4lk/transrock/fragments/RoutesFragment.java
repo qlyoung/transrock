@@ -19,9 +19,8 @@ import java.util.Set;
 
 import us.v4lk.transrock.AddRoutesActivity;
 import us.v4lk.transrock.R;
-import us.v4lk.transrock.adapters.StoredRouteAdapter;
-import us.v4lk.transrock.transloc.Route;
-import us.v4lk.transrock.util.StoredRoute;
+import us.v4lk.transrock.adapters.TransrockRouteAdapter;
+import us.v4lk.transrock.util.TransrockRoute;
 import us.v4lk.transrock.util.Util;
 
 /**
@@ -29,6 +28,9 @@ import us.v4lk.transrock.util.Util;
  */
 public class RoutesFragment extends Fragment {
 
+    /**
+     * ListView holding all route items
+     */
     ListView routeList;
 
     @Override
@@ -46,8 +48,7 @@ public class RoutesFragment extends Fragment {
         routeList = (ListView) root.findViewById(R.id.routelist);
 
         // capture & setup fab
-        FloatingActionButton addRoutesFab =
-                (FloatingActionButton) root.findViewById(R.id.routelist_addroute_fab);
+        FloatingActionButton addRoutesFab = (FloatingActionButton) root.findViewById(R.id.routelist_addroute_fab);
         addRoutesFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -57,14 +58,15 @@ public class RoutesFragment extends Fragment {
             }
         });
 
+        // return whatever should be the root of this fragment's view hierarchy
         return root;
     }
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        // setup empty adapter
-        routeList.setAdapter(new StoredRouteAdapter(getActivity(), R.layout.route_list_item));
+        // set empty adapter; will be filled later in onResume()
+        routeList.setAdapter(new TransrockRouteAdapter(getActivity(), R.layout.route_list_item));
     }
     @Override
     public void onPause() {
@@ -83,14 +85,14 @@ public class RoutesFragment extends Fragment {
     }
 
     /**
-     * Loads in routes from persistence
+     * Loads in routes to routelist from persistence
      */
     private void updateRoutelist() {
         // get routes from db
-        Set<StoredRoute> routes = Hawk.get(Util.ROUTES_STORAGE_KEY, new HashSet<StoredRoute>());
+        Set<TransrockRoute> routes = Hawk.get(Util.ROUTES_STORAGE_KEY, new HashSet<TransrockRoute>());
 
         // clear adapter
-        StoredRouteAdapter adapter = (StoredRouteAdapter) routeList.getAdapter();
+        TransrockRouteAdapter adapter = (TransrockRouteAdapter) routeList.getAdapter();
         adapter.clear();
 
         // populate list with stored routes, or hide list if there are none
@@ -111,9 +113,10 @@ public class RoutesFragment extends Fragment {
      * Writes routes to persistence
      */
     private void persistRoutelist() {
-        Set<StoredRoute> modifiedRoutes = new HashSet<>(routeList.getAdapter().getCount());
-        for (int i = 0; i < routeList.getAdapter().getCount(); i++)
-            modifiedRoutes.add((StoredRoute) routeList.getAdapter().getItem(i));
+        TransrockRoute[] all = ((TransrockRouteAdapter) routeList.getAdapter()).getAll();
+        Set<TransrockRoute> modifiedRoutes = new HashSet<>(all.length);
+        for (int i = 0; i < all.length; i++)
+            modifiedRoutes.add(all[i]);
 
         Hawk.put(Util.ROUTES_STORAGE_KEY, modifiedRoutes);
     }

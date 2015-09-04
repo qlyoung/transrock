@@ -22,13 +22,15 @@ import us.v4lk.transrock.fragments.RoutesFragment;
 import us.v4lk.transrock.util.Util;
 
 /**
- * Main activity. Switches content fragments using a
- * nav drawer.
+ * Main activity. Switches between content fragments using a nav drawer.
  */
 public class MainActivity extends AppCompatActivity {
 
+    /** the nav drawer */
     Drawer drawer;
+    /** the application toolbar **/
     Toolbar toolbar;
+    /** the current fragment being displayed **/
     Fragment current;
 
     @Override
@@ -75,6 +77,11 @@ public class MainActivity extends AppCompatActivity {
         setContentFragment(new MapFragment(), R.string.title_activity_map);
     }
 
+    /**
+     * Convenience method that switches the current fragment for the given fragment.
+     * @param content the fragment to switch to
+     * @param newActivityTitle the new title of the activity in the toolbar
+     */
     private void setContentFragment(Fragment content, int newActivityTitle) {
         FragmentManager manager = getFragmentManager();
         FragmentTransaction transaction = manager.beginTransaction();

@@ -34,7 +34,7 @@ import us.v4lk.transrock.transloc.Agency;
 import us.v4lk.transrock.transloc.Route;
 import us.v4lk.transrock.transloc.TransLocAPI;
 import us.v4lk.transrock.util.LocationManager;
-import us.v4lk.transrock.util.StoredRoute;
+import us.v4lk.transrock.util.TransrockRoute;
 import us.v4lk.transrock.util.Util;
 
 /**
@@ -43,9 +43,13 @@ import us.v4lk.transrock.util.Util;
  */
 public class AddRoutesActivity extends AppCompatActivity {
 
+    /** Root layout */
     BottomSheetLayout root;
+    /** List of agencies */
     StickyListHeadersListView agencyList;
+    /** body and toolbar progress bars */
     ProgressBar bodyProgressBar, toolbarProgressBar;
+    /** location manager */
     LocationManager locationManager;
 
     @Override
@@ -87,6 +91,9 @@ public class AddRoutesActivity extends AppCompatActivity {
     }
     @Override
     protected void onStart() {
+        /**
+         * AsyncTask which fetches all supported TransLoc agencies and populates agencyList
+         */
         AsyncTask<Void, Integer, Agency[]> fetchAgencies = new AsyncTask<Void, Integer, Agency[]>() {
 
             int numActive, numLocal;
@@ -97,14 +104,8 @@ public class AddRoutesActivity extends AppCompatActivity {
                 Location loc = locationManager.getLocation();
 
                 // get agency ids of stored routes
-                Set<StoredRoute> storedRoutes = Hawk.get(Util.ROUTES_STORAGE_KEY, new HashSet<StoredRoute>());
-
-                // convert StoredRoutes to Routes
-                Route[] routes = new Route[storedRoutes.size()];
-                int i = 0;
-                for (StoredRoute storedRoute : storedRoutes)
-                    routes[i++] = storedRoute.getRoute();
-                int[] storedAgencyIds = Util.getAgencyIds(routes);
+                Set<TransrockRoute> storedRoutes = Hawk.get(Util.ROUTES_STORAGE_KEY, new HashSet<TransrockRoute>());
+                int[] storedAgencyIds = Util.getAgencyIds(storedRoutes.toArray(new TransrockRoute[storedRoutes.size()]));
 
                 Agency[] active = null,
                         local = null,
@@ -178,6 +179,7 @@ public class AddRoutesActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            // capture back button press
             case android.R.id.home:
                 onBackPressed();
                 return true;
@@ -185,6 +187,9 @@ public class AddRoutesActivity extends AppCompatActivity {
                 return super.onOptionsItemSelected(item);
         }
     }
+    /**
+     * Dismiss sheet on back button press if it is showing, otherwise do the normal thing
+     */
     @Override
     public void onBackPressed() {
         if (root.isSheetShowing())
@@ -193,6 +198,12 @@ public class AddRoutesActivity extends AppCompatActivity {
             super.onBackPressed();
     }
 
+    /**
+     * Shows a bottom sheet with the routes for the specified agency.
+     * This overload will create an AsyncTask that fetches the routes and then calls the other
+     * overload to display them.
+     * @param agency the agency whose routes should be displayed in the bottom sheet
+     */
     private void showRouteBottomSheet(Agency agency) {
         // this AsyncTask will fetch the routes and call the other overload when it finishes.
         AsyncTask<Integer, Integer, Route[]> fetchRoutes = new AsyncTask<Integer, Integer, Route[]>() {
@@ -253,6 +264,10 @@ public class AddRoutesActivity extends AppCompatActivity {
         };
         fetchRoutes.execute(agency.agency_id);
     }
+    /**
+     * Shows a bottom sheet with a list of toggleable routes.
+     * @param routes the routes to show
+     */
     private void showRouteBottomSheet(Route[] routes) {
         // if sheet is already showing, do nothing
         if (root.isSheetShowing()) return;
@@ -264,18 +279,23 @@ public class AddRoutesActivity extends AppCompatActivity {
         TextView v = (TextView) bottomSheet.findViewById(R.id.bottomsheet_title);
         v.setText(R.string.routes);
 
+        // convert raw API routes to TransRock routes
+        ArrayList<TransrockRoute> srs = new ArrayList<>(routes.length);
+        for (Route r : routes)
+                srs.add(new TransrockRoute(r));
+
         // capture list & set adapter
         ListView routeList = (ListView) bottomSheet.findViewById(R.id.bottomsheet_list);
         RouteSwitchAdapter adapter = new RouteSwitchAdapter(
                 AddRoutesActivity.this,
                 R.layout.route_switch_item,
-                routes);
+                srs);
         routeList.setAdapter(adapter);
 
         // show bottom sheet
         root.showWithSheetView(bottomSheet);
 
-        // set sheet to call save routes on dismissal
+        // persist route changes on sheet dismissal
         root.getSheetView().addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
             @Override
             public void onViewAttachedToWindow(View v) { }
@@ -285,13 +305,13 @@ public class AddRoutesActivity extends AppCompatActivity {
                 RouteSwitchAdapter adapter = (RouteSwitchAdapter) rl.getAdapter();
 
                 // get list of routes + selection value from adapter
-                HashMap<StoredRoute, Boolean> modifiedRoutes = adapter.getResults();
+                HashMap<TransrockRoute, Boolean> modifiedRoutes = adapter.getResults();
                 // get stored routes
-                Set<StoredRoute> storedRoutes = Hawk.get(Util.ROUTES_STORAGE_KEY, new HashSet<StoredRoute>());
+                Set<TransrockRoute> storedRoutes = Hawk.get(Util.ROUTES_STORAGE_KEY, new HashSet<TransrockRoute>());
                 // remove all of the routes in the list from storage, if they're present
                 storedRoutes.removeAll(modifiedRoutes.keySet());
                 // add back the routes that are selected
-                for (StoredRoute dr : modifiedRoutes.keySet())
+                for (TransrockRoute dr : modifiedRoutes.keySet())
                     if (modifiedRoutes.get(dr))
                         storedRoutes.add(dr);
 
@@ -300,7 +320,10 @@ public class AddRoutesActivity extends AppCompatActivity {
             }
         });
     }
-
+    /**
+     * Shows the body error view with the specified message.
+     * @param errorStringResource
+     */
     private void showError(int errorStringResource) {
         // make sure spinner is hidden
         bodyProgressBar.setVisibility(View.GONE);
@@ -310,6 +333,10 @@ public class AddRoutesActivity extends AppCompatActivity {
         emv.setText(errorStringResource);
         emv.setVisibility(View.VISIBLE);
     }
+    /**
+     * Shows a popup with the specified message.
+     * @param errorStringResource
+     */
     private void showPopupError(int errorStringResource) {
         AlertDialog.Builder popup = new AlertDialog.Builder(this);
 

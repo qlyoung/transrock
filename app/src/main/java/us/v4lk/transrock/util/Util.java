@@ -20,6 +20,7 @@ import us.v4lk.transrock.transloc.Route;
  */
 public class Util {
 
+    /* global constants */
     /**
      * Global network timeout.
      */
@@ -29,6 +30,7 @@ public class Util {
      */
     public static final String ROUTES_STORAGE_KEY = "routes";
 
+    /* global utility functions */
     /**
      * Checks to see if we are connected to some form of network.
      * @param c context
@@ -71,6 +73,17 @@ public class Util {
             result[i++] = id;
 
         return result;
+    }
+    /**
+     * Returns a list of the agencies that the specified routes belong to.
+     * @return list of unique integer agency ids
+     */
+    public static int[] getAgencyIds(TransrockRoute[] routes) {
+        Route[] rts = new Route[routes.length];
+        for (int i = 0; i < rts.length; i++)
+            rts[i] = routes[i].getRoute();
+
+        return getAgencyIds(rts);
     }
     /**
      * Converts a color to a bitmap of given size.

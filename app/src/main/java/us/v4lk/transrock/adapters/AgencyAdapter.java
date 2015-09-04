@@ -20,7 +20,13 @@ import us.v4lk.transrock.util.Util;
  */
 public class AgencyAdapter extends ArrayAdapter<Agency> implements StickyListHeadersAdapter {
 
+    /**
+     * Separate lists for separate sections
+     */
     ArrayList<Agency> active, local;
+    /**
+     * Header id's for StickyListHeaders
+     */
     int HEADER_ID_ACTIVE = 0,
         HEADER_ID_LOCAL = 1,
         HEADER_ID_ALL = 2;

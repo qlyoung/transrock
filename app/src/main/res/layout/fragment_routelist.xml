@@ -24,7 +24,6 @@
         android:layout_height="match_parent"
         android:paddingStart="@dimen/spec_activity_horizontal_margin"
         android:paddingEnd="@dimen/spec_activity_horizontal_margin"
-        android:paddingTop="@dimen/navigation_padding_bottom"
         android:divider="@null"/>
 
     <android.support.design.widget.FloatingActionButton

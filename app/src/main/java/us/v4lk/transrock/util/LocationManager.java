@@ -2,8 +2,8 @@ package us.v4lk.transrock.util;
 
 import android.content.Context;
 import android.location.Location;
+import android.location.LocationListener;
 import android.os.Bundle;
-import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -16,7 +16,8 @@ import com.google.android.gms.location.LocationServices;
  * and return that if it can't get a better location immediately.
  */
 public class LocationManager implements GoogleApiClient.ConnectionCallbacks,
-                                        GoogleApiClient.OnConnectionFailedListener {
+                                        GoogleApiClient.OnConnectionFailedListener,
+                                        LocationListener {
 
     private GoogleApiClient apiclient;
     private static Location latest;
@@ -53,6 +54,22 @@ public class LocationManager implements GoogleApiClient.ConnectionCallbacks,
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
     }
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+
+    }
+    @Override
+    public void onLocationChanged(Location location) {
+        latest = location;
+    }
+    @Override
+    public void onProviderDisabled(String provider) {
+
+    }
+    @Override
+    public void onProviderEnabled(String provider) {
+
+    }
 
     /**
      * Asks Google for latest location. Will return cached location if Google
@@ -72,4 +89,6 @@ public class LocationManager implements GoogleApiClient.ConnectionCallbacks,
     public boolean isConnected() {
         return apiclient.isConnected();
     }
+
+
 }

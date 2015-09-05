@@ -1,6 +1,8 @@
 package us.v4lk.transrock.fragments;
 
 import android.app.Fragment;
+import android.graphics.Canvas;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -14,7 +16,11 @@ import android.view.ViewGroup;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.Overlay;
+import org.osmdroid.views.overlay.compass.CompassOverlay;
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
+import us.v4lk.transrock.MapWrap;
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.util.LocationManager;
 
@@ -23,13 +29,12 @@ import us.v4lk.transrock.util.LocationManager;
  */
 public class MapFragment extends Fragment {
 
-    /**
-     * map zoom level
-     */
-    final int MAP_ZOOM_LEVEL = 20;
-
+    /** location manager */
     LocationManager locationManager;
-    MapView map;
+    /** map wrapper */
+    MapWrap mapWrap;
+    /** root view */
+    View root;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -40,12 +45,7 @@ public class MapFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // inflate layout
-        View root = inflater.inflate(R.layout.fragment_map, container, false);
-
-        // capture & setup map
-        map = (MapView) root.findViewById(R.id.map);
-        map.setTileSource(TileSourceFactory.MAPQUESTOSM);
-        map.setMultiTouchControls(true);
+        root = inflater.inflate(R.layout.fragment_map, container, false);
 
         // return whatever should be the root of this fragment's view hierarchy
         return root;
@@ -54,11 +54,25 @@ public class MapFragment extends Fragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
+        // capture & setup map
+        mapWrap = new MapWrap(getActivity(), (MapView) root.findViewById(R.id.map));
+        mapWrap.setScaleBar(true);
+        mapWrap.setLocationMarkerDrawable(getResources().getDrawable(R.drawable.location_marker));
+        mapWrap.setLocationMarkerOn(false);
+
         // initialize location manager
         locationManager = new LocationManager(getActivity());
-        // center map on current location without animating
-        centerAndZoomOnLocation(false);
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        Location l = locationManager.getLocation();
+        mapWrap.centerAndZoomOnLocation(l, false);
+        mapWrap.setLocationMarkerPosition(l);
+    }
+
     @Override
     public void onPause() {
         super.onPause();
@@ -72,30 +86,11 @@ public class MapFragment extends Fragment {
         switch (item.getItemId()) {
             // if location button selected, animate & zoom to current location
             case R.id.map_menu_center_location:
-                centerAndZoomOnLocation(true);
+                mapWrap.centerAndZoomOnLocation(locationManager.getLocation(), true);
                 break;
         }
 
         return true;
     }
 
-    /**
-     * Centers the map on the current location
-     * @param animate whether the map should animate or jump directly
-     * @return false if the location could not be accessed
-     */
-    public boolean centerAndZoomOnLocation(boolean animate) {
-        Location l = locationManager.getLocation();
-
-        if (l != null) {
-            GeoPoint center = new GeoPoint(l.getLatitude(), l.getLongitude());
-            map.getController().setZoom(MAP_ZOOM_LEVEL);
-            if (animate)
-                map.getController().animateTo(center);
-            else
-                map.getController().setCenter(center);
-
-            return true;
-        } else return false;
-    }
 }

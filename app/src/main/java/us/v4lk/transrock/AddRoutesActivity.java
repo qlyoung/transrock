@@ -322,7 +322,7 @@ public class AddRoutesActivity extends AppCompatActivity {
     }
     /**
      * Shows the body error view with the specified message.
-     * @param errorStringResource
+     * @param errorStringResource resource id of string error message
      */
     private void showError(int errorStringResource) {
         // make sure spinner is hidden
@@ -335,7 +335,7 @@ public class AddRoutesActivity extends AppCompatActivity {
     }
     /**
      * Shows a popup with the specified message.
-     * @param errorStringResource
+     * @param errorStringResource resource id of string error message
      */
     private void showPopupError(int errorStringResource) {
         AlertDialog.Builder popup = new AlertDialog.Builder(this);

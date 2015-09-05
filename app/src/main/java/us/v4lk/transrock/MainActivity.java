@@ -32,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
     Toolbar toolbar;
     /** the current fragment being displayed **/
     Fragment current;
+    Fragment map, routelist;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -43,6 +44,10 @@ public class MainActivity extends AppCompatActivity {
         // set toolbar as action bar
         toolbar = (Toolbar) findViewById(R.id.main_toolbar);
         setSupportActionBar(toolbar);
+
+        // make fragments
+        map = new MapFragment();
+        routelist = new RoutesFragment();
 
         // make drawer
         drawer = new DrawerBuilder()
@@ -63,10 +68,10 @@ public class MainActivity extends AppCompatActivity {
                     public boolean onItemClick(AdapterView<?> adapterView, View view, int i, long l, IDrawerItem iDrawerItem) {
                         switch(i) {
                             case 0:
-                                setContentFragment(new MapFragment(), R.string.title_activity_map);
+                                setContentFragment(map, R.string.title_activity_map);
                                 break;
                             case 1:
-                                setContentFragment(new RoutesFragment(), R.string.title_activity_routelist);
+                                setContentFragment(routelist, R.string.title_activity_routelist);
                                 break;
                         }
                         return false;
@@ -91,5 +96,4 @@ public class MainActivity extends AppCompatActivity {
 
         toolbar.setTitle(newActivityTitle);
     }
-
 }

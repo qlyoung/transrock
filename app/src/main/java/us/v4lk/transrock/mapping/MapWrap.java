@@ -1,4 +1,4 @@
-package us.v4lk.transrock;
+package us.v4lk.transrock.mapping;
 
 import android.content.Context;
 import android.content.res.Resources;

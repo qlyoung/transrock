@@ -1,4 +1,4 @@
-package us.v4lk.transrock.util;
+package us.v4lk.transrock.mapping;
 
 import android.content.Context;
 import android.location.Location;

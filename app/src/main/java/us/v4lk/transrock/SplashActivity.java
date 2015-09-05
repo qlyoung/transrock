@@ -11,7 +11,7 @@ import com.orhanobut.hawk.HawkBuilder;
 import com.orhanobut.hawk.LogLevel;
 
 import us.v4lk.transrock.transloc.TransLocAPI;
-import us.v4lk.transrock.util.LocationManager;
+import us.v4lk.transrock.mapping.LocationManager;
 
 /**
  * Shows a splash screen, loads some resources and starts MainActivity

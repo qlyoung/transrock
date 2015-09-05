@@ -87,7 +87,7 @@ public class TransrockRouteAdapter extends ArrayAdapter<TransrockRoute> {
     }
 
     /**
-     * @return all routes backing this adapter, ordered by position
+     * @return all routesBefore backing this adapter, ordered by position
      */
     public TransrockRoute[] getAll() {
         TransrockRoute[] all = new TransrockRoute[this.getCount()];

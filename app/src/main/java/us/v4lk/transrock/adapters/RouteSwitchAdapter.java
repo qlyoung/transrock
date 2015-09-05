@@ -29,27 +29,31 @@ public class RouteSwitchAdapter extends ArrayAdapter<TransrockRoute> {
     /**
      * map that maps this adapter's data items to its view selection value
      */
-    HashMap<TransrockRoute, Boolean> routes;
+    HashMap<TransrockRoute, Boolean> routesBefore;
+    HashMap<TransrockRoute, Boolean> deltas;
 
     /**
      * @param context application context
      * @param resource resource id for layout of desired list item
-     * @param routes collection of routes to return views for
+     * @param routes collection of routesBefore to return views for
      */
     public RouteSwitchAdapter(Context context, int resource, Collection<? extends TransrockRoute> routes) {
         super(context, resource);
 
-        this.routes = new HashMap<>();
+        // make this hashmap a snapshot of the state of routes at the beginning of the interaction
+        this.routesBefore = new HashMap<>();
         HashSet<TransrockRoute> storedRoutes = Hawk.get(Util.ROUTES_STORAGE_KEY, new HashSet<TransrockRoute>());
-
         // for each route passed, check if it's stored and set the appropriate bool in the map
         for (TransrockRoute sr : routes) {
             boolean alreadyStored = storedRoutes.contains(sr);
-            this.routes.put(sr, alreadyStored);
+            this.routesBefore.put(sr, alreadyStored);
         }
 
+        // initialize list of deltas
+        deltas = new HashMap<>();
+
         this.clear();
-        this.addAll(this.routes.keySet());
+        this.addAll(this.routesBefore.keySet());
     }
 
     @Override
@@ -75,10 +79,11 @@ public class RouteSwitchAdapter extends ArrayAdapter<TransrockRoute> {
         TextView longName = (TextView) convertView.findViewById(R.id.route_switch_item_text);
         longName.setText(sr.getRoute().long_name);
 
-        // set the switch's checked value to checked if the route has been selected, or if it
-        // is in storage and has not been manually deselected by the user
+        // set the switch's checked value
         final Switch routeSwitch = (Switch) convertView.findViewById(R.id.route_switch_item_switch);
-        routeSwitch.setChecked(routes.get(sr));
+        // if the route selection status has been modified, use the new value; otherwise use old
+        boolean checked = deltas.containsKey(sr) ? deltas.get(sr) : routesBefore.get(sr);
+        routeSwitch.setChecked(checked);
 
         // if switch clicked to positive, add item to selected list & remove from deselected
         // if switched to negative, remove from selected list & add to deselected
@@ -86,7 +91,10 @@ public class RouteSwitchAdapter extends ArrayAdapter<TransrockRoute> {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 // update the map
-                routes.put(sr, isChecked);
+                if (routesBefore.get(sr) == isChecked && deltas.containsKey(sr))
+                    deltas.remove(sr);
+                else
+                    deltas.put(sr, isChecked);
             }
         });
 
@@ -103,10 +111,10 @@ public class RouteSwitchAdapter extends ArrayAdapter<TransrockRoute> {
     }
 
     /**
-     * @return the map of routes to selection value
+     * @return all routes whose selection status have been changed from their original value
      */
-    public HashMap<TransrockRoute, Boolean> getResults() {
-        return routes;
+    public HashMap<TransrockRoute, Boolean> getDeltas() {
+        return deltas;
     }
 
 }

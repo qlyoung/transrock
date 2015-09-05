@@ -33,7 +33,7 @@ import us.v4lk.transrock.adapters.RouteSwitchAdapter;
 import us.v4lk.transrock.transloc.Agency;
 import us.v4lk.transrock.transloc.Route;
 import us.v4lk.transrock.transloc.TransLocAPI;
-import us.v4lk.transrock.util.LocationManager;
+import us.v4lk.transrock.mapping.LocationManager;
 import us.v4lk.transrock.util.TransrockRoute;
 import us.v4lk.transrock.util.Util;
 
@@ -304,16 +304,18 @@ public class AddRoutesActivity extends AppCompatActivity {
                 ListView rl = (ListView) v.findViewById(R.id.bottomsheet_list);
                 RouteSwitchAdapter adapter = (RouteSwitchAdapter) rl.getAdapter();
 
-                // get list of routes + selection value from adapter
-                HashMap<TransrockRoute, Boolean> modifiedRoutes = adapter.getResults();
-                // get stored routes
+                // get modified routes from adapter
                 Set<TransrockRoute> storedRoutes = Hawk.get(Util.ROUTES_STORAGE_KEY, new HashSet<TransrockRoute>());
-                // remove all of the routes in the list from storage, if they're present
+                HashMap<TransrockRoute, Boolean> modifiedRoutes = adapter.getDeltas();
+
                 storedRoutes.removeAll(modifiedRoutes.keySet());
-                // add back the routes that are selected
-                for (TransrockRoute dr : modifiedRoutes.keySet())
-                    if (modifiedRoutes.get(dr))
+
+                for (TransrockRoute dr : modifiedRoutes.keySet()) {
+                    if (modifiedRoutes.get(dr)) {
+                        dr.setActive(true);
                         storedRoutes.add(dr);
+                    }
+                }
 
                 // commit this new list to storage
                 Hawk.put(Util.ROUTES_STORAGE_KEY, storedRoutes);

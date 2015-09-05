@@ -2,11 +2,12 @@ package us.v4lk.transrock.util;
 
 import android.content.Context;
 import android.location.Location;
-import android.location.LocationListener;
 import android.os.Bundle;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
 /**
@@ -21,6 +22,7 @@ public class LocationManager implements GoogleApiClient.ConnectionCallbacks,
 
     private GoogleApiClient apiclient;
     private static Location latest;
+    private LocationRequest locationRequest;
 
     public LocationManager(Context context) {
         apiclient = new GoogleApiClient.Builder(context)
@@ -28,6 +30,11 @@ public class LocationManager implements GoogleApiClient.ConnectionCallbacks,
                         .addOnConnectionFailedListener(this)
                         .addApi(LocationServices.API)
                         .build();
+
+        locationRequest = new LocationRequest();
+        locationRequest.setInterval(5000)
+                        .setFastestInterval(1000)
+                        .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
         apiclient.connect();
     }
@@ -37,40 +44,19 @@ public class LocationManager implements GoogleApiClient.ConnectionCallbacks,
     public void onConnectionSuspended(int i) {
         //TODO: i don't even know what goes here
     }
-    /**
-     * Called when the API client establishes a connection and can receive requests.
-     * Here, the latest known location is immediately fetched and this class's static
-     * cache is updated with it.
-     * @param bundle
-     */
     @Override
     public void onConnected(Bundle bundle) {
+        LocationServices.FusedLocationApi.requestLocationUpdates(apiclient, locationRequest, this);
         latest = LocationServices.FusedLocationApi.getLastLocation(apiclient);
     }
-    /**
-     * Called when the API client disconnects.
-     * @param connectionResult
-     */
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
-    }
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-
+        LocationServices.FusedLocationApi.removeLocationUpdates(apiclient, this);
     }
     @Override
     public void onLocationChanged(Location location) {
         latest = location;
     }
-    @Override
-    public void onProviderDisabled(String provider) {
-
-    }
-    @Override
-    public void onProviderEnabled(String provider) {
-
-    }
-
     /**
      * Asks Google for latest location. Will return cached location if Google
      * says our location is null.
@@ -83,12 +69,5 @@ public class LocationManager implements GoogleApiClient.ConnectionCallbacks,
 
         return latest;
     }
-    /**
-     * @return whether or not the API client is currently connected
-     */
-    public boolean isConnected() {
-        return apiclient.isConnected();
-    }
-
 
 }

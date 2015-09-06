@@ -37,6 +37,8 @@ public class TransLocAPI {
         private static LinkedHashMap<String, Stop> stopCache = new LinkedHashMap<>();
         // cache of routes <agency_id, routes>
         private static LinkedHashMap<Integer, Route[]> routeCache = new LinkedHashMap<>();
+        // cache of segments
+        private static LinkedHashMap<Integer, SegmentGroup> segmentCache = new LinkedHashMap<>();
 
         /**
          * Caches agencies, overwriting any previous entries for the same data.
@@ -117,13 +119,18 @@ public class TransLocAPI {
 
     }
 
+    public static String
+            AGENCY_PATH = "/agencies.json",
+            ROUTE_PATH = "/routes.json",
+            STOP_PATH = "/stops.json",
+            SEGMENT_PATH = "/segments.json";
+
+
     /**
-     * Get specified agencies. If no agency id's are specified,
-     * all agencies will be returned.
-     * This method will attempt to read agencies from local cache. If the cache
-     * is empty, it will sidetrack and cache all agencies. Therefore this
-     * method should be called on application startup to accelerate performance
-     * later on.
+     * Get specified agencies. If no agency id's are specified, all agencies will be returned.
+     * This method will attempt to read agencies from local cache. If the cache is empty, it
+     * will sidetrack and cache all agencies. Therefore this method should be called on
+     * application startup to accelerate performance later on.
      * @param ids agency ids to retrieve
      * @return the specified agencies, or all if none were specified
      */
@@ -131,7 +138,7 @@ public class TransLocAPI {
             throws NetworkErrorException, SocketTimeoutException, JSONException {
         // if cache size == 0, cache all agencies
         if (Cache.getAgencies().size() == 0) {
-            JSONObject response = callApi("/agencies.json");
+            JSONObject response = callApi(AGENCY_PATH);
 
             try {
                 JSONArray data = response.getJSONArray("data");
@@ -146,8 +153,8 @@ public class TransLocAPI {
             }
         }
 
-        /* since the cache holds either all or no agencies, we can assume the cache hit rate
-         * will be 100% and just default to cached values */
+        // since the cache holds either all or no agencies, we can assume the cache hit rate
+        // will be 100% and just default to cached values
         LinkedHashMap<Integer, Agency> cachedAgencies = Cache.getAgencies(ids);
 
         if (ids.length == 0)
@@ -214,7 +221,8 @@ public class TransLocAPI {
 
         // build request parameter
         StringBuilder builder = new StringBuilder();
-        builder.append("/routes.json?agencies=");
+        builder.append(ROUTE_PATH);
+        builder.append("?agencies=");
         for (int i : ids)
             builder.append(i).append(',');
         builder.deleteCharAt(builder.length() - 1); // delete trailing comma
@@ -246,6 +254,31 @@ public class TransLocAPI {
 
         return result;
     }
+
+    public static SegmentGroup getSegments(Route r)
+            throws NetworkErrorException, SocketTimeoutException, JSONException {
+        StringBuilder builder = new StringBuilder();
+        builder.append(SEGMENT_PATH);
+        builder.append("?");
+        builder.append("agencies=");
+        builder.append(r.agency_id);
+        builder.append("&");
+        builder.append("routes=");
+        builder.append(r.route_id);
+
+        String request = builder.toString();
+        JSONObject response = callApi(request);
+        SegmentGroup segments = null;
+        try {
+            JSONObject data = response.getJSONObject("data");
+            segments = new SegmentGroup(data);
+        } catch (JSONException e) {
+            Log.e("TransRock", e.getMessage());
+        }
+
+        return segments;
+    }
+
     /**
      * Get a list of stops served by a given agency.
      * @param ids The id's of the agencies whose stops to get
@@ -255,9 +288,12 @@ public class TransLocAPI {
         throws NetworkErrorException, SocketTimeoutException, JSONException {
         // build request parameter
         StringBuilder builder = new StringBuilder();
-        builder.append("/stops.json?agencies=");
+        builder.append(STOP_PATH);
+        builder.append("?");
+        builder.append("agencies=");
         for (int i : ids)
             builder.append(i).append(",");
+
         builder.deleteCharAt(builder.length() - 1); // delete trailing comma
         String request = builder.toString();
 
@@ -267,12 +303,11 @@ public class TransLocAPI {
         Stop[] stops = null;
         try {
             JSONArray data = response.getJSONArray("data");
-
             stops = new Stop[data.length()];
             for (int i = 0; i < data.length(); i++)
                 stops[i] = new Stop(data.getJSONObject(i));
 
-        } catch (Exception e) { Log.e("TransRock", e.getMessage()); }
+        } catch (JSONException e) { Log.e("TransRock", e.getMessage()); }
 
         return stops;
     }

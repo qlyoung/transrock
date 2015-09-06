@@ -1,13 +1,13 @@
 package us.v4lk.transrock.fragments;
 
-import android.accounts.NetworkErrorException;
 import android.app.Fragment;
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.location.Location;
-import android.net.Network;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -19,18 +19,19 @@ import android.view.ViewGroup;
 import com.google.android.gms.location.LocationListener;
 import com.orhanobut.hawk.Hawk;
 
-import org.json.JSONException;
+import org.osmdroid.bonuspack.overlays.Polyline;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Overlay;
 
-import java.net.SocketTimeoutException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 
-import us.v4lk.transrock.mapping.MapWrap;
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.mapping.LocationManager;
-import us.v4lk.transrock.transloc.Route;
-import us.v4lk.transrock.transloc.SegmentGroup;
+import us.v4lk.transrock.mapping.MapWrap;
+import us.v4lk.transrock.mapping.Polylines;
 import us.v4lk.transrock.transloc.TransLocAPI;
 import us.v4lk.transrock.util.TransrockRoute;
 import us.v4lk.transrock.util.Util;
@@ -93,11 +94,7 @@ public class MapFragment extends Fragment implements LocationListener {
             mapWrap.setLocationMarkerOn(true);
         }
 
-        // TEST get segments for a random route
-        HashSet<TransrockRoute> savedRoutes = Hawk.get(Util.ROUTES_STORAGE_KEY, new HashSet<TransrockRoute>());
-        AsyncTask fetchSegments = new FetchSegmentsTask();
-        if (savedRoutes.size() > 0)
-            fetchSegments.execute(savedRoutes.iterator().next().getRoute());
+        new AddRouteOverlays().execute();
     }
     @Override
     public void onPause() {
@@ -114,7 +111,7 @@ public class MapFragment extends Fragment implements LocationListener {
             case R.id.map_menu_center_location:
                 // enable follow-me user on location updates && simulate location update
                 followMe = true;
-                onLocationChanged(locationManager.getLocation());
+                mapWrap.centerAndZoomOnPosition(locationManager.getLocation(), true);
                 break;
         }
 
@@ -151,37 +148,42 @@ public class MapFragment extends Fragment implements LocationListener {
             return super.onDown(e, mapView);
         }
     }
-
-    private class FetchSegmentsTask extends AsyncTask<Route, Integer, SegmentGroup> {
+    class AddRouteOverlays extends AsyncTask<TransrockRoute, Integer, Overlay[]> {
         @Override
-        protected SegmentGroup doInBackground(Route[] params) {
-            SegmentGroup segmentGroup = null;
+        protected Overlay[] doInBackground(TransrockRoute... params) {
+            // get routes from storage
+            HashSet<TransrockRoute> storedRoutes = Hawk.get(Util.ROUTES_STORAGE_KEY);
+            // get just the active ones
+            ArrayList<TransrockRoute> activeRoutes = new ArrayList<>();
+            for (TransrockRoute r : storedRoutes)
+                if (r.isActive())
+                    activeRoutes.add(r);
 
-            try { segmentGroup = TransLocAPI.getSegments((Route) params[0]); }
-            catch (SocketTimeoutException e) {
-                publishProgress(R.string.error_network_timeout);
-                this.cancel(true);
-            }
-            catch (NetworkErrorException e) {
-                publishProgress(R.string.error_network_unknown);
-                this.cancel(true);
-            }
-            catch (JSONException e) {
-                publishProgress(R.string.error_bad_parse);
-                this.cancel(true);
-            }
+            // flat list of all Polyline overlays for all routes
+            ArrayList<Overlay> overlays = new ArrayList<>();
 
-            return segmentGroup;
+            for (TransrockRoute route : activeRoutes) {
+                try {
+                    Collection<String> segments = TransLocAPI.getSegments(route.getRoute()).values();
+                    Polyline[] result = Polylines.encodedPolylineToOverlay(segments, getActivity());
+                    for (Polyline p : result) {
+                        int color = Color.parseColor("#" + route.getRoute().color);
+                        p.setColor(color);
+                        overlays.add(p);
+                    }
+                } catch (Exception e) {
+                    Log.e("TransRock", e.getMessage());
+                }
+            }
+            return overlays.toArray(new Overlay[overlays.size()]);
         }
 
         @Override
-        protected void onProgressUpdate(Integer[] values) {
-            super.onProgressUpdate(values);
-        }
+        protected void onPostExecute(Overlay[] overlays) {
+            for (Overlay l : overlays)
+                mapWrap.addOverlay(l);
 
-        @Override
-        protected void onPostExecute(SegmentGroup segmentGroup) {
-            super.onPostExecute(segmentGroup);
+            super.onPostExecute(overlays);
         }
     }
 }

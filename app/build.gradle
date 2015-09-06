@@ -26,6 +26,11 @@ dependencies {
     // osmdroid + deps
     compile 'org.osmdroid:osmdroid-android:4.3'
     compile 'org.slf4j:slf4j-simple:1.6.1'
+    // osmdroid bonus pack + dependencies
+    compile(name:'osmbonuspack_v5.3', ext:'aar')
+    compile "com.android.support:support-v4:22.2.0"
+    compile 'org.apache.commons:commons-lang3:3.3.2'
+    compile 'com.google.code.gson:gson:2.3'
     // CircularImageView
     compile 'com.pkmmte.view:circularimageview:1.1'
     // BottomSheetLayout

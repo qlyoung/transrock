@@ -29,6 +29,7 @@ public class RoutesFragment extends Fragment {
     /** ListView holding all route items */
     ListView routeList;
 
+    /* lifecycle */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,16 +66,15 @@ public class RoutesFragment extends Fragment {
         routeList.setAdapter(new TransrockRouteAdapter(getActivity(), R.layout.route_list_item));
     }
     @Override
-    public void onPause() {
-        super.onPause();
-        persistRoutelist();
-    }
-    @Override
     public void onResume() {
         super.onResume();
         updateRoutelist();
     }
-
+    @Override
+    public void onPause() {
+        super.onPause();
+        persistRoutelist();
+    }
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.menu_routelist, menu);
@@ -104,7 +104,6 @@ public class RoutesFragment extends Fragment {
 
         adapter.notifyDataSetChanged();
     }
-
     /**
      * Writes routes to persistence
      */

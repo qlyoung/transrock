@@ -43,8 +43,6 @@ public class MapWrap {
     final ItemizedIconOverlay markersOverlay;
     /** scale bar overlay */
     final ScaleBarOverlay scaleBarOverlay;
-    /** whether to center the map each time the location marker is placed */
-    boolean tracking = true;
 
     /**
      * @param c context
@@ -53,7 +51,7 @@ public class MapWrap {
     public MapWrap(Context c, MapView mapView) {
         this(c, mapView, 20);
     }
-    public MapWrap(Context c, MapView mapView, int initialZoomLevel) {
+    public MapWrap(Context c, MapView mapView, int defaultZoomLevel) {
         // context & map
         context = c;
         map = mapView;
@@ -74,7 +72,7 @@ public class MapWrap {
         map.getOverlays().add(markersOverlay);
         map.getOverlays().add(scaleBarOverlay);
 
-        MAP_ZOOM_LEVEL = initialZoomLevel;
+        MAP_ZOOM_LEVEL = defaultZoomLevel;
     }
 
     public static GeoPoint toGeoPoint(Location l) {
@@ -114,9 +112,6 @@ public class MapWrap {
     public void setLocationMarkerPosition(Location l) {
         setLocationMarkerPosition(toGeoPoint(l));
     }
-    public void setTracking(boolean on) {
-        tracking = on;
-    }
     public void setLocationMarkerDrawable(Drawable d) {
         locationMarkerDrawable = d;
         locationMarker.setMarker(locationMarkerDrawable);
@@ -149,6 +144,14 @@ public class MapWrap {
     public void removeMapListener() {
         map.setMapListener(null);
     }
+    public void addOverlay(Overlay overlay) {
+        map.getOverlays().add(overlay);
+        map.invalidate();
+    }
+    public void removeOverlay(Overlay overlay){
+        map.getOverlays().remove(overlay);
+        map.invalidate();
+    }
     public MapView getMapView() {
         return map;
     }
@@ -162,6 +165,5 @@ public class MapWrap {
     private OverlayItem makeMarker(GeoPoint p, Drawable markerDrawable) {
         return makeMarker(p, markerDrawable, "", "");
     }
-
 
 }

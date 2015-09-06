@@ -11,7 +11,6 @@ public class Route {
 
     /* direct route data from json */
     enum Direction { FORWARD, BACKWARD }
-
     class Segment {
         public final String id;
         public final Direction direction;
@@ -79,7 +78,6 @@ public class Route {
         return route_id.equals(route.route_id);
 
     }
-
     @Override
     public int hashCode() {
         return route_id.hashCode();

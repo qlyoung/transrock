@@ -14,6 +14,7 @@ import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 
 import us.v4lk.transrock.util.Util;
@@ -26,11 +27,11 @@ public class TransLocAPI {
 
     /**
      * TransLocAPI cache
-     * >caching in memory
+     * TODO: make this an on-disk cache and not a memory cache
+     * TODO: integrate transloc's rate limiting into cache invalidation rules
+     * TODO: implement segment cache
      */
     static class Cache {
-        //TODO: integrate transloc's rate limiting into cache invalidation rules
-
         // cache of agencies <agency_id, agency>
         private static LinkedHashMap<Integer, Agency> agencyCache = new LinkedHashMap<>();
         // cache of stops <code, stop>
@@ -38,7 +39,7 @@ public class TransLocAPI {
         // cache of routes <agency_id, routes>
         private static LinkedHashMap<Integer, Route[]> routeCache = new LinkedHashMap<>();
         // cache of segments
-        private static LinkedHashMap<Integer, SegmentGroup> segmentCache = new LinkedHashMap<>();
+        private static LinkedHashMap<Integer, String[]> segmentCache = new LinkedHashMap<>();
 
         /**
          * Caches agencies, overwriting any previous entries for the same data.
@@ -125,7 +126,6 @@ public class TransLocAPI {
             STOP_PATH = "/stops.json",
             SEGMENT_PATH = "/segments.json";
 
-
     /**
      * Get specified agencies. If no agency id's are specified, all agencies will be returned.
      * This method will attempt to read agencies from local cache. If the cache is empty, it
@@ -208,7 +208,7 @@ public class TransLocAPI {
     public static Route[] getRoutes(int id)
         throws NetworkErrorException, SocketTimeoutException, JSONException {
         // encapsulate the single param in an array and call the more general overload
-        LinkedHashMap<Integer, Route[]> res = getRoutes(new int[] {id});
+        LinkedHashMap<Integer, Route[]> res = getRoutes(new int[]{id});
         return res.get(id);
     }
     /**
@@ -242,8 +242,9 @@ public class TransLocAPI {
                 JSONArray routelist = data.getJSONArray(String.valueOf(i));
 
                 Route[] routes = new Route[routelist.length()];
-                for (int j = 0; j < routelist.length(); j++)
+                for (int j = 0; j < routelist.length(); j++) {
                     routes[j] = new Route(routelist.getJSONObject(j));
+                }
 
                 result.put(i, routes);
             }
@@ -254,31 +255,49 @@ public class TransLocAPI {
 
         return result;
     }
-
-    public static SegmentGroup getSegments(Route r)
+    /**
+     * Returns a list of encoded polylines representing the segments for the given route
+     * along with their segment id's.
+     * @param r route to fetch segments for
+     * @return list of encoded polylines keyed by id
+     */
+    public static LinkedHashMap<String, String> getSegments(Route r)
+            throws NetworkErrorException, SocketTimeoutException, JSONException {
+        return getSegments(r.route_id, r.agency_id);
+    }
+    /**
+     * Returns a list of encoded polylines representing the segments for the given route
+     * along with their segment id's.
+     * @param routeId id of route to fetch segments for
+     * @param agencyId id of agency the route belongs to
+     * @return list of encoded polylines keyed by id
+     */
+    public static LinkedHashMap<String, String> getSegments(String routeId, int agencyId)
             throws NetworkErrorException, SocketTimeoutException, JSONException {
         StringBuilder builder = new StringBuilder();
         builder.append(SEGMENT_PATH);
         builder.append("?");
         builder.append("agencies=");
-        builder.append(r.agency_id);
+        builder.append(agencyId);
         builder.append("&");
         builder.append("routes=");
-        builder.append(r.route_id);
+        builder.append(routeId);
 
         String request = builder.toString();
         JSONObject response = callApi(request);
-        SegmentGroup segments = null;
+        LinkedHashMap<String, String> segments = new LinkedHashMap<>();
         try {
             JSONObject data = response.getJSONObject("data");
-            segments = new SegmentGroup(data);
+            Iterator<String> keys = data.keys();
+            while (keys.hasNext()) {
+                String key = keys.next();
+                segments.put(key, data.getString(key));
+            }
         } catch (JSONException e) {
             Log.e("TransRock", e.getMessage());
         }
-
         return segments;
     }
-
     /**
      * Get a list of stops served by a given agency.
      * @param ids The id's of the agencies whose stops to get
@@ -311,6 +330,7 @@ public class TransLocAPI {
 
         return stops;
     }
+
     /**
      * Calls the api endpoint with the specified path.
      * @param relativePath the path to call the server with.

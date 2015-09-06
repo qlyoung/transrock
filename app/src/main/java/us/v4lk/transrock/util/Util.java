@@ -30,6 +30,7 @@ public class Util {
      */
     public static final String ROUTES_STORAGE_KEY = "routes";
 
+
     /* global utility functions */
     /**
      * Checks to see if we are connected to some form of network.
@@ -103,5 +104,7 @@ public class Util {
 
         return colorBitmap;
     }
+
+
 
 }

@@ -23,14 +23,10 @@ import us.v4lk.transrock.adapters.TransrockRouteAdapter;
 import us.v4lk.transrock.util.TransrockRoute;
 import us.v4lk.transrock.util.Util;
 
-/**
- * Route list fragment.
- */
+/** Route list fragment. */
 public class RoutesFragment extends Fragment {
 
-    /**
-     * ListView holding all route items
-     */
+    /** ListView holding all route items */
     ListView routeList;
 
     @Override

@@ -10,33 +10,77 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
+import java.util.ArrayList;
+
 /**
  * Wrapper for Play Services Location API. Mostly exists so I don't have
  * to clutter my activities with API callbacks.
- * This class will save the last location it was able to get from Google
- * and return that if it can't get a better location immediately.
+ * This object will update the current location every 5 seconds. Updates
+ * may be subscribed to with addLocationListener(), or accessed via polling
+ * by calling getLocation().
  */
 public class LocationManager implements GoogleApiClient.ConnectionCallbacks,
                                         GoogleApiClient.OnConnectionFailedListener,
                                         LocationListener {
 
+    /** play services api client */
     private GoogleApiClient apiclient;
-    private static Location latest;
+    /** lastKnown location received */
+    private static Location lastKnown;
+    /** defines settings for location updates */
     private LocationRequest locationRequest;
+    /** list of listeners subscribed for location updates */
+    private ArrayList<LocationListener> locationListeners;
 
+    /**
+     * Initializes a new LocationManager and initiates connection to
+     * Play Services API.
+     * @param context the context
+     */
     public LocationManager(Context context) {
+        // setup api client
         apiclient = new GoogleApiClient.Builder(context)
                         .addConnectionCallbacks(this)
                         .addOnConnectionFailedListener(this)
                         .addApi(LocationServices.API)
                         .build();
 
+        // define some settings for location updates
         locationRequest = new LocationRequest();
         locationRequest.setInterval(5000)
-                        .setFastestInterval(1000)
-                        .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+                       .setFastestInterval(1000)
+                       .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+        // initialize list of listeners, and add self
+        locationListeners = new ArrayList<>();
+        addLocationListener(this);
 
         apiclient.connect();
+    }
+
+    /* listener stuff */
+    /**
+     * Adds a listener that will receive callbacks on location updates
+     * @param listener listener that should receive callbacks
+     */
+    public void addLocationListener(LocationListener listener) {
+        locationListeners.add(listener);
+        // if onConnected() has already been called, hook the listener up here
+        if (apiclient.isConnected())
+            LocationServices.FusedLocationApi.requestLocationUpdates(apiclient, locationRequest, listener);
+    }
+    /**
+     * Removes a listener so that it no longer receives location updates
+     * @param listener listener that should be removed
+     */
+    public void removeLocationListener(LocationListener listener) {
+        locationListeners.remove(listener);
+    }
+    /**
+     * @return the last known location
+     */
+    public Location getLocation() {
+        return lastKnown;
     }
 
     /* google api callbacks */
@@ -46,28 +90,19 @@ public class LocationManager implements GoogleApiClient.ConnectionCallbacks,
     }
     @Override
     public void onConnected(Bundle bundle) {
-        LocationServices.FusedLocationApi.requestLocationUpdates(apiclient, locationRequest, this);
-        latest = LocationServices.FusedLocationApi.getLastLocation(apiclient);
+        // subscribe all listeners to receive location updates
+        for (LocationListener listener : locationListeners)
+            LocationServices.FusedLocationApi.requestLocationUpdates(apiclient, locationRequest, listener);
+        // get an immediate update
+        lastKnown = LocationServices.FusedLocationApi.getLastLocation(apiclient);
     }
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
-        LocationServices.FusedLocationApi.removeLocationUpdates(apiclient, this);
+        for (LocationListener listener : locationListeners)
+            LocationServices.FusedLocationApi.removeLocationUpdates(apiclient, listener);
     }
     @Override
     public void onLocationChanged(Location location) {
-        latest = location;
+        lastKnown = location;
     }
-    /**
-     * Asks Google for latest location. Will return cached location if Google
-     * says our location is null.
-     * @return the latest location, or the cached location if we can't reach Google.
-     */
-    public Location getLocation() {
-        Location l = LocationServices.FusedLocationApi.getLastLocation(apiclient);
-        if (l != null)
-            latest = l;
-
-        return latest;
-    }
-
 }

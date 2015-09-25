@@ -49,7 +49,7 @@ public class MapWrap {
      * @param mapView the mapview to wrap
      */
     public MapWrap(Context c, MapView mapView) {
-        this(c, mapView, 20);
+        this(c, mapView, 17);
     }
     public MapWrap(Context c, MapView mapView, int defaultZoomLevel) {
         // context & map

@@ -1,9 +1,14 @@
 package us.v4lk.transrock.fragments;
 
+import android.app.Application;
 import android.app.Fragment;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.ComposePathEffect;
+import android.graphics.CornerPathEffect;
+import android.graphics.DashPathEffect;
+import android.graphics.Paint;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -20,6 +25,7 @@ import com.google.android.gms.location.LocationListener;
 import com.orhanobut.hawk.Hawk;
 
 import org.osmdroid.bonuspack.overlays.Polyline;
+import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Overlay;
 
@@ -27,6 +33,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.mapping.LocationManager;
@@ -151,38 +160,70 @@ public class MapFragment extends Fragment implements LocationListener {
     class AddRouteOverlays extends AsyncTask<TransrockRoute, Integer, Overlay[]> {
         @Override
         protected Overlay[] doInBackground(TransrockRoute... params) {
-            // get routes from storage
-            HashSet<TransrockRoute> storedRoutes = Hawk.get(Util.ROUTES_STORAGE_KEY);
-            // get just the active ones
-            ArrayList<TransrockRoute> activeRoutes = new ArrayList<>();
-            for (TransrockRoute r : storedRoutes)
-                if (r.isActive())
-                    activeRoutes.add(r);
 
-            // flat list of all Polyline overlays for all routes
-            ArrayList<Overlay> overlays = new ArrayList<>();
+            // get the active routes
+            Set<TransrockRoute> storedRoutes = Hawk.get(Util.ROUTES_STORAGE_KEY);
+            Set<TransrockRoute> activeRoutes = new HashSet<>();
+            for (TransrockRoute route : storedRoutes)
+                    if (route.isActive())
+                        activeRoutes.add(route);
 
+            // update their segments
             for (TransrockRoute route : activeRoutes) {
                 try {
                     Collection<String> segments = TransLocAPI.getSegments(route.getRoute()).values();
-                    Polyline[] result = Polylines.encodedPolylineToOverlay(segments, getActivity());
-                    for (Polyline p : result) {
-                        int color = Color.parseColor("#" + route.getRoute().color);
-                        p.setColor(color);
-                        overlays.add(p);
-                    }
+                    route.setSegments(segments);
                 } catch (Exception e) {
                     Log.e("TransRock", e.getMessage());
                 }
             }
-            return overlays.toArray(new Overlay[overlays.size()]);
+
+            // calculate how many times each segment is reused across all routes
+            Map<String, Integer> totalCount = new LinkedHashMap<>(activeRoutes.size());
+            for (TransrockRoute route : activeRoutes)
+                for (String segment : route.getSegments()) {
+                    int prevCount = totalCount.get(segment) == null ? 0 : totalCount.get(segment);
+                    totalCount.put(segment, prevCount + 1);
+                }
+
+            // build overlays
+            ArrayList<Polyline> polylines = new ArrayList<>();
+            Map<String, Integer> visitedCount = new LinkedHashMap<>(totalCount.size());
+            int basePolylineSize = 10;
+            float dashScale = 100;
+
+            for (TransrockRoute route : activeRoutes) {
+                for (String segment : route.getSegments() ) {
+                    int timesVisited = visitedCount.get(segment) == null ? 0 : visitedCount.get(segment);
+
+                    // get the polyline
+                    Polyline p = Polylines.encodedPolylineToOverlay(segment, getActivity());
+                    p.setWidth(basePolylineSize);
+                    p.setColor(Color.parseColor("#" + route.getRoute().color));
+
+                    // calculate the dash effect
+                    float split = 1f / totalCount.get(segment);             // ratio of this line : all other lines
+                    float dashOn = split * dashScale;                       // magnitude of 'on' segments
+                    float dashOff = dashOn * (totalCount.get(segment) - 1); // magnitude of 'off' segments, which should equal split * lines remaining
+                    DashPathEffect dashFect = new DashPathEffect(new float[]{dashOn, dashOff}, timesVisited * dashOn);
+                    // set effect
+                    p.getPaint().setPathEffect(dashFect);
+
+                    // increment segment's visited count
+                    visitedCount.put(segment, timesVisited + 1);
+
+                    // add polyline to list
+                    polylines.add(p);
+                }
+            }
+
+            return polylines.toArray(new Polyline[0]);
         }
 
         @Override
         protected void onPostExecute(Overlay[] overlays) {
             for (Overlay l : overlays)
                 mapWrap.addOverlay(l);
-
             super.onPostExecute(overlays);
         }
     }

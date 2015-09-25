@@ -90,8 +90,10 @@ public class MainActivity extends AppCompatActivity {
     private void setContentFragment(Fragment content, int newActivityTitle) {
         FragmentManager manager = getFragmentManager();
         FragmentTransaction transaction = manager.beginTransaction();
-        transaction.replace(R.id.main_root, content);
-        transaction.commit();
+        transaction.replace(R.id.main_root, content)
+                    .setCustomAnimations(R.anim.abc_slide_in_bottom, R.anim.abc_slide_out_bottom)
+                    .addToBackStack(null)
+                    .commit();
         current = content;
 
         toolbar.setTitle(newActivityTitle);

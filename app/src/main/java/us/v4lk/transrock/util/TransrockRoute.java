@@ -1,11 +1,16 @@
 package us.v4lk.transrock.util;
 
+import java.util.Collection;
+import java.util.Set;
+
 import us.v4lk.transrock.transloc.Route;
 
 /**
  * Route with application metadata. Wraps the raw Route object from the TransLoc API.
  */
 public class TransrockRoute {
+
+    private Collection<String> segments;
 
     /**
      * The route.
@@ -47,6 +52,11 @@ public class TransrockRoute {
      * @param active whether the route is active or not
      */
     public void setActive(boolean active) { this.active = active; }
+
+    public void setSegments(Collection<String> segments) {
+        this.segments = segments;
+    }
+    public Collection<String> getSegments() { return segments; }
 
     /* these equivalency methods are crucial to other pieces of the code, do not change them */
     @Override

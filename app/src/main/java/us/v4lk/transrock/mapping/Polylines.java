@@ -8,7 +8,6 @@ import org.osmdroid.bonuspack.routing.RoadManager;
 import org.osmdroid.util.GeoPoint;
 
 import java.util.ArrayList;
-import java.util.Collection;
 
 /**
  * Various convenience methods for working with polylines
@@ -24,7 +23,7 @@ public class Polylines {
      * @param precision precision to decode to (should be ~ 1e5 or 1e6)
      * @return a list of geopoints corresponding to the encoded polyline
      */
-    private static ArrayList<GeoPoint> decodePolyline(String encoded, double precision) {
+    public static ArrayList<GeoPoint> decodePolyline(String encoded, double precision) {
         ArrayList<GeoPoint> track = new ArrayList<>();
         int index = 0;
         int lat = 0, lng = 0;
@@ -61,7 +60,7 @@ public class Polylines {
      * @param context the context
      * @return a Polyline overlay
      */
-    private static Polyline pointsToOverlay(ArrayList<GeoPoint> waypoints, Context context) {
+    public static Polyline pointsToOverlay(ArrayList<GeoPoint> waypoints, Context context) {
         Road road = new Road(waypoints);
         road.buildLegs(waypoints);
         Polyline overlay = RoadManager.buildRoadOverlay(road, context);
@@ -80,21 +79,6 @@ public class Polylines {
         Polyline segmentPolyline = pointsToOverlay(segmentGeoPoints, context);
         // return polyline
         return segmentPolyline;
-    }
-    /**
-     * Converts a list of encoded polyline strings to an array of Polyline overlays.
-     * @param encodedPolylines collection of encoded polylines
-     * @param context the context
-     * @return an array of Polyline overlays
-     */
-    public static Polyline[] encodedPolylineToOverlay(Collection<String> encodedPolylines, Context context) {
-        ArrayList<Polyline> polylines = new ArrayList<>();
-        for (String segment : encodedPolylines) {
-            Polyline overlay = encodedPolylineToOverlay(segment, context);
-            polylines.add(overlay);
-        }
-
-        return polylines.toArray(new Polyline[polylines.size()]);
     }
 
 }

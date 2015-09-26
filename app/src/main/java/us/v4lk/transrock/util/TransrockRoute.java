@@ -1,7 +1,6 @@
 package us.v4lk.transrock.util;
 
 import java.util.Collection;
-import java.util.Set;
 
 import us.v4lk.transrock.transloc.Route;
 
@@ -10,12 +9,20 @@ import us.v4lk.transrock.transloc.Route;
  */
 public class TransrockRoute {
 
-    private Collection<String> segments;
+    // properties of this route
+    public final String
+            description,
+            short_name,
+            route_id,
+            color,
+            text_color,
+            long_name,
+            url,
+            type;
+    public final int agency_id;
+    public final String[] stopIds;
+    public final String[] segmentIds;
 
-    /**
-     * The route.
-     */
-    private Route route;
     /**
      * Whether this route should be shown on the map.
      */
@@ -35,14 +42,22 @@ public class TransrockRoute {
      * @param active whether this route should be displayed on the map
      */
     public TransrockRoute(Route r, boolean active) {
-        route = r;
+        description = r.description;
+        short_name = r.short_name;
+        route_id = r.route_id;
+        color = r.color;
+        text_color = r.text_color;
+        long_name = r.long_name;
+        url = r.url;
+        type = r.type;
+        agency_id = r.agency_id;
+        stopIds = r.stops;
+        segmentIds = new String[r.segments.length];
+        for (int i = 0; i < segmentIds.length; i++)
+            segmentIds[i] = r.segments[i].id;
         this.active = active;
     }
 
-    /**
-     * @return the corresponding Route object
-     */
-    public Route getRoute() { return route; }
     /**
      * @return whether this route is active
      */
@@ -53,23 +68,23 @@ public class TransrockRoute {
      */
     public void setActive(boolean active) { this.active = active; }
 
-    public void setSegments(Collection<String> segments) {
-        this.segments = segments;
-    }
-    public Collection<String> getSegments() { return segments; }
+    /**
+     * @return polyline encoded segments
+     */
+    public String[] getSegmentIds() { return segmentIds; }
 
-    /* these equivalency methods are crucial to other pieces of the code, do not change them */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        TransrockRoute that = (TransrockRoute) o;
+        TransrockRoute route = (TransrockRoute) o;
 
-        return !(route != null ? !route.equals(that.route) : that.route != null);
+        return route_id.equals(route.route_id);
+
     }
     @Override
     public int hashCode() {
-        return route != null ? route.hashCode() : 0;
+        return route_id.hashCode();
     }
 }

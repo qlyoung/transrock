@@ -8,6 +8,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -23,8 +24,10 @@ import org.json.JSONException;
 
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
@@ -34,6 +37,7 @@ import us.v4lk.transrock.transloc.Agency;
 import us.v4lk.transrock.transloc.Route;
 import us.v4lk.transrock.transloc.TransLocAPI;
 import us.v4lk.transrock.mapping.LocationManager;
+import us.v4lk.transrock.util.RouteStorage;
 import us.v4lk.transrock.util.TransrockRoute;
 import us.v4lk.transrock.util.Util;
 
@@ -91,9 +95,7 @@ public class AddRoutesActivity extends AppCompatActivity {
     }
     @Override
     protected void onStart() {
-        /**
-         * AsyncTask which fetches all supported TransLoc agencies and populates agencyList
-         */
+        /** asynctask to fetch all agencies & populate list */
         AsyncTask<Void, Integer, Agency[]> fetchAgencies = new AsyncTask<Void, Integer, Agency[]>() {
 
             int numActive, numLocal;
@@ -104,7 +106,7 @@ public class AddRoutesActivity extends AppCompatActivity {
                 Location loc = locationManager.getLocation();
 
                 // get agency ids of stored routes
-                Set<TransrockRoute> storedRoutes = Hawk.get(Util.ROUTES_STORAGE_KEY, new HashSet<TransrockRoute>());
+                Collection<TransrockRoute> storedRoutes = RouteStorage.getAllRoutes();
                 int[] storedAgencyIds = Util.getAgencyIds(storedRoutes.toArray(new TransrockRoute[storedRoutes.size()]));
 
                 Agency[] active = null,
@@ -164,7 +166,6 @@ public class AddRoutesActivity extends AppCompatActivity {
                 showError(values[0]);
             }
         };
-
         if (Util.isConnected(this)) fetchAgencies.execute();
         else showError(R.string.error_network_disconnected);
 
@@ -279,17 +280,9 @@ public class AddRoutesActivity extends AppCompatActivity {
         TextView v = (TextView) bottomSheet.findViewById(R.id.bottomsheet_title);
         v.setText(R.string.routes);
 
-        // convert raw API routes to TransRock routes
-        ArrayList<TransrockRoute> srs = new ArrayList<>(routes.length);
-        for (Route r : routes)
-                srs.add(new TransrockRoute(r));
-
         // capture list & set adapter
         ListView routeList = (ListView) bottomSheet.findViewById(R.id.bottomsheet_list);
-        RouteSwitchAdapter adapter = new RouteSwitchAdapter(
-                AddRoutesActivity.this,
-                R.layout.route_switch_item,
-                srs);
+        RouteSwitchAdapter adapter = new RouteSwitchAdapter( AddRoutesActivity.this, R.layout.route_switch_item, routes);
         routeList.setAdapter(adapter);
 
         // show bottom sheet
@@ -298,27 +291,42 @@ public class AddRoutesActivity extends AppCompatActivity {
         // persist route changes on sheet dismissal
         root.getSheetView().addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
             @Override
-            public void onViewAttachedToWindow(View v) { }
+            public void onViewAttachedToWindow(View v) {
+            }
+
             @Override
             public void onViewDetachedFromWindow(View v) {
                 ListView rl = (ListView) v.findViewById(R.id.bottomsheet_list);
                 RouteSwitchAdapter adapter = (RouteSwitchAdapter) rl.getAdapter();
 
-                // get modified routes from adapter
-                Set<TransrockRoute> storedRoutes = Hawk.get(Util.ROUTES_STORAGE_KEY, new HashSet<TransrockRoute>());
-                HashMap<TransrockRoute, Boolean> modifiedRoutes = adapter.getDeltas();
+                Map<Route, Boolean> deltas = adapter.getDeltas();
 
-                storedRoutes.removeAll(modifiedRoutes.keySet());
+                // remove all routes
+                for (Route route : deltas.keySet())
+                    RouteStorage.removeRoute(route.route_id);
 
-                for (TransrockRoute dr : modifiedRoutes.keySet()) {
-                    if (modifiedRoutes.get(dr)) {
-                        dr.setActive(true);
-                        storedRoutes.add(dr);
-                    }
+                final ArrayList<Route> needToBeAdded = new ArrayList<Route>();
+                for (Route route : deltas.keySet()) {
+                    if (adapter.getDeltas().get(route))
+                        needToBeAdded.add(route);
                 }
 
-                // commit this new list to storage
-                Hawk.put(Util.ROUTES_STORAGE_KEY, storedRoutes);
+                // add routes to storage
+                for (Route route : needToBeAdded) {
+                    TransrockRoute tRoute = new TransrockRoute(route);
+                    RouteStorage.putRoute(tRoute);
+                }
+
+                // fire off an asynctask to cache some data we might want later
+                AsyncTask<Route, Void, Void> downloadAndAddRoutes = new AsyncTask<Route, Void, Void>() {
+                    @Override
+                    protected Void doInBackground(Route... routes) {
+                        for (Route route : routes)
+                            try { TransLocAPI.getSegments(route).values(); } catch (Exception e) { }
+                        return null;
+                    }
+                };
+                downloadAndAddRoutes.execute(needToBeAdded.toArray(new Route[needToBeAdded.size()]));
             }
         });
     }

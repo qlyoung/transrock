@@ -25,11 +25,6 @@ public class Util {
      * Global network timeout.
      */
     public static final int GLOBAL_NETWORK_TIMEOUT = 3000;
-    /**
-     * Hawk key to access saved routes.
-     */
-    public static final String ROUTES_STORAGE_KEY = "routes";
-
 
     /* global utility functions */
     /**
@@ -61,10 +56,10 @@ public class Util {
      * Returns a list of the agencies that the specified routes belong to.
      * @return list of unique integer agency ids
      */
-    public static int[] getAgencyIds(Route[] routes) {
+    public static int[] getAgencyIds(TransrockRoute[] routes) {
         // get unique ids
         Set<Integer> ids = new HashSet<>();
-        for (Route r : routes)
+        for (TransrockRoute r : routes)
             ids.add(r.agency_id);
 
         // convert to int[]
@@ -74,17 +69,6 @@ public class Util {
             result[i++] = id;
 
         return result;
-    }
-    /**
-     * Returns a list of the agencies that the specified routes belong to.
-     * @return list of unique integer agency ids
-     */
-    public static int[] getAgencyIds(TransrockRoute[] routes) {
-        Route[] rts = new Route[routes.length];
-        for (int i = 0; i < rts.length; i++)
-            rts[i] = routes[i].getRoute();
-
-        return getAgencyIds(rts);
     }
     /**
      * Converts a color to a bitmap of given size.
@@ -104,7 +88,5 @@ public class Util {
 
         return colorBitmap;
     }
-
-
 
 }

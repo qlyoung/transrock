@@ -11,7 +11,7 @@ public class Route {
 
     /* direct route data from json */
     enum Direction { FORWARD, BACKWARD }
-    class Segment {
+    public class Segment {
         public final String id;
         public final Direction direction;
         public Segment(String id, Direction direction) {

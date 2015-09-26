@@ -12,6 +12,7 @@ import com.orhanobut.hawk.LogLevel;
 
 import us.v4lk.transrock.transloc.TransLocAPI;
 import us.v4lk.transrock.mapping.LocationManager;
+import us.v4lk.transrock.util.RouteStorage;
 
 /**
  * Shows a splash screen, loads some resources and starts MainActivity
@@ -40,7 +41,6 @@ public class SplashActivity extends AppCompatActivity {
         protected Void doInBackground(Void... params) {
             // cache agencies
             try { TransLocAPI.getAgencies(); }
-            // it isn't crucial if the api errors here, so we don't bother checking exceptions
             catch (Exception e) { Log.e("TransRock", e.getMessage()); }
 
             // initialize a location manager
@@ -54,6 +54,8 @@ public class SplashActivity extends AppCompatActivity {
                 .setStorage(HawkBuilder.newSqliteStorage(SplashActivity.this))
                 .setLogLevel(LogLevel.FULL)
                 .build();
+
+            RouteStorage.initialize();
 
             return null;
         }

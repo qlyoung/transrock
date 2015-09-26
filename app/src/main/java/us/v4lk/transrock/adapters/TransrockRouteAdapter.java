@@ -48,16 +48,16 @@ public class TransrockRouteAdapter extends ArrayAdapter<TransrockRoute> {
 
         // badge
         CircularImageView badge = (CircularImageView) convertView.findViewById(R.id.route_list_item_badge);
-        Bitmap color = Util.colorToBitmap(Color.parseColor("#" + transrockRoute.getRoute().color), 50, 50);
+        Bitmap color = Util.colorToBitmap(Color.parseColor("#" + transrockRoute.color), 50, 50);
         badge.setImageBitmap(color);
 
         // long name
         TextView longName = (TextView) convertView.findViewById(R.id.route_list_item_longname);
-        longName.setText(transrockRoute.getRoute().long_name);
+        longName.setText(transrockRoute.long_name);
 
         // short name if present (hidden otherwise)
         TextView shortName = (TextView) convertView.findViewById(R.id.route_list_item_shortname);
-        String sn = transrockRoute.getRoute().short_name;
+        String sn = transrockRoute.short_name;
         if (!sn.isEmpty())
             shortName.setText(sn);
         else

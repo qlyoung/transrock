@@ -14,12 +14,14 @@ import android.widget.ListView;
 
 import com.orhanobut.hawk.Hawk;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
 import us.v4lk.transrock.AddRoutesActivity;
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.adapters.TransrockRouteAdapter;
+import us.v4lk.transrock.util.RouteStorage;
 import us.v4lk.transrock.util.TransrockRoute;
 import us.v4lk.transrock.util.Util;
 
@@ -85,7 +87,7 @@ public class RoutesFragment extends Fragment {
      */
     private void updateRoutelist() {
         // get routes from db
-        Set<TransrockRoute> routes = Hawk.get(Util.ROUTES_STORAGE_KEY, new HashSet<TransrockRoute>());
+        Collection<TransrockRoute> routes = RouteStorage.getAllRoutes();
 
         // clear adapter
         TransrockRouteAdapter adapter = (TransrockRouteAdapter) routeList.getAdapter();
@@ -113,6 +115,6 @@ public class RoutesFragment extends Fragment {
         for (int i = 0; i < all.length; i++)
             modifiedRoutes.add(all[i]);
 
-        Hawk.put(Util.ROUTES_STORAGE_KEY, modifiedRoutes);
+        RouteStorage.putRoute(modifiedRoutes);
     }
 }

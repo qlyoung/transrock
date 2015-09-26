@@ -21,9 +21,9 @@ public class Stop {
         stop_id,
         name;
 
-    String[] agency_ids;
-    String[] routes;
-    Vector<Double> location;
+    public String[] agency_ids;
+    public String[] routes;
+    public Vector<Double> location;
 
 
     public Stop(JSONObject stopObject) throws JSONException {

@@ -10,6 +10,7 @@ import android.net.NetworkInfo;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -57,6 +58,20 @@ public class Util {
      * @return list of unique integer agency ids
      */
     public static int[] getAgencyIds(TransrockRoute[] routes) {
+        // get unique ids
+        Set<Integer> ids = new HashSet<>();
+        for (TransrockRoute r : routes)
+            ids.add(r.agency_id);
+
+        // convert to int[]
+        int[] result = new int[ids.size()];
+        int i = 0;
+        for (Integer id : ids)
+            result[i++] = id;
+
+        return result;
+    }
+    public static int[] getAgencyIds(Collection<TransrockRoute> routes) {
         // get unique ids
         Set<Integer> ids = new HashSet<>();
         for (TransrockRoute r : routes)

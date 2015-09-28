@@ -19,13 +19,16 @@ import android.view.ViewGroup;
 import com.google.android.gms.location.LocationListener;
 
 import org.osmdroid.bonuspack.overlays.Polyline;
+import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Overlay;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.mapping.LocationManager;
@@ -99,6 +102,8 @@ public class MapFragment extends Fragment implements LocationListener {
 
         // draw routes to map
         new AddRouteOverlays().execute();
+        // draw stops to map
+        new AddStopOverlays().execute();
     }
     @Override
     public void onPause() {
@@ -152,7 +157,7 @@ public class MapFragment extends Fragment implements LocationListener {
         }
     }
 
-    /** AsyncTask which draws the user's active routes to the map */
+    /** AsyncTask which fetches and draws segments on the map */
     class AddRouteOverlays extends AsyncTask<Void, Integer, Overlay[]> {
         @Override
         protected Overlay[] doInBackground(Void... params) {
@@ -222,15 +227,49 @@ public class MapFragment extends Fragment implements LocationListener {
             super.onPostExecute(overlays);
         }
     }
-    /** AsyncTask which draws the stops belonging to active routes to the map */
-    class AddStopOverlays extends AsyncTask<TransrockRoute, Integer, Overlay[]> {
+    /** AsyncTask which fetches and draws stops on the map */
+    class AddStopOverlays extends AsyncTask<TransrockRoute, Integer, Stop[]> {
         @Override
-        protected Overlay[] doInBackground(TransrockRoute... params) {
+        protected Stop[] doInBackground(TransrockRoute... params) {
+            // get active routes
+            Collection<TransrockRoute> activeRoutes = RouteStorage.getActiveRoutes();
+            int[] ids = Util.getAgencyIds(activeRoutes);
 
-            return new Overlay[0];
+            // map stops to routes they belong to
+            Map<String, Collection<TransrockRoute>> stopsToRoutes = new LinkedHashMap<>();
+            for (TransrockRoute route : activeRoutes)
+                for (String stopId : route.stopIds) {
+                    Collection<TransrockRoute> existing = stopsToRoutes.get(stopId);
+                    if (existing == null) existing = new HashSet<>();
+                    existing.add(route);
+                    stopsToRoutes.put(stopId, existing);
+                }
+
+            // get stops (map)
+            Map<String, Stop> stops = null;
+            try { stops = TransLocAPI.getStops(ids); }
+            catch (Exception e) { /* todo: actual exception handling */ }
+
+            // map
+            Map<Stop, Collection<TransrockRoute>> resultant = new LinkedHashMap<>();
+            for (String stopId : stopsToRoutes.keySet())
+                resultant.put(stops.get(stopId), stopsToRoutes.get(stopId));
+
+            // build overlays
+            ArrayList<Overlay> stopOverlays = new ArrayList<>(resultant.size());
+            //for (Stop stop : resultant.keySet())
+            //
+            //
+
+            return resultant.keySet().toArray(new Stop[resultant.size()]);
         }
         @Override
-        protected void onPostExecute(Overlay[] overlays) {
+        protected void onPostExecute(Stop[] overlays) {
+            for (Stop stop : overlays) {
+                GeoPoint p = new GeoPoint(stop.location.get(0), stop.location.get(1));
+                mapWrap.putMarkerAt(p);
+            }
+
             super.onPostExecute(overlays);
         }
     }

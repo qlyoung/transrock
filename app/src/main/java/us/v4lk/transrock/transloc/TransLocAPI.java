@@ -306,7 +306,7 @@ public class TransLocAPI {
      * @param ids The id's of the agencies whose stops to get
      * @return An array of Stops.
      */
-    public static Collection<Stop> getStops(int... ids)
+    public static Map<String, Stop> getStops(int... ids)
         throws NetworkErrorException, SocketTimeoutException, JSONException {
         // build request parameter
         StringBuilder builder = new StringBuilder();
@@ -322,11 +322,13 @@ public class TransLocAPI {
         // call api
         JSONObject response = callApi(request);
 
-        Collection<Stop> stops = new ArrayList<>();
+        Map<String, Stop> stops = new LinkedHashMap<>();
         try {
             JSONArray data = response.getJSONArray("data");
-            for (int i = 0; i < data.length(); i++)
-                stops.add( new Stop(data.getJSONObject(i)) );
+            for (int i = 0; i < data.length(); i++) {
+                Stop s = new Stop(data.getJSONObject(i));
+                stops.put(s.stop_id, s);
+            }
 
         } catch (JSONException e) { Log.e("TransRock", e.getMessage()); }
 

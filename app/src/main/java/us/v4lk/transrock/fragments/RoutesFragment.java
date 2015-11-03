@@ -17,6 +17,7 @@ import android.widget.ListView;
 import org.json.JSONException;
 
 import java.net.SocketTimeoutException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -77,8 +78,8 @@ public class RoutesFragment extends Fragment {
     }
     @Override
     public void onResume() {
-        super.onResume();
         updateRoutelist();
+        super.onResume();
     }
     @Override
     public void onPause() {
@@ -128,46 +129,64 @@ public class RoutesFragment extends Fragment {
             case SELECT_ROUTES_REQUESTCODE:
                 // pull and store any new routes
                 HashMap<String, Route> routelist = (HashMap<String, Route>) data.getSerializableExtra("routelist");
-                // this can be done more efficiently in the future
-                RouteStorage.clear();
-                AsyncTask<Route, Integer, Void> fetchNewRoutes = new AsyncTask<Route, Integer, Void>() {
-                    @Override
-                    protected Void doInBackground(Route... params) {
-
-                        // pull segments from network, create a TransrockRoute, and put
-                        // it in internal storage
-                        for (Route route : params) {
-                            try {
-                                Map<String, String> segments = TransLocAPI.getSegments(route);
-                                TransrockRoute trr = new TransrockRoute(route, segments.values().toArray(new String[0]));
-                                RouteStorage.putRoute(trr);
-                            } catch (SocketTimeoutException e) {
-                                publishProgress(R.string.error_network_timeout);
-                                this.cancel(true);
-                            } catch (NetworkErrorException e) {
-                                publishProgress(R.string.error_network_unknown);
-                                this.cancel(true);
-                            } catch (JSONException e) {
-                                publishProgress(R.string.error_bad_parse);
-                                this.cancel(true);
-                            }
-                        }
-
-                        return null;
-                    }
-
-                    @Override
-                    protected void onPostExecute(Void aVoid) {
-                        updateRoutelist();
-                        super.onPostExecute(aVoid);
-                    }
-
-                    @Override
-                    protected void onProgressUpdate(Integer... values) {
-                        //todo: implement error handling here
-                    }
-                };
+                FetchRoutesTask fetchNewRoutes = new FetchRoutesTask();
                 fetchNewRoutes.execute(routelist.values().toArray(new Route[0]));
         }
     }
+
+    /**
+     * Takes a list of routes, gets necessary data to build TransrockRoutes, sets
+     * internal storage to the resulting list (not additive), and then updates
+     * this routelist.
+     */
+    class FetchRoutesTask extends AsyncTask<Route, Integer, Collection<TransrockRoute>> {
+        @Override
+        protected void onPreExecute() {
+            // add currently stored routes to listview before pulling new ones
+            // avoids empty routelist while waiting for this task to finish
+            updateRoutelist();
+            super.onPreExecute();
+        }
+
+        @Override
+        protected Collection<TransrockRoute> doInBackground(Route... params) {
+
+            ArrayList<TransrockRoute> result = new ArrayList<>();
+
+            // pull segments from network, create a TransrockRoute, and put
+            // it in internal storage
+            for (Route route : params) {
+                try {
+                    Map<String, String> segments = TransLocAPI.getSegments(route);
+                    TransrockRoute trr = new TransrockRoute(route, segments.values().toArray(new String[0]));
+                    trr.setActivated(true);
+                    result.add(trr);
+                } catch (SocketTimeoutException e) {
+                    publishProgress(R.string.error_network_timeout);
+                    this.cancel(true);
+                } catch (NetworkErrorException e) {
+                    publishProgress(R.string.error_network_unknown);
+                    this.cancel(true);
+                } catch (JSONException e) {
+                    publishProgress(R.string.error_bad_parse);
+                    this.cancel(true);
+                }
+            }
+
+            return result;
+        }
+
+        @Override
+        protected void onPostExecute(Collection<TransrockRoute> result) {
+            RouteStorage.clear();
+            RouteStorage.putRoute(result);
+            updateRoutelist();
+            super.onPostExecute(result);
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            //todo: implement error handling here
+        }
+    };
 }

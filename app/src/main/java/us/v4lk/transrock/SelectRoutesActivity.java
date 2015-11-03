@@ -3,12 +3,12 @@ package us.v4lk.transrock;
 import android.accounts.NetworkErrorException;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -18,23 +18,22 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.flipboard.bottomsheet.BottomSheetLayout;
-import com.orhanobut.hawk.Hawk;
 
 import org.json.JSONException;
 
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
 import us.v4lk.transrock.adapters.AgencyAdapter;
 import us.v4lk.transrock.adapters.RouteSwitchAdapter;
-import us.v4lk.transrock.transloc.Agency;
-import us.v4lk.transrock.transloc.Route;
+import us.v4lk.transrock.transloc.objects.Agency;
+import us.v4lk.transrock.transloc.objects.Route;
 import us.v4lk.transrock.transloc.TransLocAPI;
 import us.v4lk.transrock.mapping.LocationManager;
 import us.v4lk.transrock.util.RouteStorage;
@@ -44,8 +43,20 @@ import us.v4lk.transrock.util.Util;
 /**
  * Allows the user to select which routes they want to track.
  * Routes are organized by agency.
+ *
+ * This activity mains a list of API route objects that represents
+ * all routes the user has currently selected. Each time the user
+ * selects or deselects a route, this list is updated.
+ *
+ * When the activity exits, a copy of the list is put as a Serializable
+ * extra in the result intent. The receiving activity should use this list
+ * to update the on-disk list. The preferred method is by launching a
+ * generalized AsyncTask to accomplish this goal and update the UI after completion.
+ *
+ * The key is "routelist" and the type is HashMap<String, Route>.
+ * e.g. data.getSerializableExtra("routelist");
  */
-public class AddRoutesActivity extends AppCompatActivity {
+public class SelectRoutesActivity extends AppCompatActivity {
 
     /** Root layout */
     BottomSheetLayout root;
@@ -55,6 +66,16 @@ public class AddRoutesActivity extends AppCompatActivity {
     ProgressBar bodyProgressBar, toolbarProgressBar;
     /** location manager */
     LocationManager locationManager;
+
+    /**
+     * List of routes that the user wishes to store.
+     * This is loaded from storage at the beginning of this activity's
+     * lifecycle, and returned as an activity result at the end.
+     *
+     * keys:   route id's
+     * values: route api objects
+     */
+    HashMap<String, Route> routelist;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,6 +113,11 @@ public class AddRoutesActivity extends AppCompatActivity {
         // build location manager
         locationManager = new LocationManager(this);
 
+        // fetch stored route ids from storage & build delta map
+        routelist = new HashMap<>();
+        for (TransrockRoute route : RouteStorage.getAllRoutes()) {
+            routelist.put(route.route_id, route.getRoute());
+        }
     }
     @Override
     protected void onStart() {
@@ -109,17 +135,22 @@ public class AddRoutesActivity extends AppCompatActivity {
                 Collection<TransrockRoute> storedRoutes = RouteStorage.getAllRoutes();
                 int[] storedAgencyIds = Util.getAgencyIds(storedRoutes.toArray(new TransrockRoute[storedRoutes.size()]));
 
-                Agency[] active = null,
+                Agency[]
+                        active = null,
                         local = null,
                         all = null;
 
                 try {
+
                     // fetch the various routes from the various sources
                     active = storedAgencyIds.length != 0 ?
-                            TransLocAPI.getAgencies(storedAgencyIds) :
-                            new Agency[0];
+                                TransLocAPI.getAgencies(storedAgencyIds) :
+                                new Agency[0];
+
+                    // if we couldn't get the location, don't display that section
                     local = loc != null ? TransLocAPI.getAgencies(loc, 10000) : new Agency[0];
                     all = TransLocAPI.getAgencies();
+
                 } catch (SocketTimeoutException e) {
                     publishProgress(R.string.error_network_timeout);
                     this.cancel(true);
@@ -133,25 +164,37 @@ public class AddRoutesActivity extends AppCompatActivity {
                     this.cancel(true);
                 }
 
-                // concatenate all agencies into single ordered array
-                // the order of cumulative is important for correct categorical sorting
-                Agency[][] cumulative = new Agency[][] { active, local, all };
-                ArrayList<Agency> sum = new ArrayList<>(active.length + local.length + all.length);
-                for (Agency[] al : cumulative)
-                    for (Agency a : al)
-                        if (!sum.contains(a)) // don't add items twice
-                            sum.add(a);
+                // sort alphabetically
+                Comparator alphabetical = new Comparator<Agency>() {
+                    @Override
+                    public int compare(Agency lhs, Agency rhs) {
+                        return lhs.long_name.compareTo(rhs.long_name);
+                    }
+                };
+                Arrays.sort(active, alphabetical);
+                Arrays.sort(local, alphabetical);
+                Arrays.sort(all, alphabetical);
+
+                // convenient holder
+                Agency[][] sections = new Agency[][] { active, local, all };
+
+                // flatten into an (ordered) arraylist
+                ArrayList<Agency> result = new ArrayList<>(active.length + local.length + all.length);
+                for (Agency[] agencyList : sections)
+                    for (Agency a : agencyList)
+                        if (!result.contains(a)) // don't add items twice
+                            result.add(a);
 
                 numActive = active.length;
                 numLocal = local.length;
 
-                return sum.toArray(new Agency[sum.size()]);
+                return result.toArray(new Agency[result.size()]);
             }
             @Override
             public void onPostExecute(Agency[] result) {
                 // populate agency list
                 AgencyAdapter adapter = new AgencyAdapter(
-                        AddRoutesActivity.this,
+                        SelectRoutesActivity.this,
                         R.layout.agency_list_item,
                         result,
                         numActive,
@@ -188,6 +231,16 @@ public class AddRoutesActivity extends AppCompatActivity {
                 return super.onOptionsItemSelected(item);
         }
     }
+
+    /** Commits TransLocAPI's memcache to disk */
+    @Override
+    protected void onPause() {
+
+        // commit api cache to disk
+        TransLocAPI.commitCache();
+        super.onPause();
+    }
+
     /**
      * Dismiss sheet on back button press if it is showing, otherwise do the normal thing
      */
@@ -195,8 +248,13 @@ public class AddRoutesActivity extends AppCompatActivity {
     public void onBackPressed() {
         if (root.isSheetShowing())
             root.dismissSheet();
-        else
-            super.onBackPressed();
+        else {
+            // set result
+            Intent result = new Intent();
+            result.putExtra("routelist", routelist);
+            setResult(RESULT_OK, result);
+            finish();
+        }
     }
 
     /**
@@ -212,7 +270,7 @@ public class AddRoutesActivity extends AppCompatActivity {
             @Override
             protected void onPreExecute() {
                 // before doing anything, check if we're connected
-                if (!Util.isConnected(AddRoutesActivity.this)) {
+                if (!Util.isConnected(SelectRoutesActivity.this)) {
                     showPopupError(R.string.error_network_disconnected);
                     this.cancel(true);
                 }
@@ -241,6 +299,7 @@ public class AddRoutesActivity extends AppCompatActivity {
                 }
 
                 return routes;
+
             }
             @Override
             protected void onPostExecute(Route[] routes) {
@@ -269,7 +328,7 @@ public class AddRoutesActivity extends AppCompatActivity {
      * Shows a bottom sheet with a list of toggleable routes.
      * @param routes the routes to show
      */
-    private void showRouteBottomSheet(Route[] routes) {
+    private void showRouteBottomSheet(Route[] routes)  {
         // if sheet is already showing, do nothing
         if (root.isSheetShowing()) return;
 
@@ -280,53 +339,45 @@ public class AddRoutesActivity extends AppCompatActivity {
         TextView v = (TextView) bottomSheet.findViewById(R.id.bottomsheet_title);
         v.setText(R.string.routes);
 
-        // capture list & set adapter
+        // setup adapter & listview
         ListView routeList = (ListView) bottomSheet.findViewById(R.id.bottomsheet_list);
-        RouteSwitchAdapter adapter = new RouteSwitchAdapter( AddRoutesActivity.this, R.layout.route_switch_item, routes);
+
+        // cross-reference against storageRoutes to build a map of route -> checked value
+        Map<Route, Boolean> routeSwitchMap = new HashMap<>();
+        for (Route r : routes) {
+            routeSwitchMap.put(r, routelist.containsKey(r.route_id));
+        }
+
+        RouteSwitchAdapter adapter = new RouteSwitchAdapter(
+                SelectRoutesActivity.this,
+                R.layout.route_switch_item,
+                routeSwitchMap);
+
         routeList.setAdapter(adapter);
 
         // show bottom sheet
         root.showWithSheetView(bottomSheet);
 
-        // persist route changes on sheet dismissal
+        // modify routelist on dismissal
         root.getSheetView().addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
             @Override
-            public void onViewAttachedToWindow(View v) {
-            }
+            public void onViewAttachedToWindow(View v) { }
 
             @Override
             public void onViewDetachedFromWindow(View v) {
                 ListView rl = (ListView) v.findViewById(R.id.bottomsheet_list);
                 RouteSwitchAdapter adapter = (RouteSwitchAdapter) rl.getAdapter();
 
-                Map<Route, Boolean> deltas = adapter.getDeltas();
+                // get changes made
+                Map<Route, Boolean> result = adapter.getData();
 
-                // remove all routes
-                for (Route route : deltas.keySet())
-                    RouteStorage.removeRoute(route.route_id);
+                // apply changes
+                for (Route r : result.keySet())
+                    if (result.get(r))
+                        routelist.put(r.route_id, r);
+                    else
+                        routelist.remove(r.route_id);
 
-                final ArrayList<Route> needToBeAdded = new ArrayList<Route>();
-                for (Route route : deltas.keySet()) {
-                    if (adapter.getDeltas().get(route))
-                        needToBeAdded.add(route);
-                }
-
-                // add routes to storage
-                for (Route route : needToBeAdded) {
-                    TransrockRoute tRoute = new TransrockRoute(route);
-                    RouteStorage.putRoute(tRoute);
-                }
-
-                // fire off an asynctask to cache some data we might want later
-                AsyncTask<Route, Void, Void> downloadAndAddRoutes = new AsyncTask<Route, Void, Void>() {
-                    @Override
-                    protected Void doInBackground(Route... routes) {
-                        for (Route route : routes)
-                            try { TransLocAPI.getSegments(route).values(); } catch (Exception e) { }
-                        return null;
-                    }
-                };
-                downloadAndAddRoutes.execute(needToBeAdded.toArray(new Route[needToBeAdded.size()]));
             }
         });
     }

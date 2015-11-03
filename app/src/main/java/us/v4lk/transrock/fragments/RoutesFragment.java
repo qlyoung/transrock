@@ -1,7 +1,9 @@
 package us.v4lk.transrock.fragments;
 
+import android.accounts.NetworkErrorException;
 import android.app.Fragment;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -12,24 +14,30 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 
-import com.orhanobut.hawk.Hawk;
+import org.json.JSONException;
 
+import java.net.SocketTimeoutException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
-import us.v4lk.transrock.AddRoutesActivity;
+import us.v4lk.transrock.SelectRoutesActivity;
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.adapters.TransrockRouteAdapter;
+import us.v4lk.transrock.transloc.objects.Route;
+import us.v4lk.transrock.transloc.TransLocAPI;
 import us.v4lk.transrock.util.RouteStorage;
 import us.v4lk.transrock.util.TransrockRoute;
-import us.v4lk.transrock.util.Util;
 
 /** Route list fragment. */
 public class RoutesFragment extends Fragment {
 
     /** ListView holding all route items */
     ListView routeList;
+    /** request code for route selection activity */
+    final int SELECT_ROUTES_REQUESTCODE = 0;
 
     /* lifecycle */
     @Override
@@ -52,8 +60,8 @@ public class RoutesFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 // start add routes activity
-                Intent intent = new Intent(getActivity(), AddRoutesActivity.class);
-                getActivity().startActivity(intent);
+                Intent intent = new Intent(getActivity(), SelectRoutesActivity.class);
+                startActivityForResult(intent, SELECT_ROUTES_REQUESTCODE);
             }
         });
 
@@ -82,9 +90,7 @@ public class RoutesFragment extends Fragment {
         inflater.inflate(R.menu.menu_routelist, menu);
     }
 
-    /**
-     * Loads in routes to routelist from persistence
-     */
+    /** Loads in routes to routelist from persistence */
     private void updateRoutelist() {
         // get routes from db
         Collection<TransrockRoute> routes = RouteStorage.getAllRoutes();
@@ -106,9 +112,7 @@ public class RoutesFragment extends Fragment {
 
         adapter.notifyDataSetChanged();
     }
-    /**
-     * Writes routes to persistence
-     */
+    /** Writes modified routes to persistence */
     private void persistRoutelist() {
         TransrockRoute[] all = ((TransrockRouteAdapter) routeList.getAdapter()).getAll();
         Set<TransrockRoute> modifiedRoutes = new HashSet<>(all.length);
@@ -116,5 +120,54 @@ public class RoutesFragment extends Fragment {
             modifiedRoutes.add(all[i]);
 
         RouteStorage.putRoute(modifiedRoutes);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case SELECT_ROUTES_REQUESTCODE:
+                // pull and store any new routes
+                HashMap<String, Route> routelist = (HashMap<String, Route>) data.getSerializableExtra("routelist");
+                // this can be done more efficiently in the future
+                RouteStorage.clear();
+                AsyncTask<Route, Integer, Void> fetchNewRoutes = new AsyncTask<Route, Integer, Void>() {
+                    @Override
+                    protected Void doInBackground(Route... params) {
+
+                        // pull segments from network, create a TransrockRoute, and put
+                        // it in internal storage
+                        for (Route route : params) {
+                            try {
+                                Map<String, String> segments = TransLocAPI.getSegments(route);
+                                TransrockRoute trr = new TransrockRoute(route, segments.values().toArray(new String[0]));
+                                RouteStorage.putRoute(trr);
+                            } catch (SocketTimeoutException e) {
+                                publishProgress(R.string.error_network_timeout);
+                                this.cancel(true);
+                            } catch (NetworkErrorException e) {
+                                publishProgress(R.string.error_network_unknown);
+                                this.cancel(true);
+                            } catch (JSONException e) {
+                                publishProgress(R.string.error_bad_parse);
+                                this.cancel(true);
+                            }
+                        }
+
+                        return null;
+                    }
+
+                    @Override
+                    protected void onPostExecute(Void aVoid) {
+                        updateRoutelist();
+                        super.onPostExecute(aVoid);
+                    }
+
+                    @Override
+                    protected void onProgressUpdate(Integer... values) {
+                        //todo: implement error handling here
+                    }
+                };
+                fetchNewRoutes.execute(routelist.values().toArray(new Route[0]));
+        }
     }
 }

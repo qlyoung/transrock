@@ -1,15 +1,20 @@
 package us.v4lk.transrock.util;
 
-import java.util.Collection;
-
-import us.v4lk.transrock.transloc.Route;
+import us.v4lk.transrock.transloc.objects.Route;
 
 /**
- * Route with application metadata. Wraps the raw Route object from the TransLoc API.
+ * Full Route object for use on client side.
+ *
+ * This class defines routes that the user has saved and is used as
+ * TransRock's internal representation of a route. The information
+ * it contains is not time-dependent and should only need to be fetched
+ * at time of creation. Information that is time-dependent is only keyed
+ * here and should be accessed using said keys in conjunction with the
+ * TransLoc API.
  */
 public class TransrockRoute {
 
-    // properties of this route
+    /* properties of this route */
     public final String
             description,
             short_name,
@@ -20,28 +25,28 @@ public class TransrockRoute {
             url,
             type;
     public final int agency_id;
+    public final String[] segments;
     public final String[] stopIds;
-    public final String[] segmentIds;
 
-    /**
-     * Whether this route should be shown on the map.
-     */
-    private boolean active = false;
+    private Route route;
+
+    /* metadata for application use */
+    private boolean activated = false;
 
     /**
      * Constructs a new TransRock route with deactivated status.
      * @param r the route
      */
-    public TransrockRoute(Route r) {
-        this(r, false);
+    public TransrockRoute(Route r, String[] segments) {
+        this(r, false, segments);
     }
 
     /**
      * Constructs a new TransRock route with the specified status.
      * @param r the route
-     * @param active whether this route should be displayed on the map
+     * @param activated whether this route should be displayed on the map
      */
-    public TransrockRoute(Route r, boolean active) {
+    public TransrockRoute(Route r, boolean activated, String[] segments) {
         description = r.description;
         short_name = r.short_name;
         route_id = r.route_id;
@@ -52,26 +57,25 @@ public class TransrockRoute {
         type = r.type;
         agency_id = r.agency_id;
         stopIds = r.stops;
-        segmentIds = new String[r.segments.length];
-        for (int i = 0; i < segmentIds.length; i++)
-            segmentIds[i] = r.segments[i].id;
-        this.active = active;
+        this.segments = segments;
+        this.activated = activated;
+
+        this.route = r;
     }
 
     /**
-     * @return whether this route is active
+     * @return whether this route is activated
      */
-    public boolean isActive() { return active; }
+    public boolean isActivated() { return activated; }
     /**
-     * Sets whether this route is active or not
-     * @param active whether the route is active or not
+     * Sets whether this route is activated or not
+     * @param activated whether the route is activated or not
      */
-    public void setActive(boolean active) { this.active = active; }
-
-    /**
-     * @return polyline encoded segments
-     */
-    public String[] getSegmentIds() { return segmentIds; }
+    public void setActivated(boolean activated) { this.activated = activated; }
+    /** returns the route used to create this object; useful at times */
+    public Route getRoute() {
+        return route;
+    }
 
     @Override
     public boolean equals(Object o) {

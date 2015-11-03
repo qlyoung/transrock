@@ -4,6 +4,8 @@ import android.accounts.NetworkErrorException;
 import android.location.Location;
 import android.util.Log;
 
+import com.orhanobut.hawk.Hawk;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -14,12 +16,16 @@ import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
+import us.v4lk.transrock.transloc.objects.Agency;
+import us.v4lk.transrock.transloc.objects.Route;
+import us.v4lk.transrock.transloc.objects.Segment;
+import us.v4lk.transrock.transloc.objects.Stop;
+import us.v4lk.transrock.transloc.objects.Vehicle;
 import us.v4lk.transrock.util.Util;
 
 /**
@@ -28,150 +34,182 @@ import us.v4lk.transrock.util.Util;
  */
 public class TransLocAPI {
 
-    /**
-     * TransLocAPI cache
-     * TODO: make this an on-disk cache and not a memory cache
-     * TODO: integrate transloc's rate limiting into cache invalidation rules
-     * TODO: implement segment cache
-     */
+    /**  TransLocAPI memcache */
     static class Cache {
-        // cache of agencies <agency_id, agency>
-        private static LinkedHashMap<Integer, Agency> agencyCache = new LinkedHashMap<>();
-        // cache of stops <code, stop>
-        private static LinkedHashMap<String, Stop> stopCache = new LinkedHashMap<>();
-        // cache of routes <agency_id, routes>
-        private static LinkedHashMap<Integer, Route[]> routeCache = new LinkedHashMap<>();
-        // cache of segments
-        private static LinkedHashMap<Integer, String[]> segmentCache = new LinkedHashMap<>();
+        /** Structures cache data for serialization onto disk */
+        private static final String API_AGENCY_CACHE_KEY = "API_CACHE_AGENCY",
+                                    API_STOP_CACHE_KEY = "API_CACHE_STOP",
+                                    API_ROUTE_CACHE_KEY = "API_CACHE_ROUTE",
+                                    API_SEGMENT_CACHE_KEY = "API_CACHE_SEGMENT";
+
+        private static Map<Integer, Agency> agencyCache;
+        private static Map<String, Stop> stopCache;
+        private static Map<String, Route> routeCache;
+        private static Map<String, Segment> segmentCache;
+
+        private static boolean initialized = false;
 
         /**
          * Caches agencies, overwriting any previous entries for the same data.
          * @param agencies agencies to cache
          */
         public static void cacheAgencies(Agency... agencies) {
-            for (Agency a : agencies)
-                agencyCache.put(a.agency_id, a);
+            for (Agency agency : agencies)
+                agencyCache.put(agency.agency_id, agency);
         }
         /**
          * Caches stops, overwriting any previous entries for the same data.
          * @param stops stops to cache
          */
         public static void cacheStops(Stop... stops) {
-            for (Stop s : stops)
-                stopCache.put(s.code, s);
+            for (Stop stop : stops)
+                stopCache.put(stop.stop_id, stop);
         }
         /**
          * Caches routes, overwriting any previous entries for the same data.
          * @param routes routes to cache
          */
-        public static void cacheRoutes(int id, Route... routes) {
-            //TODO: implement additive caching
-            routeCache.put(id, routes);
+        public static void cacheRoutes(Route... routes) {
+            for (Route route : routes)
+                routeCache.put(route.route_id, route);
+        }
+        /**
+         * Caches segments, overwriting any previous entries for the same data.
+         * @param segments segments to cache
+         */
+        public static void cacheSegments(Segment... segments) {
+            for (Segment segment : segments)
+                segmentCache.put(segment.segmentId, segment);
         }
 
         /**
-         * Gets specified agencies, if they are cached. Agencies which were requested
-         * but not found in the cache will have a null value. If no agencies are
-         * specified, the entire agency cache will be returned.
-         * @param ids ids of agencies to get
-         * @return a hash map with agency ids as keys and corresponding agency objects as values
+         * Gets the agency cache. Please don't write to it!
+         * @return agency cache
          */
-        public static LinkedHashMap<Integer, Agency> getAgencies(int... ids) {
-            if (ids.length == 0)
-                return agencyCache;
-
-            LinkedHashMap<Integer, Agency> result = new LinkedHashMap<>(ids.length);
-            for (int i : ids)
-                result.put(i, agencyCache.get(i));
-
-            return result;
+        public static Map<Integer, Agency> getAgencyCache() {
+            return agencyCache;
         }
         /**
-         * Gets specified stops, if they are cached. Stops which were requested
-         * but not found in the cache will have a null value. If no stops are
-         * specified, the entire stop cache will be returned.
-         * @param codes id codes of stops to get
-         * @return a hash map with stop code ids as keys and corresponding stop objects as values
+         * Gets the stop cache. Please don't write to it!
+         * @return stop cache
          */
-        public static LinkedHashMap<String, Stop> getStops(String... codes){
-            if (codes.length == 0)
-                return stopCache;
-
-            LinkedHashMap<String, Stop> result = new LinkedHashMap<>(codes.length);
-            for (String s : codes)
-                result.put(s, stopCache.get(s));
-
-            return result;
+        public static Map<String, Stop> getStopCache() {
+            return stopCache;
         }
         /**
-         * Gets specified routes, if they are cached. Routes which were requested
-         * but not found in the cache will have a null value. If no routes are
-         * specified, the entire route cache will be returned.
-         * @param ids ids of agencies whose routes should be fetched
-         * @return a hash map with agency ids as keys and corresponding route object arrays as values
+         * Gets the route cache. Please don't write to it!
+         * @return route cache
          */
-        public static LinkedHashMap<Integer, Route[]> getRoutes(int... ids) {
-            if (ids.length == 0)
-                return routeCache;
-
-            LinkedHashMap<Integer, Route[]> result = new LinkedHashMap<>(ids.length);
-            for (int i : ids)
-                result.put(i, routeCache.get(i));
-
-            return result;
+        public static Map<String, Route> getRouteCache() {
+            return routeCache;
+        }
+        /**
+         * Gets the segment cache. Please don't write to it!
+         * @return segment cache
+         */
+        public static Map<String, Segment> getSegmentCache() {
+            return segmentCache;
         }
 
+        /** loads on-disk cache to mem */
+        public static void initialize() {
+            if (!initialized) {
+                agencyCache = Hawk.get(API_AGENCY_CACHE_KEY, new LinkedHashMap<Integer, Agency>());
+                stopCache = Hawk.get(API_STOP_CACHE_KEY, new LinkedHashMap<String, Stop>());
+                routeCache = Hawk.get(API_ROUTE_CACHE_KEY, new LinkedHashMap<String, Route>());
+                segmentCache = Hawk.get(API_SEGMENT_CACHE_KEY, new LinkedHashMap<String, Segment>());
+            }
+            initialized = true;
+        }
+        /** commits in-mem cache to disk */
+        public static void commit() {
+            Hawk.chain()
+                    .put(API_AGENCY_CACHE_KEY, agencyCache)
+                    .put(API_STOP_CACHE_KEY, stopCache)
+                    .put(API_ROUTE_CACHE_KEY, routeCache)
+                    .put(API_SEGMENT_CACHE_KEY, segmentCache)
+                    .commit();
+        }
     }
 
-    public static String
+    private static final String
             AGENCY_PATH = "/agencies.json",
             ROUTE_PATH = "/routes.json",
             STOP_PATH = "/stops.json",
-            SEGMENT_PATH = "/segments.json";
+            SEGMENT_PATH = "/segments.json",
+            VEHICLE_PATH = "/vehicles.json";
+    private static final String DATA = "data";
+
+    /* API call methods */
+    /**
+     * Calls the api endpoint with the specified path.
+     * @param relativePath the path to call the server with.
+     * @return A JSONObject with the response. Includes API metadata.
+     */
+    private static JSONObject callApi(String relativePath)
+            throws NetworkErrorException, SocketTimeoutException, JSONException {
+
+        JSONObject response;
+        try {
+            // setup the request
+            URL url = new URL("https://transloc-api-1-2.p.mashape.com" + relativePath);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestProperty("X-Mashape-Key", "HVy1utpe5Smsh8QVRRAES2GQu4pdp1Qx9gYjsnAoiFVQ0DZcXz");
+            conn.setRequestProperty("Accept", "application/json");
+            conn.setConnectTimeout(Util.GLOBAL_NETWORK_TIMEOUT);
+
+            // make the request and convert the response to a JSONObject
+            conn.connect();
+            InputStream response_body = conn.getInputStream();
+            String responseBody = (new java.util.Scanner(response_body).useDelimiter("\\A")).next();
+            response = new JSONObject(responseBody);
+
+        } catch (IOException e) { throw new NetworkErrorException("Unknown issue with network."); }
+
+        return response;
+    }
 
     /**
      * Get specified agencies. If no agency id's are specified, all agencies will be returned.
      * This method will attempt to read agencies from local cache. If the cache is empty, it
      * will sidetrack and cache all agencies. Therefore this method should be called on
      * application startup to accelerate performance later on.
-     * @param ids agency ids to retrieve
+     * @param agencyIds agency ids to retrieve
      * @return the specified agencies, or all if none were specified
      */
-    public static Agency[] getAgencies(int... ids)
+    public static Agency[] getAgencies(int... agencyIds)
             throws NetworkErrorException, SocketTimeoutException, JSONException {
+
         // if cache size == 0, cache all agencies
-        if (Cache.getAgencies().size() == 0) {
+        if (Cache.getAgencyCache().size() == 0) {
             JSONObject response = callApi(AGENCY_PATH);
 
-            try {
-                JSONArray data = response.getJSONArray("data");
-                ArrayList<Agency> agencies = new ArrayList<>();
-                for (int i = 0; i < data.length(); i++)
-                    agencies.add(new Agency(data.getJSONObject(i)));
+            JSONArray data = response.getJSONArray(DATA);
+            ArrayList<Agency> agencies = new ArrayList<>();
+            for (int i = 0; i < data.length(); i++)
+                agencies.add(new Agency(data.getJSONObject(i)));
 
-                Cache.cacheAgencies(agencies.toArray(new Agency[agencies.size()]));
-
-            } catch (Exception e) {
-                Log.e("TransRock", e.getMessage());
-            }
+            Cache.cacheAgencies(agencies.toArray(new Agency[agencies.size()]));
         }
 
         // since the cache holds either all or no agencies, we can assume the cache hit rate
         // will be 100% and just default to cached values
-        LinkedHashMap<Integer, Agency> cachedAgencies = Cache.getAgencies(ids);
+        // TODO: scary assumption, fix this
+        Map<Integer, Agency> cachedAgencies = Cache.getAgencyCache();
 
-        if (ids.length == 0)
+        if (agencyIds.length == 0)
             return cachedAgencies.values().toArray(new Agency[cachedAgencies.size()]);
         else {
-            Agency[] result  = new Agency[ids.length];
-            for (int i = 0; i < ids.length; i++)
-                result[i] = cachedAgencies.get(ids[i]);
+            Agency[] result  = new Agency[agencyIds.length];
+            for (int i = 0; i < agencyIds.length; i++)
+                result[i] = cachedAgencies.get(agencyIds[i]);
             return result;
         }
-
     }
     /**
-     * Get agencies within the defined geoarea. Point-radius form.
+     * Get agencies within the defined geoarea. Point-radius form. TransLoc
+     * has an API parameter for this but since we've got the agencies locally
+     * it's faster to do the measurement ourselves.
      * @param center center of the circle
      * @param radius radius of circle in meters
      * @return all agencies in the specified geoarea
@@ -205,28 +243,31 @@ public class TransLocAPI {
     }
     /**
      * Get the routes for the given agency.
-     * @param id id of the agency to retrieve routes for
+     * TODO: implement caching
+     * @param agencyId id of the agency to retrieve routes for
      * @return array of routes for the agency
      */
-    public static Route[] getRoutes(int id)
+    public static Route[] getRoutes(int agencyId)
         throws NetworkErrorException, SocketTimeoutException, JSONException {
         // encapsulate the single param in an array and call the more general overload
-        Map<Integer, Route[]> res = getRoutes(new int[]{id});
-        return res.get(id);
+        Map<Integer, Route[]> res = getRoutes(new int[]{agencyId});
+        return res.get(agencyId);
     }
     /**
      * Get the routes for a given agency.
-     * @param ids id's of agencies to retrieve routes for
+     * * TODO: implement caching
+     * @param agencyIds id's of agencies to retrieve routes for
      * @return hash map with agency ids as keys and corresponding route arrays as values
      */
-    public static Map<Integer, Route[]> getRoutes(int... ids)
+    public static Map<Integer, Route[]> getRoutes(int... agencyIds)
         throws NetworkErrorException, SocketTimeoutException, JSONException {
 
         // build request parameter
         StringBuilder builder = new StringBuilder();
-        builder.append(ROUTE_PATH);
-        builder.append("?agencies=");
-        for (int i : ids)
+        builder
+                .append(ROUTE_PATH)
+                .append("?agencies=");
+        for (int i : agencyIds)
             builder.append(i).append(',');
         builder.deleteCharAt(builder.length() - 1); // delete trailing comma
         String request = builder.toString();
@@ -234,14 +275,14 @@ public class TransLocAPI {
         // call api
         JSONObject response = callApi(request);
 
-        LinkedHashMap<Integer, Route[]> result = new LinkedHashMap<>(ids.length);
+        LinkedHashMap<Integer, Route[]> result = new LinkedHashMap<>(agencyIds.length);
 
         try {
             // get response datablock
-            JSONObject data = response.getJSONObject("data");
+            JSONObject data = response.getJSONObject(DATA);
 
             // extract routes for each agency block
-            for (int i : ids) {
+            for (int i : agencyIds) {
                 JSONArray routelist = data.getJSONArray(String.valueOf(i));
 
                 Route[] routes = new Route[routelist.length()];
@@ -261,111 +302,121 @@ public class TransLocAPI {
     /**
      * Returns a list of encoded polylines representing the segments for the given route
      * along with their segment id's.
+     * TODO: implement caching
      * @param r route to fetch segments for
      * @return list of encoded polylines keyed by id
      */
     public static Map<String, String> getSegments(Route r)
             throws NetworkErrorException, SocketTimeoutException, JSONException {
-        return getSegments(r.route_id, r.agency_id);
+        return getSegments(r.agency_id, r.route_id);
     }
     /**
      * Returns a list of encoded polylines representing the segments for the given route
      * along with their segment id's.
+     * TODO: implement caching
      * @param routeId id of route to fetch segments for
      * @param agencyId id of agency the route belongs to
      * @return list of encoded polylines keyed by id
      */
-    public static Map<String, String> getSegments(String routeId, int agencyId)
+    public static Map<String, String> getSegments(int agencyId, String routeId)
             throws NetworkErrorException, SocketTimeoutException, JSONException {
         StringBuilder builder = new StringBuilder();
-        builder.append(SEGMENT_PATH);
-        builder.append("?");
-        builder.append("agencies=");
-        builder.append(agencyId);
-        builder.append("&");
-        builder.append("routes=");
-        builder.append(routeId);
-
+        builder
+                .append(SEGMENT_PATH)
+                .append("?")
+                .append("agencies=")
+                .append(agencyId)
+                .append("&")
+                .append("routes=")
+                .append(routeId);
         String request = builder.toString();
+
         JSONObject response = callApi(request);
+
+        JSONObject data = response.getJSONObject(DATA);
+
         LinkedHashMap<String, String> segments = new LinkedHashMap<>();
-        try {
-            JSONObject data = response.getJSONObject("data");
-            Iterator<String> keys = data.keys();
-            while (keys.hasNext()) {
-                String key = keys.next();
-                segments.put(key, data.getString(key));
-            }
-        } catch (JSONException e) {
-            Log.e("TransRock", e.getMessage());
+        Iterator<String> keys = data.keys();
+        while (keys.hasNext()) {
+            String key = keys.next();
+            segments.put(key, data.getString(key));
         }
+
         return segments;
     }
     /**
      * Get a list of stops served by a given agency.
-     * @param ids The id's of the agencies whose stops to get
+     * TODO: implement caching
+     * @param agencyIds The id's of the agencies whose stops to get
      * @return An array of Stops.
      */
-    public static Map<String, Stop> getStops(int... ids)
+    public static Map<String, Stop> getStops(int... agencyIds)
         throws NetworkErrorException, SocketTimeoutException, JSONException {
         // build request parameter
         StringBuilder builder = new StringBuilder();
-        builder.append(STOP_PATH);
-        builder.append("?");
-        builder.append("agencies=");
-        for (int i : ids)
+        builder
+                .append(STOP_PATH)
+                .append("?")
+                .append("agencies=");
+        for (int i : agencyIds)
             builder.append(i).append(",");
-
         builder.deleteCharAt(builder.length() - 1); // delete trailing comma
         String request = builder.toString();
 
         // call api
         JSONObject response = callApi(request);
 
+        // build map
         Map<String, Stop> stops = new LinkedHashMap<>();
-        try {
-            JSONArray data = response.getJSONArray("data");
-            for (int i = 0; i < data.length(); i++) {
-                Stop s = new Stop(data.getJSONObject(i));
-                stops.put(s.stop_id, s);
-            }
-
-        } catch (JSONException e) { Log.e("TransRock", e.getMessage()); }
+        JSONArray data = response.getJSONArray(DATA);
+        for (int i = 0; i < data.length(); i++) {
+            Stop s = new Stop(data.getJSONObject(i));
+            stops.put(s.stop_id, s);
+        }
 
         return stops;
     }
-
     /**
-     * Calls the api endpoint with the specified path.
-     * @param relativePath the path to call the server with.
-     * @return A JSONObject with the response. Includes API metadata.
+     * Gets latest vehicles for the given agency and routes
+     * @param agencyId agency
+     * @param routeId route ids to retrieve vehicles for; should be limited to agency specified
      */
-    private static JSONObject callApi(String relativePath)
+    public static List<Vehicle> getVehicles(int agencyId, int routeId)
             throws NetworkErrorException, SocketTimeoutException, JSONException {
-        // Fuck all the JSON parsers and shitty REST libraries, they can go fuck themselves.
-        // Fuck writing shit introspecting dynamic generic converter adapter classes for fucked
-        // up stupid JSON to object parses. I'll just parse this shit myself if you're going
-        // to make me trudge through your shitty docs.
+        StringBuilder builder = new StringBuilder();
+        builder
+                .append(VEHICLE_PATH)
+                .append("?")
+                .append("agencies=").append(agencyId)
+                .append("&")
+                .append("routes=")
+                .append(routeId);
 
-        JSONObject response = null;
-        try {
-            // setup the request
-            URL url = new URL("https://transloc-api-1-2.p.mashape.com" + relativePath);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestProperty("X-Mashape-Key", "HVy1utpe5Smsh8QVRRAES2GQu4pdp1Qx9gYjsnAoiFVQ0DZcXz");
-            conn.setRequestProperty("Accept", "application/json");
-            conn.setConnectTimeout(Util.GLOBAL_NETWORK_TIMEOUT);
+        String request = builder.toString();
 
-            // make the request and convert the response to a JSONObject
-            conn.connect();
-            InputStream response_body = conn.getInputStream();
-            String responseBody = (new java.util.Scanner(response_body).useDelimiter("\\A")).next();
-            response = new JSONObject(responseBody);
-        } catch (IOException e) {
-            throw new NetworkErrorException("Unknown issue with network.");
-        }
+        // call api
+        JSONObject response = callApi(request);
 
-        return response;
+        ArrayList<Vehicle> result = new ArrayList<>();
+        JSONArray agblock = response.getJSONObject(DATA).getJSONArray(String.valueOf(agencyId));
+        for (int i = 0; i < agblock.length(); i++)
+            result.add(new Vehicle(agblock.getJSONObject(i)));
+
+        return result;
     }
 
+    /* caching and init methods */
+    /**
+     * Initializes API object. Loads cache from disk to memory.
+     */
+    public static void initialize() {
+        Cache.initialize();
+    }
+    /**
+     * Commits memory cache to disk. May take a second or two; consider
+     * calling in an AsyncTask.
+     */
+    public static void commitCache() {
+        Cache.commit();
+    }
 }

@@ -65,12 +65,12 @@ public class TransrockRouteAdapter extends ArrayAdapter<TransrockRoute> {
 
         // activation switch
         final Switch routeActivationSwitch = (Switch) convertView.findViewById(R.id.route_list_item_switch);
-        routeActivationSwitch.setChecked(transrockRoute.isActive());
+        routeActivationSwitch.setChecked(transrockRoute.isActivated());
         routeActivationSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 // change activation state
-                transrockRoute.setActive(isChecked);
+                transrockRoute.setActivated(isChecked);
             }
         });
 
@@ -87,7 +87,7 @@ public class TransrockRouteAdapter extends ArrayAdapter<TransrockRoute> {
     }
 
     /**
-     * @return all routesBefore backing this adapter, ordered by position
+     * @return all data backing this adapter, ordered by position
      */
     public TransrockRoute[] getAll() {
         TransrockRoute[] all = new TransrockRoute[this.getCount()];

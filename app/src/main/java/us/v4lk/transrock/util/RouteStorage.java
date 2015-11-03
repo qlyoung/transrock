@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Interface to saved routes
@@ -20,11 +21,12 @@ public class RouteStorage {
     public static Collection<TransrockRoute> getAllRoutes() {
         return getMap().values();
     }
-
+    public static Set<String> getAllRoutesIds() {
+        return getMap().keySet();
+    }
     public static TransrockRoute getRoute(String id) {
         return getMap().get(id);
     }
-
     public static TransrockRoute putRoute(TransrockRoute route) {
         Map<String, TransrockRoute> map = getMap();
         TransrockRoute previous = map.put(route.route_id, route);
@@ -43,7 +45,6 @@ public class RouteStorage {
 
         return previous;
     }
-
     public static TransrockRoute removeRoute(String id) {
         Map<String, TransrockRoute> map = getMap();
         TransrockRoute removed = map.remove(id);
@@ -65,24 +66,24 @@ public class RouteStorage {
 
         return removed;
     }
-
-    public static Collection<TransrockRoute> getActiveRoutes() {
+    public static Collection<TransrockRoute> getActivatedRoutes() {
         Collection<TransrockRoute> routes = getAllRoutes();
         ArrayList<TransrockRoute> actives = new ArrayList<>();
         for (TransrockRoute route : routes)
-            if (route.isActive())
+            if (route.isActivated())
                 actives.add(route);
 
         return actives;
     }
-
     public static boolean contains(TransrockRoute route) {
         return contains(route.route_id);
     }
     public static boolean contains(String id) {
         return getMap().containsKey(id);
     }
-
+    public static void clear() {
+        Hawk.put(ROUTES_STORAGE_KEY, new HashMap<String, TransrockRoute>());
+    }
     /**
      * initialize empty storage if it does not already exist
      */

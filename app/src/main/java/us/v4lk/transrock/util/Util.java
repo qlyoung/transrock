@@ -14,8 +14,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import us.v4lk.transrock.transloc.Route;
-
 /**
  * Miscellaneous static helper functions & global vars
  */

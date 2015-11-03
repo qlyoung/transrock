@@ -98,4 +98,15 @@ public class MainActivity extends AppCompatActivity {
 
         toolbar.setTitle(newActivityTitle);
     }
+
+    /**
+     * Handles return from activities called for a result. Passes it off to the current
+     * fragment.
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    }
 }

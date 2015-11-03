@@ -24,15 +24,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".RouteListActivity"
-            android:label="@string/title_activity_routelist" >
-        </activity>
-        <activity
-            android:name=".MapActivity"
-            android:label="@string/title_activity_map" >
-        </activity>
-        <activity
-            android:name=".AddRoutesActivity"
+            android:name=".SelectRoutesActivity"
             android:label="@string/title_activity_add_route" >
         </activity>
         <activity

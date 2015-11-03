@@ -55,7 +55,11 @@ public class SplashActivity extends AppCompatActivity {
                 .setLogLevel(LogLevel.FULL)
                 .build();
 
+            // initialize route storage
             RouteStorage.initialize();
+
+            // initialize api
+            TransLocAPI.initialize();
 
             return null;
         }

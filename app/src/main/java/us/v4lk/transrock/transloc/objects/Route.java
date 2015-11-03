@@ -1,17 +1,19 @@
-package us.v4lk.transrock.transloc;
+package us.v4lk.transrock.transloc.objects;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.Serializable;
+
 /**
  * A route.
  */
-public class Route {
+public class Route implements Serializable {
 
     /* direct route data from json */
     enum Direction { FORWARD, BACKWARD }
-    public class Segment {
+    public class Segment implements Serializable {
         public final String id;
         public final Direction direction;
         public Segment(String id, Direction direction) {

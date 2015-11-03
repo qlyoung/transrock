@@ -39,7 +39,7 @@ import us.v4lk.transrock.R;
 import us.v4lk.transrock.mapping.LocationManager;
 import us.v4lk.transrock.mapping.MapWrap;
 import us.v4lk.transrock.mapping.Polylines;
-import us.v4lk.transrock.transloc.Stop;
+import us.v4lk.transrock.transloc.objects.Stop;
 import us.v4lk.transrock.transloc.TransLocAPI;
 import us.v4lk.transrock.util.RouteStorage;
 import us.v4lk.transrock.util.TransrockRoute;
@@ -58,6 +58,7 @@ public class MapFragment extends Fragment implements LocationListener {
     View root;
     /** whether to center the map on the user's location */
     boolean followMe = true;
+
 
     /* lifecycle */
     @Override
@@ -141,11 +142,12 @@ public class MapFragment extends Fragment implements LocationListener {
             mapWrap.centerOnPosition(location, true);
     }
 
+    /* overlays */
     /**
      * Hacky workaround for all of MapView's touch callbacks being hosed.
      * This overlay covers the whole map and breaks follow-me when touched.
      */
-    private class TouchOverlay extends Overlay {
+    class TouchOverlay extends Overlay {
         Context context;
 
         public TouchOverlay(Context c) {
@@ -162,20 +164,19 @@ public class MapFragment extends Fragment implements LocationListener {
             return super.onDown(e, mapView);
         }
     }
-
     /** AsyncTask which fetches and draws segments on the map */
     class AddRouteOverlays extends AsyncTask<Void, Integer, Overlay[]> {
         @Override
         protected Overlay[] doInBackground(Void... params) {
 
             // get the active routes
-            Collection<TransrockRoute> activeRoutes = RouteStorage.getActiveRoutes();
+            Collection<TransrockRoute> activeRoutes = RouteStorage.getActivatedRoutes();
 
             // get segments
             Map<TransrockRoute, Collection<String>> segments = new LinkedHashMap<>(activeRoutes.size());
             for (TransrockRoute route : activeRoutes) {
                 try {
-                    Collection<String> segs = TransLocAPI.getSegments(route.route_id, route.agency_id).values();
+                    Collection<String> segs = TransLocAPI.getSegments(route.agency_id, route.route_id).values();
                     segments.put(route, segs);
                 } catch (Exception e) { /* todo: actual exception handling */ }
             }
@@ -220,7 +221,6 @@ public class MapFragment extends Fragment implements LocationListener {
 
             return polylines.toArray(new Polyline[polylines.size()]);
         }
-
         @Override
         protected void onPostExecute(Overlay[] overlays) {
             // add overlays to map
@@ -231,11 +231,11 @@ public class MapFragment extends Fragment implements LocationListener {
         }
     }
     /** AsyncTask which fetches and draws stops on the map */
-    class AddStopsOverlay extends AsyncTask<TransrockRoute, Integer, Overlay> {
+    class AddStopsOverlay extends AsyncTask<Void, Integer, Overlay> {
         @Override
-        protected Overlay doInBackground(TransrockRoute... params) {
+        protected Overlay doInBackground(Void... params) {
             // get active routes
-            Collection<TransrockRoute> activeRoutes = RouteStorage.getActiveRoutes();
+            Collection<TransrockRoute> activeRoutes = RouteStorage.getActivatedRoutes();
             int[] ids = Util.getAgencyIds(activeRoutes);
 
             // get stops
@@ -275,7 +275,7 @@ public class MapFragment extends Fragment implements LocationListener {
                     drawables[i] = arcDrawable;
                     i++;
                 }
-                drawables[numRoutes] = getResources().getDrawable(R.drawable.stop_marker);
+                drawables[numRoutes] = getResources().getDrawable(R.drawable.stop_marker); // border
                 LayerDrawable stopMarkerDrawable = new LayerDrawable(drawables);
 
                 // make new OverlayItem for this stop

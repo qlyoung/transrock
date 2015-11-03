@@ -12,7 +12,7 @@ import java.util.ArrayList;
 
 import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
 import us.v4lk.transrock.R;
-import us.v4lk.transrock.transloc.Agency;
+import us.v4lk.transrock.transloc.objects.Agency;
 import us.v4lk.transrock.util.Util;
 
 /**

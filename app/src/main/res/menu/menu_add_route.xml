@@ -2,7 +2,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="us.v4lk.transrock.AddRoutesActivity">
+    tools:context="us.v4lk.transrock.SelectRoutesActivity">
 
     <item
         android:id="@+id/addroute_action_search"

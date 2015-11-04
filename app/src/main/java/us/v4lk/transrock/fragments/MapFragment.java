@@ -116,6 +116,18 @@ public class MapFragment extends Fragment implements LocationListener {
     public void onPause() {
         super.onPause();
     }
+
+    @Override
+    public void onStop() {
+        ;
+        super.onStop();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+    }
+
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.menu_map, menu);

@@ -21,6 +21,7 @@ import com.flipboard.bottomsheet.BottomSheetLayout;
 
 import org.json.JSONException;
 
+import java.io.Serializable;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,6 +30,10 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import butterknife.OnItemClick;
 import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
 import us.v4lk.transrock.adapters.AgencyAdapter;
 import us.v4lk.transrock.adapters.RouteSwitchAdapter;
@@ -58,14 +63,31 @@ import us.v4lk.transrock.util.Util;
  */
 public class SelectRoutesActivity extends AppCompatActivity {
 
-    /** Root layout */
-    BottomSheetLayout root;
-    /** List of agencies */
-    StickyListHeadersListView agencyList;
-    /** body and toolbar progress bars */
-    ProgressBar bodyProgressBar, toolbarProgressBar;
-    /** location manager */
+    @Bind(R.id.addroute_bottomsheetlayout) BottomSheetLayout root;
+    @Bind(R.id.addroute_agency_list) StickyListHeadersListView agencyList;
+    @Bind(R.id.addroute_body_progressbar) ProgressBar bodyProgressBar;
+    @Bind(R.id.addroute_toolbar_progressbar) ProgressBar toolbarProgressBar;
+    @Bind(R.id.addroute_toolbar) Toolbar toolbar;
     LocationManager locationManager;
+
+    public void onAgencyItemClicked(View v) {
+        Agency agency = (Agency) v.getTag();
+        showRouteBottomSheet(agency);
+    }
+    public void onBottomSheetDismissed(View v) {
+        ListView bottomSheetView = (ListView) v.findViewById(R.id.bottomsheet_list);
+        RouteSwitchAdapter adapter = (RouteSwitchAdapter) bottomSheetView.getAdapter();
+
+        // get changes made
+        Map<Route, Boolean> result = adapter.getData();
+
+        // apply changes
+        for (Route r : result.keySet())
+            if (result.get(r))
+                routelist.put(r.route_id, r);
+            else
+                routelist.remove(r.route_id);
+    }
 
     /**
      * List of routes that the user wishes to store.
@@ -81,135 +103,32 @@ public class SelectRoutesActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // set content
         setContentView(R.layout.activity_add_routes);
+        ButterKnife.bind(this);
 
-        // capture content
-        root = (BottomSheetLayout) findViewById(R.id.addroute_bottomsheetlayout);
-
-        // set toolbar as action bar, enable back button
-        Toolbar toolbar = (Toolbar) findViewById(R.id.addroute_toolbar);
-        setSupportActionBar(toolbar);
-
-        // enable home button
-        getSupportActionBar().setHomeButtonEnabled(true);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
-        // capture views
-        agencyList = (StickyListHeadersListView) findViewById(R.id.addroute_agency_list);
-        bodyProgressBar = (ProgressBar) findViewById(R.id.addroute_body_progressbar);
-        toolbarProgressBar = (ProgressBar) findViewById(R.id.addroute_toolbar_progressbar);
-
-        // set listener
-        AdapterView.OnItemClickListener agencyClickListener = new AdapterView.OnItemClickListener() {
+        agencyList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Agency a = (Agency) view.getTag();
-                showRouteBottomSheet(a);
+                onAgencyItemClicked(view);
             }
-        };
-        agencyList.setOnItemClickListener(agencyClickListener);
+        });
+
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setHomeButtonEnabled(true);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         // build location manager
         locationManager = new LocationManager(this);
 
-        // fetch stored route ids from storage & build delta map
+        // build map
         routelist = new HashMap<>();
-        for (TransrockRoute route : RouteStorage.getAllRoutes()) {
+        for (TransrockRoute route : RouteStorage.getAllRoutes())
             routelist.put(route.route_id, route.getRoute());
-        }
     }
     @Override
     protected void onStart() {
-        /** asynctask to fetch all agencies & populate list */
-        AsyncTask<Void, Integer, Agency[]> fetchAgencies = new AsyncTask<Void, Integer, Agency[]>() {
-
-            int numActive, numLocal;
-
-            @Override
-            protected Agency[] doInBackground(Void... params) {
-                // get last location;
-                Location loc = locationManager.getLocation();
-
-                // get agency ids of stored routes
-                Collection<TransrockRoute> storedRoutes = RouteStorage.getAllRoutes();
-                int[] storedAgencyIds = Util.getAgencyIds(storedRoutes.toArray(new TransrockRoute[storedRoutes.size()]));
-
-                Agency[]
-                        active = null,
-                        local = null,
-                        all = null;
-
-                try {
-
-                    // fetch the various routes from the various sources
-                    active = storedAgencyIds.length != 0 ?
-                                TransLocAPI.getAgencies(storedAgencyIds) :
-                                new Agency[0];
-
-                    // if we couldn't get the location, don't display that section
-                    local = loc != null ? TransLocAPI.getAgencies(loc, 10000) : new Agency[0];
-                    all = TransLocAPI.getAgencies();
-
-                } catch (SocketTimeoutException e) {
-                    publishProgress(R.string.error_network_timeout);
-                    this.cancel(true);
-                }
-                catch (NetworkErrorException e) {
-                    publishProgress(R.string.error_network_unknown);
-                    this.cancel(true);
-                }
-                catch (JSONException e) {
-                    publishProgress(R.string.error_bad_parse);
-                    this.cancel(true);
-                }
-
-                // sort alphabetically
-                Comparator alphabetical = new Comparator<Agency>() {
-                    @Override
-                    public int compare(Agency lhs, Agency rhs) {
-                        return lhs.long_name.compareTo(rhs.long_name);
-                    }
-                };
-                Arrays.sort(active, alphabetical);
-                Arrays.sort(local, alphabetical);
-                Arrays.sort(all, alphabetical);
-
-                // convenient holder
-                Agency[][] sections = new Agency[][] { active, local, all };
-
-                // flatten into an (ordered) arraylist
-                ArrayList<Agency> result = new ArrayList<>(active.length + local.length + all.length);
-                for (Agency[] agencyList : sections)
-                    for (Agency a : agencyList)
-                        if (!result.contains(a)) // don't add items twice
-                            result.add(a);
-
-                numActive = active.length;
-                numLocal = local.length;
-
-                return result.toArray(new Agency[result.size()]);
-            }
-            @Override
-            public void onPostExecute(Agency[] result) {
-                // populate agency list
-                AgencyAdapter adapter = new AgencyAdapter(
-                        SelectRoutesActivity.this,
-                        R.layout.agency_list_item,
-                        result,
-                        numActive,
-                        numLocal);
-                agencyList.setAdapter(adapter);
-
-                // hide body progress spinner
-                bodyProgressBar.setVisibility(View.GONE);
-            }
-            @Override
-            protected void onProgressUpdate(Integer... values) {
-                showError(values[0]);
-            }
-        };
-        if (Util.isConnected(this)) fetchAgencies.execute();
+        PopulateListTask populateListTask = new PopulateListTask();
+        if (Util.isConnected(this)) populateListTask.execute();
         else showError(R.string.error_network_disconnected);
 
         super.onStart();
@@ -231,19 +150,7 @@ public class SelectRoutesActivity extends AppCompatActivity {
                 return super.onOptionsItemSelected(item);
         }
     }
-
-    /** Commits TransLocAPI's memcache to disk */
-    @Override
-    protected void onPause() {
-
-        // commit api cache to disk
-        TransLocAPI.commitCache();
-        super.onPause();
-    }
-
-    /**
-     * Dismiss sheet on back button press if it is showing, otherwise do the normal thing
-     */
+    /** Dismiss sheet on back button press if it is showing, otherwise do the normal thing */
     @Override
     public void onBackPressed() {
         if (root.isSheetShowing())
@@ -362,22 +269,9 @@ public class SelectRoutesActivity extends AppCompatActivity {
         root.getSheetView().addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
             @Override
             public void onViewAttachedToWindow(View v) { }
-
             @Override
             public void onViewDetachedFromWindow(View v) {
-                ListView rl = (ListView) v.findViewById(R.id.bottomsheet_list);
-                RouteSwitchAdapter adapter = (RouteSwitchAdapter) rl.getAdapter();
-
-                // get changes made
-                Map<Route, Boolean> result = adapter.getData();
-
-                // apply changes
-                for (Route r : result.keySet())
-                    if (result.get(r))
-                        routelist.put(r.route_id, r);
-                    else
-                        routelist.remove(r.route_id);
-
+                onBottomSheetDismissed(v);
             }
         });
     }
@@ -409,6 +303,93 @@ public class SelectRoutesActivity extends AppCompatActivity {
            });
 
         popup.show();
+    }
+
+    /** Pulls all agencies from the network and populates the list. */
+    private class PopulateListTask extends AsyncTask<Void, Integer, Agency[]> {
+        int numActive, numLocal;
+
+        @Override
+        protected Agency[] doInBackground(Void... params) {
+            // get last location;
+            Location loc = locationManager.getLocation();
+
+            // get agency ids of stored routes
+            Collection<TransrockRoute> storedRoutes = RouteStorage.getAllRoutes();
+            int[] storedAgencyIds = Util.getAgencyIds(storedRoutes.toArray(new TransrockRoute[storedRoutes.size()]));
+
+            Agency[] active = null, local = null, all = null;
+
+            try {
+
+                // fetch the various routes from the various sources
+                active = storedAgencyIds.length != 0 ?
+                        TransLocAPI.getAgencies(storedAgencyIds) :
+                        new Agency[0];
+
+                // if we couldn't get the location, don't display that section
+                local = loc != null ? TransLocAPI.getAgencies(loc, 10000) : new Agency[0];
+                all = TransLocAPI.getAgencies();
+
+            } catch (SocketTimeoutException e) {
+                publishProgress(R.string.error_network_timeout);
+                this.cancel(true);
+            }
+            catch (NetworkErrorException e) {
+                publishProgress(R.string.error_network_unknown);
+                this.cancel(true);
+            }
+            catch (JSONException e) {
+                publishProgress(R.string.error_bad_parse);
+                this.cancel(true);
+            }
+
+            // sort alphabetically
+            Comparator alphabetical = new Comparator<Agency>() {
+                @Override
+                public int compare(Agency lhs, Agency rhs) {
+                    return lhs.long_name.compareTo(rhs.long_name);
+                }
+            };
+            Arrays.sort(active, alphabetical);
+            Arrays.sort(local, alphabetical);
+            Arrays.sort(all, alphabetical);
+
+            // convenient holder
+            Agency[][] sections = new Agency[][] { active, local, all };
+
+            // flatten into an (ordered) arraylist
+            ArrayList<Agency> result = new ArrayList<>(active.length + local.length + all.length);
+            for (Agency[] agencyList : sections)
+                for (Agency a : agencyList)
+                    if (!result.contains(a)) // don't add items twice
+                        result.add(a);
+
+            numActive = active.length;
+            numLocal = local.length;
+
+            return result.toArray(new Agency[result.size()]);
+        }
+
+        @Override
+        public void onPostExecute(Agency[] result) {
+            // populate agency list
+            AgencyAdapter adapter = new AgencyAdapter(
+                    SelectRoutesActivity.this,
+                    R.layout.agency_list_item,
+                    result,
+                    numActive,
+                    numLocal);
+            agencyList.setAdapter(adapter);
+
+            // hide body progress spinner
+            bodyProgressBar.setVisibility(View.GONE);
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            showError(values[0]);
+        }
     }
 
 }

@@ -7,8 +7,6 @@ import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 
@@ -17,35 +15,34 @@ import com.mikepenz.materialdrawer.DrawerBuilder;
 import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
 import us.v4lk.transrock.fragments.MapFragment;
 import us.v4lk.transrock.fragments.RoutesFragment;
-import us.v4lk.transrock.util.Util;
 
 /**
  * Main activity. Switches between content fragments using a nav drawer.
  */
 public class MainActivity extends AppCompatActivity {
 
-    /** the nav drawer */
-    Drawer drawer;
-    /** the application toolbar **/
-    Toolbar toolbar;
-    /** the current fragment being displayed **/
+    @Bind(R.id.main_toolbar) Toolbar toolbar;
+    /** the current fragment being displayed */
     Fragment current;
-    Fragment map, routelist;
+    /** map fragment */
+    Fragment map;
+    /** route fragment */
+    Fragment routelist;
+    /**
+     * the nav drawer
+     */
+    Drawer drawer;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // set content view
         setContentView(R.layout.activity_main);
-
-        // set toolbar as action bar
-        toolbar = (Toolbar) findViewById(R.id.main_toolbar);
+        ButterKnife.bind(this);
         setSupportActionBar(toolbar);
-
-        // make fragments
         map = new MapFragment();
         routelist = new RoutesFragment();
 
@@ -66,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
                 .withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
                     @Override
                     public boolean onItemClick(AdapterView<?> adapterView, View view, int i, long l, IDrawerItem iDrawerItem) {
-                        switch(i) {
+                        switch (i) {
                             case 0:
                                 setContentFragment(map, R.string.title_activity_map);
                                 break;
@@ -79,33 +76,34 @@ public class MainActivity extends AppCompatActivity {
                 })
                 .build();
 
-        setContentFragment(new MapFragment(), R.string.title_activity_map);
+
+        // add map fragment
+        FragmentTransaction tx = getFragmentManager().beginTransaction();
+        tx.add(R.id.main_root, map).commit();
+        current = map;
+        toolbar.setTitle(R.string.title_activity_map);
+    }
+    @Override
+    protected void onStop() {
+        super.onStop();
     }
 
     /**
      * Convenience method that switches the current fragment for the given fragment.
-     * @param content the fragment to switch to
-     * @param newActivityTitle the new title of the activity in the toolbar
+     *
+     * @param fragment  the fragment to switch to
+     * @param title     the new title of the activity in the toolbar
      */
-    private void setContentFragment(Fragment content, int newActivityTitle) {
+    private void setContentFragment(Fragment fragment, int title) {
+
         FragmentManager manager = getFragmentManager();
         FragmentTransaction transaction = manager.beginTransaction();
-        transaction.replace(R.id.main_root, content)
-                    .addToBackStack(null)
-                    .commit();
-        current = content;
+        transaction.setCustomAnimations(R.animator.slide_in_left, R.animator.slide_out_right);
+        transaction.replace(R.id.main_root, fragment);
+        transaction.addToBackStack(null);
+        transaction.commit();
 
-        toolbar.setTitle(newActivityTitle);
+        toolbar.setTitle(title);
     }
 
-    /**
-     * Handles return from activities called for a result. Passes it off to the current
-     * fragment.
-     * @param requestCode
-     * @param resultCode
-     * @param data
-     */
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-    }
 }

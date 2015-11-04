@@ -7,6 +7,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -113,7 +114,14 @@ public class RoutesFragment extends Fragment {
 
         adapter.notifyDataSetChanged();
     }
-    /** Writes modified routes to persistence */
+    /**
+     * Writes modified routes to persistence.
+     *
+     * Each time a user turns a route on or off, the corresponding field
+     * is set in the backing route object. These changes need to be saved to disk.
+     * Instead of writing to disk each time a switch is flipped, it's more
+     * efficient to
+     */
     private void persistRoutelist() {
         TransrockRoute[] all = ((TransrockRouteAdapter) routeList.getAdapter()).getAll();
         Set<TransrockRoute> modifiedRoutes = new HashSet<>(all.length);
@@ -140,11 +148,26 @@ public class RoutesFragment extends Fragment {
      * this routelist.
      */
     class FetchRoutesTask extends AsyncTask<Route, Integer, Collection<TransrockRoute>> {
+
+        Snackbar snackbar;
+
         @Override
         protected void onPreExecute() {
             // add currently stored routes to listview before pulling new ones
             // avoids empty routelist while waiting for this task to finish
             updateRoutelist();
+            // show snackbar
+            snackbar = Snackbar.make(
+                            RoutesFragment.this.getView(),
+                            R.string.updating_routes,
+                            Snackbar.LENGTH_SHORT);
+            snackbar.setAction(R.string.dismiss, new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    snackbar.dismiss();
+                }
+            });
+            snackbar.show();
             super.onPreExecute();
         }
 
@@ -181,6 +204,7 @@ public class RoutesFragment extends Fragment {
             RouteStorage.clear();
             RouteStorage.putRoute(result);
             updateRoutelist();
+            snackbar.dismiss();
             super.onPostExecute(result);
         }
 

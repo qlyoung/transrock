@@ -16,6 +16,7 @@
     <string name="local">Local</string>
     <string name="all">All</string>
     <string name="dismiss">Dismiss</string>
+    <string name="updating_routes">Updating routes...</string>
 
     <!-- error strings -->
     <string name="error_indeterminate">Something went wrong.</string>

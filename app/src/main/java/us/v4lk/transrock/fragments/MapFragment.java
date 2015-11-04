@@ -164,7 +164,9 @@ public class MapFragment extends Fragment implements LocationListener {
             return super.onDown(e, mapView);
         }
     }
-    /** AsyncTask which fetches and draws segments on the map */
+    /**
+     * AsyncTask which fetches and draws segments on the map
+     */
     class AddRouteOverlays extends AsyncTask<Void, Integer, Overlay[]> {
         @Override
         protected Overlay[] doInBackground(Void... params) {
@@ -172,19 +174,10 @@ public class MapFragment extends Fragment implements LocationListener {
             // get the active routes
             Collection<TransrockRoute> activeRoutes = RouteStorage.getActivatedRoutes();
 
-            // get segments
-            Map<TransrockRoute, Collection<String>> segments = new LinkedHashMap<>(activeRoutes.size());
-            for (TransrockRoute route : activeRoutes) {
-                try {
-                    Collection<String> segs = TransLocAPI.getSegments(route.agency_id, route.route_id).values();
-                    segments.put(route, segs);
-                } catch (Exception e) { /* todo: actual exception handling */ }
-            }
-
             // calculate how many times each segment is reused across all routes
             Map<String, Integer> totalCount = new LinkedHashMap<>(activeRoutes.size());
             for (TransrockRoute route : activeRoutes)
-                for (String segment : segments.get(route)) {
+                for (String segment : route.segments) {
                     int prevCount = totalCount.get(segment) == null ? 0 : totalCount.get(segment);
                     totalCount.put(segment, prevCount + 1);
                 }
@@ -194,8 +187,9 @@ public class MapFragment extends Fragment implements LocationListener {
             Map<String, Integer> visitedCount = new LinkedHashMap<>(totalCount.size());
             int basePolylineSize = 10;
             float dashScale = 100;
+
             for (TransrockRoute route : activeRoutes) {
-                for (String segment : segments.get(route)) {
+                for (String segment : route.segments) {
                     int timesVisited = visitedCount.get(segment) == null ? 0 : visitedCount.get(segment);
 
                     // get the polyline
@@ -207,7 +201,8 @@ public class MapFragment extends Fragment implements LocationListener {
                     float split = 1f / totalCount.get(segment);             // ratio of this line : all other lines
                     float dashOn = split * dashScale;                       // magnitude of 'on' segments
                     float dashOff = dashOn * (totalCount.get(segment) - 1); // magnitude of 'off' segments, which should equal split * scale * lines remaining
-                    DashPathEffect dashFect = new DashPathEffect(new float[]{dashOn, dashOff}, timesVisited * dashOn);
+                    DashPathEffect dashFect = new DashPathEffect(new float[] {dashOn, dashOff}, timesVisited * dashOn);
+
                     // set effect
                     p.getPaint().setPathEffect(dashFect);
 

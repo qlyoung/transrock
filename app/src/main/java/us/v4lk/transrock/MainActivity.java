@@ -91,7 +91,6 @@ public class MainActivity extends AppCompatActivity {
         FragmentManager manager = getFragmentManager();
         FragmentTransaction transaction = manager.beginTransaction();
         transaction.replace(R.id.main_root, content)
-                    .setCustomAnimations(R.anim.abc_slide_in_bottom, R.anim.abc_slide_out_bottom)
                     .addToBackStack(null)
                     .commit();
         current = content;

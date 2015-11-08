@@ -1,5 +1,6 @@
 package us.v4lk.transrock.mapping;
 
+import android.app.Application;
 import android.content.Context;
 import android.location.Location;
 import android.os.Bundle;
@@ -26,20 +27,22 @@ public class LocationManager implements GoogleApiClient.ConnectionCallbacks,
     /** play services api client */
     private GoogleApiClient apiclient;
     /** lastKnown location received */
-    private static Location lastKnown;
+    private Location lastKnown;
     /** defines settings for location updates */
     private LocationRequest locationRequest;
     /** list of listeners subscribed for location updates */
     private ArrayList<LocationListener> locationListeners;
 
+    private static LocationManager instance;
+
     /**
      * Initializes a new LocationManager and initiates connection to
      * Play Services API.
-     * @param context the context
+     * @param appContext the application context
      */
-    public LocationManager(Context context) {
+    private LocationManager(Context appContext) {
         // setup api client
-        apiclient = new GoogleApiClient.Builder(context)
+        apiclient = new GoogleApiClient.Builder(appContext)
                         .addConnectionCallbacks(this)
                         .addOnConnectionFailedListener(this)
                         .addApi(LocationServices.API)
@@ -56,6 +59,18 @@ public class LocationManager implements GoogleApiClient.ConnectionCallbacks,
         addLocationListener(this);
 
         apiclient.connect();
+    }
+
+    /**
+     * Gets the LocationManager instance.
+     * @param appContext application context
+     * @return instance of LocationManager
+     */
+    public static LocationManager getInstance(Context appContext) {
+        if (instance == null)
+            instance = new LocationManager(appContext);
+
+        return instance;
     }
 
     /* listener stuff */

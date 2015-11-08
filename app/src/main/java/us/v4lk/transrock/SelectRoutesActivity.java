@@ -58,8 +58,8 @@ import us.v4lk.transrock.util.Util;
  * to update the on-disk list. The preferred method is by launching a
  * generalized AsyncTask to accomplish this goal and update the UI after completion.
  *
- * The key is "routelist" and the type is HashMap<String, Route>.
- * e.g. data.getSerializableExtra("routelist");
+ * The key is "routeFragment" and the type is HashMap<String, Route>.
+ * e.g. data.getSerializableExtra("routeFragment");
  */
 public class SelectRoutesActivity extends AppCompatActivity {
 
@@ -118,9 +118,9 @@ public class SelectRoutesActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         // build location manager
-        locationManager = new LocationManager(this);
+        locationManager = LocationManager.getInstance(this.getApplicationContext());
 
-        // build map
+        // build mapFragment
         routelist = new HashMap<>();
         for (TransrockRoute route : RouteStorage.getAllRoutes())
             routelist.put(route.route_id, route.getRoute());
@@ -158,7 +158,7 @@ public class SelectRoutesActivity extends AppCompatActivity {
         else {
             // set result
             Intent result = new Intent();
-            result.putExtra("routelist", routelist);
+            result.putExtra("routeFragment", routelist);
             setResult(RESULT_OK, result);
             finish();
         }
@@ -249,7 +249,7 @@ public class SelectRoutesActivity extends AppCompatActivity {
         // setup adapter & listview
         ListView routeList = (ListView) bottomSheet.findViewById(R.id.bottomsheet_list);
 
-        // cross-reference against storageRoutes to build a map of route -> checked value
+        // cross-reference against storageRoutes to build a mapFragment of route -> checked value
         Map<Route, Boolean> routeSwitchMap = new HashMap<>();
         for (Route r : routes) {
             routeSwitchMap.put(r, routelist.containsKey(r.route_id));
@@ -265,7 +265,7 @@ public class SelectRoutesActivity extends AppCompatActivity {
         // show bottom sheet
         root.showWithSheetView(bottomSheet);
 
-        // modify routelist on dismissal
+        // modify routeFragment on dismissal
         root.getSheetView().addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
             @Override
             public void onViewAttachedToWindow(View v) { }

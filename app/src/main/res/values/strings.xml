@@ -17,6 +17,7 @@
     <string name="all">All</string>
     <string name="dismiss">Dismiss</string>
     <string name="updating_routes">Updating routes...</string>
+    <string name="retry">Retry</string>
 
     <!-- error strings -->
     <string name="error_indeterminate">Something went wrong.</string>

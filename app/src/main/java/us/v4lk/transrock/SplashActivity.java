@@ -44,7 +44,7 @@ public class SplashActivity extends AppCompatActivity {
             catch (Exception e) { Log.e("TransRock", e.getMessage()); }
 
             // initialize a location manager
-            LocationManager manager = new LocationManager(SplashActivity.this);
+            LocationManager manager = LocationManager.getInstance(getApplicationContext());
             // try to cache location
             manager.getLocation();
 

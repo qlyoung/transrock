@@ -150,6 +150,7 @@ public class RoutesFragment extends Fragment {
     class FetchRoutesTask extends AsyncTask<Route, Integer, Collection<TransrockRoute>> {
 
         Snackbar snackbar;
+        Route[] routes;
 
         @Override
         protected void onPreExecute() {
@@ -175,6 +176,7 @@ public class RoutesFragment extends Fragment {
         protected Collection<TransrockRoute> doInBackground(Route... params) {
 
             ArrayList<TransrockRoute> result = new ArrayList<>();
+            routes = params;
 
             // pull segments from network, create a TransrockRoute, and put
             // it in internal storage
@@ -210,7 +212,16 @@ public class RoutesFragment extends Fragment {
 
         @Override
         protected void onProgressUpdate(Integer... values) {
-            //todo: implement error handling here
+            // show snackbar with error message
+            int messageResId = values[0];
+            Snackbar errorSnackbar = Snackbar.make(RoutesFragment.this.getView(), messageResId, Snackbar.LENGTH_LONG);
+            // allow user to retry
+            errorSnackbar.setAction(R.string.retry, new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    FetchRoutesTask.this.execute(routes);
+                }
+            });
         }
-    };
+    }
 }

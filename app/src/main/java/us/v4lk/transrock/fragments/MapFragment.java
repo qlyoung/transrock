@@ -1,5 +1,6 @@
 package us.v4lk.transrock.fragments;
 
+import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
 import android.graphics.Canvas;
@@ -35,6 +36,9 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import butterknife.Bind;
+import butterknife.BindDrawable;
+import butterknife.ButterKnife;
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.mapping.LocationManager;
 import us.v4lk.transrock.mapping.MapWrap;
@@ -49,6 +53,10 @@ import us.v4lk.transrock.util.Util;
  * Map fragment. Draws routes and lets the user move around the map.
  */
 public class MapFragment extends Fragment implements LocationListener {
+
+    @BindDrawable(R.drawable.location_marker) Drawable location_marker;
+    @BindDrawable(R.drawable.stop_marker) Drawable stop_marker;
+    @Bind(R.id.map) MapView map;
 
     /** location manager */
     LocationManager locationManager;
@@ -68,10 +76,8 @@ public class MapFragment extends Fragment implements LocationListener {
     }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        // inflate layout
         root = inflater.inflate(R.layout.fragment_map, container, false);
-
-        // return whatever should be the root of this fragment's view hierarchy
+        ButterKnife.bind(this, root);
         return root;
     }
     @Override
@@ -79,18 +85,18 @@ public class MapFragment extends Fragment implements LocationListener {
         super.onActivityCreated(savedInstanceState);
 
         // capture & setup map
-        mapWrap = new MapWrap(getActivity(), (MapView) root.findViewById(R.id.map));
+        mapWrap = new MapWrap(getActivity(), map);
+        mapWrap.setLocationMarkerDrawable(location_marker);
+        mapWrap.setDefaultMarkerDrawable(stop_marker);
         mapWrap.setScaleBar(true);
-        mapWrap.setLocationMarkerDrawable(getResources().getDrawable(R.drawable.location_marker));
-        mapWrap.setDefaultMarkerDrawable(getResources().getDrawable(R.drawable.stop_marker));
 
         // add follow-me watchdog overlay
         TouchOverlay touchOverlay = new TouchOverlay(mapWrap.getContext());
         touchOverlay.setEnabled(true);
         mapWrap.getMapView().getOverlays().add(touchOverlay);
 
-        // initialize location manager
-        locationManager = new LocationManager(getActivity());
+        // get a reference to the location manager
+        locationManager = LocationManager.getInstance(this.getActivity().getApplicationContext());
 
         // get location updates
         locationManager.addLocationListener(this);
@@ -111,16 +117,6 @@ public class MapFragment extends Fragment implements LocationListener {
         new AddRouteOverlays().execute();
         // draw stops to map
         new AddStopsOverlay().execute();
-    }
-    @Override
-    public void onPause() {
-        super.onPause();
-    }
-
-    @Override
-    public void onStop() {
-        ;
-        super.onStop();
     }
 
     @Override
@@ -231,9 +227,7 @@ public class MapFragment extends Fragment implements LocationListener {
         @Override
         protected void onPostExecute(Overlay[] overlays) {
             // add overlays to map
-            for (Overlay l : overlays)
-                mapWrap.addOverlay(l);
-
+            mapWrap.addOverlay(overlays);
             super.onPostExecute(overlays);
         }
     }
@@ -263,7 +257,8 @@ public class MapFragment extends Fragment implements LocationListener {
             }
 
             // single itemized overlay for all stop markers
-            ItemizedIconOverlay<OverlayItem> stopsOverlay = new ItemizedIconOverlay(getActivity(), new ArrayList<OverlayItem>(), null);
+            Activity e = getActivity();
+            ItemizedIconOverlay<OverlayItem> stopsOverlay = new ItemizedIconOverlay<>(getActivity(), new ArrayList<OverlayItem>(), null);
             for (Stop stop : stopsToRoutes.keySet()) {
                 Collection<TransrockRoute> stopRoutes = stopsToRoutes.get(stop);
                 int numRoutes = stopRoutes.size();

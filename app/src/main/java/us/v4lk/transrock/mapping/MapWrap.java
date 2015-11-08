@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.widget.Toast;
 
@@ -20,6 +21,8 @@ import org.osmdroid.views.overlay.OverlayItem;
 import org.osmdroid.views.overlay.ScaleBarOverlay;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Convenience wrapper for MapView that encapsulates many common
@@ -144,8 +147,16 @@ public class MapWrap {
     public void removeMapListener() {
         map.setMapListener(null);
     }
-    public void addOverlay(Overlay overlay) {
-        map.getOverlays().add(overlay);
+    public void addOverlay(Overlay... overlays) {
+        List<Overlay> overlayList = map.getOverlays();
+        Log.d("tag", "tag");
+        for (Overlay overlay : overlays)
+            overlayList.add(overlay);
+
+        map.invalidate();
+    }
+    public void addOverlay(Collection<? extends Overlay> overlays) {
+        map.getOverlays().addAll(overlays);
         map.invalidate();
     }
     public void removeOverlay(Overlay overlay){

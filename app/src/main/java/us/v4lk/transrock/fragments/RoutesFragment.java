@@ -215,6 +215,16 @@ public class RoutesFragment extends Fragment {
             // show snackbar with error message
             int messageResId = values[0];
             Snackbar errorSnackbar = Snackbar.make(RoutesFragment.this.getView(), messageResId, Snackbar.LENGTH_LONG);
+
+            // allow user to retry this task in case of error
+            errorSnackbar.setAction(R.string.retry, new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // re-run this task
+                    FetchRoutesTask newTask = new FetchRoutesTask();
+                    newTask.execute(routes);
+                }
+            });
         }
     }
 }

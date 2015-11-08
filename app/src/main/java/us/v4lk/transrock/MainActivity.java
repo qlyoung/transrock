@@ -16,8 +16,10 @@ import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import butterknife.OnPageChange;
 import us.v4lk.transrock.fragments.MapFragment;
 import us.v4lk.transrock.fragments.RoutesFragment;
+import us.v4lk.transrock.util.SmartViewPager;
 
 /**
  * Main activity. Switches between content fragments using a nav drawer.
@@ -25,7 +27,16 @@ import us.v4lk.transrock.fragments.RoutesFragment;
 public class MainActivity extends AppCompatActivity {
 
     @Bind(R.id.main_toolbar) Toolbar toolbar;
-    @Bind(R.id.fragment_pager) ViewPager pager;
+    @Bind(R.id.fragment_pager) SmartViewPager pager;
+    @OnPageChange(R.id.fragment_pager) void onPageSelected(int position) {
+        if (position == 0) {
+            // disallow swiping on map and set drawer's item selection to the correct value
+            pager.setAllowSwiping(false);
+            drawer.setSelection(position);
+        }
+        else
+            pager.setAllowSwiping(true);
+    }
 
     /** the nav drawer */
     Drawer drawer;
@@ -65,10 +76,8 @@ public class MainActivity extends AppCompatActivity {
 
         // build drawer
         drawer = buildDrawer(R.id.drawer_container);
-    }
-    @Override
-    protected void onStop() {
-        super.onStop();
+        // trigger some setup that gets called on item selection
+        drawer.setSelection(0);
     }
 
     private Drawer buildDrawer(int rootView) {

@@ -11,6 +11,7 @@ import android.widget.Toast;
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.ResourceProxy;
 import org.osmdroid.ResourceProxy.bitmap;
+import org.osmdroid.bonuspack.overlays.Polyline;
 import org.osmdroid.events.MapListener;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
@@ -18,15 +19,19 @@ import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.ItemizedIconOverlay;
 import org.osmdroid.views.overlay.Overlay;
 import org.osmdroid.views.overlay.OverlayItem;
+import org.osmdroid.views.overlay.OverlayManager;
 import org.osmdroid.views.overlay.ScaleBarOverlay;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Convenience wrapper for MapView that encapsulates many common
- * tasks into easy-to-use methods!
+ * tasks into easy-to-use methods. Also tracks different classes
+ * and groups of overlays for easy addition and removal.
  */
 public class MapWrap {
 
@@ -36,16 +41,20 @@ public class MapWrap {
     final Context context;
     /** map **/
     final MapView map;
+
     /** default marker drawable */
     Drawable defaultMarkerDrawable;
     /** location marker drawable */
     Drawable locationMarkerDrawable;
+
     /** location marker */
     OverlayItem locationMarker;
     /** overlay with all map markersOverlay */
     final ItemizedIconOverlay markersOverlay;
     /** scale bar overlay */
     final ScaleBarOverlay scaleBarOverlay;
+    /** route polyline overlays */
+    final Map<String, Collection<Polyline>> routeOverlays;
 
     /**
      * @param c context
@@ -74,6 +83,8 @@ public class MapWrap {
         scaleBarOverlay.setEnabled(true);
         map.getOverlays().add(markersOverlay);
         map.getOverlays().add(scaleBarOverlay);
+        routeOverlays = new HashMap<>();
+
 
         MAP_ZOOM_LEVEL = defaultZoomLevel;
     }
@@ -88,24 +99,13 @@ public class MapWrap {
         map.invalidate();
         return markerItem;
     }
-    public OverlayItem putMarkerAt(Location l, Drawable markerDrawable) {
-        return putMarkerAt(toGeoPoint(l), markerDrawable);
-    }
-    public OverlayItem putMarkerAt(GeoPoint p) {
-        return putMarkerAt(p, defaultMarkerDrawable);
-    }
-    public OverlayItem putMarkerAt(Location l) {
-        return putMarkerAt(toGeoPoint(l), defaultMarkerDrawable);
-    }
     public void setScaleBar(boolean on) {
         scaleBarOverlay.setEnabled(on);
-        map.invalidate();
     }
     public void setLocationMarkerOn(boolean on) {
         markersOverlay.removeItem(locationMarker);
         if (on)
             markersOverlay.addItem(locationMarker);
-        map.invalidate();
     }
     public void setLocationMarkerPosition(GeoPoint p) {
         markersOverlay.removeItem(locationMarker);
@@ -141,27 +141,44 @@ public class MapWrap {
     public void centerAndZoomOnPosition(Location l, boolean animate) {
         centerAndZoomOnPosition(toGeoPoint(l), animate);
     }
-    public void setMapListener(MapListener listener) {
-        map.setMapListener(listener);
-    }
-    public void removeMapListener() {
-        map.setMapListener(null);
-    }
-    public void addOverlay(Overlay... overlays) {
-        List<Overlay> overlayList = map.getOverlays();
-        for (Overlay overlay : overlays)
-            overlayList.add(overlay);
 
-        map.invalidate();
+    /* overlays */
+    public void addOverlay(Overlay... overlays) {
+        OverlayManager overlayManager = map.getOverlayManager();
+        for (Overlay overlay : overlays)
+            overlayManager.add(overlay);
     }
     public void addOverlay(Collection<? extends Overlay> overlays) {
-        map.getOverlays().addAll(overlays);
-        map.invalidate();
+        map.getOverlayManager().addAll(overlays);
     }
-    public void removeOverlay(Overlay overlay){
-        map.getOverlays().remove(overlay);
-        map.invalidate();
+    public void removeOverlay(Overlay... overlays) {
+        OverlayManager overlayManager = map.getOverlayManager();
+        for (Overlay overlay : overlays)
+            overlayManager.remove(overlay);
     }
+    public void removeOverlay(Collection<? extends Overlay> overlays) {
+        map.getOverlayManager().removeAll(overlays);
+    }
+    public void addRouteOverlay(String route_id, Collection<Polyline> segmentOverlays) {
+        routeOverlays.put(route_id, segmentOverlays);
+        addOverlay(segmentOverlays);
+    }
+    public void removeRouteOverlay(String... route_ids) {
+        if (routeOverlays.containsKey(route_ids)) {
+            for (String id : route_ids) {
+                map.getOverlayManager().removeAll(routeOverlays.get(id));
+                map.getOverlays().removeAll(routeOverlays.get(id));
+            }
+        }
+    }
+    public void removeAllRouteOverlays() {
+        for (Collection<Polyline> routeOverlay : routeOverlays.values())
+            map.getOverlayManager().removeAll(routeOverlay);
+
+        routeOverlays.clear();
+    }
+
+    public void invalidate() { map.invalidate(); }
     public MapView getMapView() {
         return map;
     }

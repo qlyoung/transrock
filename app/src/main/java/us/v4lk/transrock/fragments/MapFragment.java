@@ -113,10 +113,7 @@ public class MapFragment extends Fragment implements LocationListener {
             mapWrap.setLocationMarkerOn(true);
         }
 
-        // draw routes to map
-        new AddRouteOverlays().execute();
-        // draw stops to map
-        new AddStopsOverlay().execute();
+        updateOverlays();
     }
 
     @Override
@@ -152,6 +149,16 @@ public class MapFragment extends Fragment implements LocationListener {
 
     /* overlays */
     /**
+     * Pulls route overlays from storage and adds them to the map.
+     */
+    public void updateOverlays() {
+        mapWrap.removeAllRouteOverlays();
+        new AddRouteOverlays().execute();
+        new AddStopsOverlay().execute();
+        mapWrap.invalidate();
+    }
+
+    /**
      * Hacky workaround for all of MapView's touch callbacks being hosed.
      * This overlay covers the whole map and breaks follow-me when touched.
      */
@@ -185,7 +192,6 @@ public class MapFragment extends Fragment implements LocationListener {
             activeRoutes = RouteStorage.getActivatedRoutes();
             super.onPreExecute();
         }
-
         @Override
         protected Overlay[] doInBackground(Void... params) {
 
@@ -234,6 +240,9 @@ public class MapFragment extends Fragment implements LocationListener {
         @Override
         protected void onPostExecute(Overlay[] overlays) {
             // add overlays to map
+            //TODO: change this to use the new addRouteOverlay method
+            //TODO: fix route removal after update bug
+            //TODO: figure out how to update after routesfragment route has switch changed
             mapWrap.addOverlay(overlays);
             super.onPostExecute(overlays);
         }

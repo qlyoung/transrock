@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import us.v4lk.transrock.MainActivity;
 import us.v4lk.transrock.SelectRoutesActivity;
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.adapters.TransrockRouteAdapter;
@@ -39,7 +40,7 @@ public class RoutesFragment extends Fragment {
     /** ListView holding all route items */
     ListView routeList;
     /** request code for route selection activity */
-    final int SELECT_ROUTES_REQUESTCODE = 0;
+    public static final int SELECT_ROUTES_REQUESTCODE = 0;
 
     /* lifecycle */
     @Override
@@ -79,8 +80,8 @@ public class RoutesFragment extends Fragment {
     }
     @Override
     public void onResume() {
-        updateRoutelist();
         super.onResume();
+        updateRoutelist();
     }
     @Override
     public void onPause() {
@@ -213,6 +214,10 @@ public class RoutesFragment extends Fragment {
             RouteStorage.putRoute(result);
             updateRoutelist();
             snackbar.dismiss();
+
+            // notify activity that we updated
+            ((MainActivity) getActivity()).onRouteListChanged();
+
             super.onPostExecute(result);
         }
 

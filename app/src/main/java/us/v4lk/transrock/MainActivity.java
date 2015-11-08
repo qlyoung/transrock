@@ -77,8 +77,10 @@ public class MainActivity extends AppCompatActivity {
 
         // build drawer
         drawer = buildDrawer(R.id.drawer_container);
-        // trigger some setup that gets called on item selection
-        drawer.setSelection(0);
+        // set initial page and disable swiping for initial use
+        pager.setCurrentItem(0);
+        pager.setAllowSwiping(false);
+
     }
 
     private Drawer buildDrawer(int rootView) {

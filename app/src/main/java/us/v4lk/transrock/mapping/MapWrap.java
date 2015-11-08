@@ -149,7 +149,6 @@ public class MapWrap {
     }
     public void addOverlay(Overlay... overlays) {
         List<Overlay> overlayList = map.getOverlays();
-        Log.d("tag", "tag");
         for (Overlay overlay : overlays)
             overlayList.add(overlay);
 

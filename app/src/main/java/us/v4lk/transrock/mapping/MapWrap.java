@@ -55,6 +55,8 @@ public class MapWrap {
     final ScaleBarOverlay scaleBarOverlay;
     /** route polyline overlays */
     final Map<String, Collection<Polyline>> routeOverlays;
+    /** stop marker overlays */
+    Overlay stopOverlay;
 
     /**
      * @param c context
@@ -84,7 +86,6 @@ public class MapWrap {
         map.getOverlays().add(markersOverlay);
         map.getOverlays().add(scaleBarOverlay);
         routeOverlays = new HashMap<>();
-
 
         MAP_ZOOM_LEVEL = defaultZoomLevel;
     }
@@ -159,6 +160,7 @@ public class MapWrap {
     public void removeOverlay(Collection<? extends Overlay> overlays) {
         map.getOverlayManager().removeAll(overlays);
     }
+    // route overlays
     public void addRouteOverlay(String route_id, Collection<Polyline> segmentOverlays) {
         routeOverlays.put(route_id, segmentOverlays);
         addOverlay(segmentOverlays);
@@ -176,6 +178,16 @@ public class MapWrap {
             map.getOverlayManager().removeAll(routeOverlay);
 
         routeOverlays.clear();
+    }
+    // stop overlays
+    public void setStopsOverlay(Overlay stopOverlay) {
+        removeStopsOverlay();
+        this.stopOverlay = stopOverlay;
+        map.getOverlayManager().add(stopOverlay);
+    }
+    public void removeStopsOverlay() {
+        map.getOverlayManager().remove(stopOverlay);
+        this.stopOverlay = null;
     }
 
     public void invalidate() { map.invalidate(); }

@@ -8,6 +8,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -32,10 +33,11 @@ import us.v4lk.transrock.adapters.TransrockRouteAdapter;
 import us.v4lk.transrock.transloc.objects.Route;
 import us.v4lk.transrock.transloc.TransLocAPI;
 import us.v4lk.transrock.util.RouteStorage;
+import us.v4lk.transrock.util.SmartViewPager;
 import us.v4lk.transrock.util.TransrockRoute;
 
 /** Route list fragment. */
-public class RoutesFragment extends Fragment {
+public class RoutesFragment extends Fragment implements ViewPager.OnPageChangeListener {
 
     /** ListView holding all route items */
     ListView routeList;
@@ -93,6 +95,24 @@ public class RoutesFragment extends Fragment {
         inflater.inflate(R.menu.menu_routelist, menu);
     }
 
+    /* pager callbacks */
+    @Override
+    public void onPageSelected(int position) {
+        switch (position) {
+            case SmartViewPager.MAP_PAGE:
+                persistRoutelist();
+                break;
+            case SmartViewPager.ROUTE_PAGE:
+            default:
+                break;
+        }
+    }
+    @Override
+    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) { /* don't care */ }
+    @Override
+    public void onPageScrollStateChanged(int state) { /* don't care */ }
+
+    /* methods that save & read route list */
     /** Loads in routes to routelist from persistence */
     private void updateRoutelist() {
         // get routes from db
@@ -121,9 +141,9 @@ public class RoutesFragment extends Fragment {
      * Each time a user turns a route on or off, the corresponding field
      * is set in the backing route object. These changes need to be saved to disk.
      * Instead of writing to disk each time a switch is flipped, it's more
-     * efficient to
+     * efficient to wait until we leave the activity and batch persist them.
      */
-    private void persistRoutelist() {
+    public void persistRoutelist() {
         TransrockRoute[] all = ((TransrockRouteAdapter) routeList.getAdapter()).getAll();
         Set<TransrockRoute> modifiedRoutes = new HashSet<>(all.length);
         for (int i = 0; i < all.length; i++)
@@ -132,6 +152,7 @@ public class RoutesFragment extends Fragment {
         RouteStorage.putRoute(modifiedRoutes);
     }
 
+    /* called when we return from SelectRoutesActivity */
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
@@ -143,6 +164,7 @@ public class RoutesFragment extends Fragment {
         }
     }
 
+    /* tasks */
     /**
      * Takes a list of routes, gets necessary data to build TransrockRoutes, sets
      * internal storage to the resulting list (not additive), and then updates
@@ -210,13 +232,14 @@ public class RoutesFragment extends Fragment {
                 if (storageRoutes.containsKey(route.route_id))
                     route.setActivated(storageRoutes.get(route.route_id).isActivated());
 
+            // remove all previously stored routes
             RouteStorage.clear();
+            // put all new routes
             RouteStorage.putRoute(result);
+            // update views
             updateRoutelist();
+            // dismiss snackbar
             snackbar.dismiss();
-
-            // notify activity that we updated
-            ((MainActivity) getActivity()).onRouteListChanged();
 
             super.onPostExecute(result);
         }

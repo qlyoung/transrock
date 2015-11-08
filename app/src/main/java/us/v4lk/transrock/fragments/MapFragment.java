@@ -1,6 +1,5 @@
 package us.v4lk.transrock.fragments;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -13,6 +12,7 @@ import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -32,6 +32,7 @@ import org.osmdroid.views.overlay.OverlayItem;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -43,20 +44,20 @@ import us.v4lk.transrock.R;
 import us.v4lk.transrock.mapping.LocationManager;
 import us.v4lk.transrock.mapping.MapWrap;
 import us.v4lk.transrock.mapping.Polylines;
-import us.v4lk.transrock.transloc.objects.Stop;
 import us.v4lk.transrock.transloc.TransLocAPI;
+import us.v4lk.transrock.transloc.objects.Stop;
 import us.v4lk.transrock.util.RouteStorage;
+import us.v4lk.transrock.util.SmartViewPager;
 import us.v4lk.transrock.util.TransrockRoute;
 import us.v4lk.transrock.util.Util;
 
 /**
  * Map fragment. Draws routes and lets the user move around the map.
  */
-public class MapFragment extends Fragment implements LocationListener {
+public class MapFragment extends Fragment implements LocationListener, ViewPager.OnPageChangeListener {
 
     @BindDrawable(R.drawable.location_marker) Drawable location_marker;
     @BindDrawable(R.drawable.stop_marker) Drawable stop_marker;
-    @Bind(R.id.map) MapView map;
 
     /** location manager */
     LocationManager locationManager;
@@ -64,9 +65,8 @@ public class MapFragment extends Fragment implements LocationListener {
     MapWrap mapWrap;
     /** root view */
     View root;
-    /** whether to center the map on the user's location */
+    /** whether to center the map on the user's location each time we get a location update */
     boolean followMe = true;
-
 
     /* lifecycle */
     @Override
@@ -85,7 +85,7 @@ public class MapFragment extends Fragment implements LocationListener {
         super.onActivityCreated(savedInstanceState);
 
         // capture & setup map
-        mapWrap = new MapWrap(getActivity(), map);
+        mapWrap = new MapWrap(getActivity(), (MapView) getView().findViewById(R.id.map));
         mapWrap.setLocationMarkerDrawable(location_marker);
         mapWrap.setDefaultMarkerDrawable(stop_marker);
         mapWrap.setScaleBar(true);
@@ -113,9 +113,8 @@ public class MapFragment extends Fragment implements LocationListener {
             mapWrap.setLocationMarkerOn(true);
         }
 
-        updateOverlays();
+        new UpdateOverlays().execute();
     }
-
     @Override
     public void onDestroyView() {
         super.onDestroyView();
@@ -139,6 +138,23 @@ public class MapFragment extends Fragment implements LocationListener {
         return true;
     }
 
+    /* pager callbacks */
+    @Override
+    public void onPageSelected(int position) {
+        switch (position) {
+            case SmartViewPager.MAP_PAGE:
+                new UpdateOverlays().execute();
+                break;
+            case SmartViewPager.ROUTE_PAGE:
+            default:
+                break;
+        }
+    }
+    @Override
+    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) { }
+    @Override
+    public void onPageScrollStateChanged(int state) { }
+
     /* play services location api callback */
     @Override
     public void onLocationChanged(Location location) {
@@ -147,44 +163,22 @@ public class MapFragment extends Fragment implements LocationListener {
             mapWrap.centerOnPosition(location, true);
     }
 
-    /* overlays */
+    /** tasks */
     /**
-     * Pulls route overlays from storage and adds them to the map.
+     * Asynchronous map update task.
+     * Clears all route and stop overlays, pulls new ones from
+     * storage and network, adds them, and invalidates the map.
      */
-    public void updateOverlays() {
-        mapWrap.removeAllRouteOverlays();
-        new AddRouteOverlays().execute();
-        new AddStopsOverlay().execute();
-        mapWrap.invalidate();
-    }
-
-    /**
-     * Hacky workaround for all of MapView's touch callbacks being hosed.
-     * This overlay covers the whole map and breaks follow-me when touched.
-     */
-    class TouchOverlay extends Overlay {
-        Context context;
-
-        public TouchOverlay(Context c) {
-            super(c);
-            context = c;
-        }
-
-        @Override
-        protected void draw(Canvas c, MapView osmv, boolean shadow) { }
-        @Override
-        public boolean onDown(MotionEvent e, MapView mapView) {
-            // disable follow-me; user goes to manual mode
-            followMe = false;
-            return super.onDown(e, mapView);
-        }
-    }
-    /**
-     * AsyncTask which fetches and draws segments on the map
-     */
-    class AddRouteOverlays extends AsyncTask<Void, Integer, Overlay[]> {
+    class UpdateOverlays extends AsyncTask<Void, Integer, Void> {
 
         private Collection<TransrockRoute> activeRoutes;
+        private Map<TransrockRoute, ArrayList<Polyline>> polylines;
+        private ItemizedIconOverlay stopOverlay;
+
+        public UpdateOverlays() {
+            super();
+            polylines = new HashMap<>();
+        }
 
         @Override
         protected void onPreExecute() {
@@ -193,7 +187,9 @@ public class MapFragment extends Fragment implements LocationListener {
             super.onPreExecute();
         }
         @Override
-        protected Overlay[] doInBackground(Void... params) {
+        protected Void doInBackground(Void... params) {
+
+            /* ------------ SEGMENTS --------------- */
 
             // calculate how many times each segment is reused across all routes
             Map<String, Integer> totalCount = new LinkedHashMap<>(activeRoutes.size());
@@ -204,12 +200,12 @@ public class MapFragment extends Fragment implements LocationListener {
                 }
 
             // build overlays
-            ArrayList<Polyline> polylines = new ArrayList<>();
             Map<String, Integer> visitedCount = new LinkedHashMap<>(totalCount.size());
             int basePolylineSize = 10;
             float dashScale = 100;
 
             for (TransrockRoute route : activeRoutes) {
+                ArrayList<Polyline> segments = new ArrayList<>();
                 for (String segment : route.segments) {
                     int timesVisited = visitedCount.get(segment) == null ? 0 : visitedCount.get(segment);
 
@@ -231,36 +227,13 @@ public class MapFragment extends Fragment implements LocationListener {
                     visitedCount.put(segment, timesVisited + 1);
 
                     // add polyline to list
-                    polylines.add(p);
+                    segments.add(p);
                 }
+                polylines.put(route, segments);
             }
 
-            return polylines.toArray(new Polyline[polylines.size()]);
-        }
-        @Override
-        protected void onPostExecute(Overlay[] overlays) {
-            // add overlays to map
-            //TODO: change this to use the new addRouteOverlay method
-            //TODO: fix route removal after update bug
-            //TODO: figure out how to update after routesfragment route has switch changed
-            mapWrap.addOverlay(overlays);
-            super.onPostExecute(overlays);
-        }
-    }
-    /** AsyncTask which fetches and draws stops on the map */
-    class AddStopsOverlay extends AsyncTask<Void, Integer, Overlay> {
 
-        private Collection<TransrockRoute> activeRoutes;
-
-        @Override
-        protected void onPreExecute() {
-            // do this on the UI thread to avoid synchronization blocking
-            activeRoutes = RouteStorage.getActivatedRoutes();
-            super.onPreExecute();
-        }
-
-        @Override
-        protected Overlay doInBackground(Void... params) {
+            /* ------------------ STOPS -------------------- */
             // get active routes
             int[] ids = Util.getAgencyIds(activeRoutes);
 
@@ -282,8 +255,7 @@ public class MapFragment extends Fragment implements LocationListener {
             }
 
             // single itemized overlay for all stop markers
-            Activity e = getActivity();
-            ItemizedIconOverlay<OverlayItem> stopsOverlay = new ItemizedIconOverlay<>(getActivity(), new ArrayList<OverlayItem>(), null);
+            stopOverlay = new ItemizedIconOverlay<>(getActivity(), new ArrayList<OverlayItem>(), null);
             for (Stop stop : stopsToRoutes.keySet()) {
                 Collection<TransrockRoute> stopRoutes = stopsToRoutes.get(stop);
                 int numRoutes = stopRoutes.size();
@@ -311,16 +283,48 @@ public class MapFragment extends Fragment implements LocationListener {
                 item.setMarker(stopMarkerDrawable);
 
                 // add it to the overlay
-                stopsOverlay.addItem(item);
+                stopOverlay.addItem(item);
             }
 
-            return stopsOverlay;
-
+            return null;
         }
+
         @Override
-        protected void onPostExecute(Overlay overlay) {
-            mapWrap.addOverlay(overlay);
-            super.onPostExecute(overlay);
+        protected void onPostExecute(Void aVoid) {
+            // add route path overlays to map
+            for (TransrockRoute route : polylines.keySet())
+                mapWrap.addRouteOverlay(route.route_id, polylines.get(route));
+
+            // set stop overlay
+            mapWrap.setStopsOverlay(stopOverlay);
+
+            // invalidate map
+            mapWrap.invalidate();
+
+            super.onPostExecute(aVoid);
+        }
+    }
+
+    /* overlays */
+    /**
+     * Hacky workaround for all of MapView's touch callbacks being hosed.
+     * This overlay covers the whole map and breaks follow-me when touched.
+     */
+    class TouchOverlay extends Overlay {
+        Context context;
+
+        public TouchOverlay(Context c) {
+            super(c);
+            context = c;
+        }
+
+        @Override
+        protected void draw(Canvas c, MapView osmv, boolean shadow) { }
+        @Override
+        public boolean onDown(MotionEvent e, MapView mapView) {
+            // disable follow-me; user goes to manual mode
+            followMe = false;
+            return super.onDown(e, mapView);
         }
     }
 }

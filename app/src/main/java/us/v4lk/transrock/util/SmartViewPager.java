@@ -11,6 +11,7 @@ import android.view.MotionEvent;
 public class SmartViewPager extends ViewPager {
 
     private boolean allowSwiping = true;
+    public static final int MAP_PAGE = 0, ROUTE_PAGE = 1;
 
     public SmartViewPager(Context context) {
         super(context);

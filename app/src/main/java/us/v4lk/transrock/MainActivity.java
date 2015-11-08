@@ -29,13 +29,15 @@ public class MainActivity extends AppCompatActivity {
     @Bind(R.id.main_toolbar) Toolbar toolbar;
     @Bind(R.id.fragment_pager) SmartViewPager pager;
     @OnPageChange(R.id.fragment_pager) void onPageSelected(int position) {
-        if (position == 0) {
-            // disallow swiping on map and set drawer's item selection to the correct value
-            pager.setAllowSwiping(false);
-            drawer.setSelection(position);
+        switch (position) {
+            case SmartViewPager.MAP_PAGE:
+                pager.setAllowSwiping(false);
+                drawer.setSelection(position);
+                break;
+            case SmartViewPager.ROUTE_PAGE:
+                pager.setAllowSwiping(true);
+                drawer.setSelection(position);
         }
-        else
-            pager.setAllowSwiping(true);
     }
 
     /** fragments this activity hosts */
@@ -76,11 +78,13 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         pager.setAdapter(adapter);
+        pager.addOnPageChangeListener(routeFragment);
+        pager.addOnPageChangeListener(mapFragment);
 
         // build drawer
         drawer = buildDrawer(R.id.drawer_container);
         // set initial page and disable swiping for initial use
-        pager.setCurrentItem(0);
+        pager.setCurrentItem(SmartViewPager.MAP_PAGE);
         pager.setAllowSwiping(false);
 
     }
@@ -109,10 +113,10 @@ public class MainActivity extends AppCompatActivity {
             public boolean onItemClick(AdapterView<?> adapterView, View view, int i, long l, IDrawerItem iDrawerItem) {
                 switch (i) {
                     case 0:
-                        pager.setCurrentItem(0);
+                        pager.setCurrentItem(SmartViewPager.MAP_PAGE);
                         break;
                     case 1:
-                        pager.setCurrentItem(1);
+                        pager.setCurrentItem(SmartViewPager.ROUTE_PAGE);
                         break;
                 }
                 return false;
@@ -126,7 +130,4 @@ public class MainActivity extends AppCompatActivity {
         return builder.build();
     }
 
-    public void onRouteListChanged() {
-        mapFragment.updateOverlays();
-    }
 }

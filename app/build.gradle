@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 22
+    compileSdkVersion 23
     buildToolsVersion '22.0.1'
 
     defaultConfig {
@@ -21,8 +21,9 @@ android {
 
 dependencies {
     // appcompat and design compat
-    compile 'com.android.support:appcompat-v7:22.2.1'
-    compile 'com.android.support:design:22.2.0'
+    compile 'com.android.support:support-v4:23.1.0'
+    compile 'com.android.support:appcompat-v7:23.1.0'
+    compile 'com.android.support:design:23.1.0'
     // osmdroid + deps
     compile 'org.osmdroid:osmdroid-android:4.3'
     compile 'org.slf4j:slf4j-simple:1.6.1'
@@ -35,16 +36,20 @@ dependencies {
     // BottomSheetLayout
     compile 'com.flipboard:bottomsheet-core:1.1.0'
     // play services location
-    compile 'com.google.android.gms:play-services-location:7.5.0'
+    compile 'com.google.android.gms:play-services-location:8.1.0'
     // sticky list headers
     compile 'se.emilsjolander:stickylistheaders:2.7.0'
     // all jars in libs folder
     compile fileTree(include: ['*.jar'], dir: 'libs')
     // tha hawk
-    compile 'com.orhanobut:hawk:1.18'
+    compile 'com.github.orhanobut:hawk:1.19'
     // material drawer
     compile('com.mikepenz:materialdrawer:3.1.2@aar') { transitive = true }
     // magic butterknife
     compile 'com.jakewharton:butterknife:7.0.1'
-    compile 'com.android.support:support-v4:23.1.0'
+}
+
+repositories {
+    // ...
+    maven { url "https://jitpack.io" }
 }

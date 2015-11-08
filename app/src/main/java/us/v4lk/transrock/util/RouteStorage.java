@@ -9,32 +9,35 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Interface to saved routes
+ * Wrapper for Hawk that offers a convenient way to access routes in storage.
+ *
+ * Hawk is backed by Android's SQLite interface which requires synchronous access. Hawk
+ * doesn't make this explicit, so I've done so in this wrapper.
  */
 public class RouteStorage {
 
     private static final String ROUTES_STORAGE_KEY = "routes";
 
-    public static Map<String, TransrockRoute> getMap() {
+    public static synchronized Map<String, TransrockRoute> getMap() {
         return Hawk.get(ROUTES_STORAGE_KEY);
     }
-    public static Collection<TransrockRoute> getAllRoutes() {
+    public static synchronized Collection<TransrockRoute> getAllRoutes() {
         return getMap().values();
     }
-    public static Set<String> getAllRoutesIds() {
+    public static synchronized Set<String> getAllRoutesIds() {
         return getMap().keySet();
     }
-    public static TransrockRoute getRoute(String id) {
+    public static synchronized TransrockRoute getRoute(String id) {
         return getMap().get(id);
     }
-    public static TransrockRoute putRoute(TransrockRoute route) {
+    public static synchronized TransrockRoute putRoute(TransrockRoute route) {
         Map<String, TransrockRoute> map = getMap();
         TransrockRoute previous = map.put(route.route_id, route);
         Hawk.put(ROUTES_STORAGE_KEY, map);
 
         return previous;
     }
-    public static TransrockRoute[] putRoute(Collection<TransrockRoute> routes) {
+    public static synchronized TransrockRoute[] putRoute(Collection<TransrockRoute> routes) {
         TransrockRoute[] previous = new TransrockRoute[routes.size()];
 
         Map<String, TransrockRoute> map = getMap();
@@ -45,17 +48,17 @@ public class RouteStorage {
 
         return previous;
     }
-    public static TransrockRoute removeRoute(String id) {
+    public static synchronized TransrockRoute removeRoute(String id) {
         Map<String, TransrockRoute> map = getMap();
         TransrockRoute removed = map.remove(id);
         Hawk.put(ROUTES_STORAGE_KEY, map);
 
         return removed;
     }
-    public static TransrockRoute removeRoute(TransrockRoute route) {
+    public static synchronized TransrockRoute removeRoute(TransrockRoute route) {
         return removeRoute(route.route_id);
     }
-    public static TransrockRoute[] removeRoute(Collection<TransrockRoute> routes) {
+    public static synchronized TransrockRoute[] removeRoute(Collection<TransrockRoute> routes) {
         TransrockRoute[] removed = new TransrockRoute[routes.size()];
 
         Map<String, TransrockRoute> map = getMap();
@@ -66,7 +69,7 @@ public class RouteStorage {
 
         return removed;
     }
-    public static Collection<TransrockRoute> getActivatedRoutes() {
+    public static synchronized Collection<TransrockRoute> getActivatedRoutes() {
         Collection<TransrockRoute> routes = getAllRoutes();
         ArrayList<TransrockRoute> actives = new ArrayList<>();
         for (TransrockRoute route : routes)
@@ -75,19 +78,20 @@ public class RouteStorage {
 
         return actives;
     }
-    public static boolean contains(TransrockRoute route) {
+    public static synchronized boolean contains(TransrockRoute route) {
         return contains(route.route_id);
     }
-    public static boolean contains(String id) {
+    public static synchronized boolean contains(String id) {
         return getMap().containsKey(id);
     }
-    public static void clear() {
-        Hawk.put(ROUTES_STORAGE_KEY, new HashMap<String, TransrockRoute>());
+    public static synchronized void clear() {
+        Hawk.remove(ROUTES_STORAGE_KEY);
+        initialize();
     }
     /**
      * initialize empty storage if it does not already exist
      */
-    public static void initialize() {
+    public static synchronized void initialize() {
         if (Hawk.get(ROUTES_STORAGE_KEY) == null)
             Hawk.put(ROUTES_STORAGE_KEY, new HashMap<String, TransrockRoute>());
     }

@@ -63,6 +63,8 @@ import us.v4lk.transrock.util.Util;
  */
 public class SelectRoutesActivity extends AppCompatActivity {
 
+    public static String RESULT_EXTRA_KEY = "routelist";
+
     @Bind(R.id.addroute_bottomsheetlayout) BottomSheetLayout root;
     @Bind(R.id.addroute_agency_list) StickyListHeadersListView agencyList;
     @Bind(R.id.addroute_body_progressbar) ProgressBar bodyProgressBar;
@@ -158,7 +160,7 @@ public class SelectRoutesActivity extends AppCompatActivity {
         else {
             // set result
             Intent result = new Intent();
-            result.putExtra("routeFragment", routelist);
+            result.putExtra(RESULT_EXTRA_KEY, routelist);
             setResult(RESULT_OK, result);
             finish();
         }

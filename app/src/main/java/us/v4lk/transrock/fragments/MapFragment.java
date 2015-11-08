@@ -176,11 +176,18 @@ public class MapFragment extends Fragment implements LocationListener {
      * AsyncTask which fetches and draws segments on the map
      */
     class AddRouteOverlays extends AsyncTask<Void, Integer, Overlay[]> {
+
+        private Collection<TransrockRoute> activeRoutes;
+
+        @Override
+        protected void onPreExecute() {
+            // do this on the UI thread to avoid synchronization blocking
+            activeRoutes = RouteStorage.getActivatedRoutes();
+            super.onPreExecute();
+        }
+
         @Override
         protected Overlay[] doInBackground(Void... params) {
-
-            // get the active routes
-            Collection<TransrockRoute> activeRoutes = RouteStorage.getActivatedRoutes();
 
             // calculate how many times each segment is reused across all routes
             Map<String, Integer> totalCount = new LinkedHashMap<>(activeRoutes.size());
@@ -233,10 +240,19 @@ public class MapFragment extends Fragment implements LocationListener {
     }
     /** AsyncTask which fetches and draws stops on the map */
     class AddStopsOverlay extends AsyncTask<Void, Integer, Overlay> {
+
+        private Collection<TransrockRoute> activeRoutes;
+
+        @Override
+        protected void onPreExecute() {
+            // do this on the UI thread to avoid synchronization blocking
+            activeRoutes = RouteStorage.getActivatedRoutes();
+            super.onPreExecute();
+        }
+
         @Override
         protected Overlay doInBackground(Void... params) {
             // get active routes
-            Collection<TransrockRoute> activeRoutes = RouteStorage.getActivatedRoutes();
             int[] ids = Util.getAgencyIds(activeRoutes);
 
             // get stops

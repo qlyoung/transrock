@@ -136,7 +136,7 @@ public class RoutesFragment extends Fragment {
         switch (requestCode) {
             case SELECT_ROUTES_REQUESTCODE:
                 // pull and store any new routes
-                HashMap<String, Route> routelist = (HashMap<String, Route>) data.getSerializableExtra("routelist");
+                HashMap<String, Route> routelist = (HashMap<String, Route>) data.getSerializableExtra(SelectRoutesActivity.RESULT_EXTRA_KEY);
                 FetchRoutesTask fetchNewRoutes = new FetchRoutesTask();
                 fetchNewRoutes.execute(routelist.values().toArray(new Route[0]));
         }
@@ -215,13 +215,6 @@ public class RoutesFragment extends Fragment {
             // show snackbar with error message
             int messageResId = values[0];
             Snackbar errorSnackbar = Snackbar.make(RoutesFragment.this.getView(), messageResId, Snackbar.LENGTH_LONG);
-            // allow user to retry
-            errorSnackbar.setAction(R.string.retry, new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    FetchRoutesTask.this.execute(routes);
-                }
-            });
         }
     }
 }

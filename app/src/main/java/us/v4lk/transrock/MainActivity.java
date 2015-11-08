@@ -89,7 +89,6 @@ public class MainActivity extends AppCompatActivity {
                 .withToolbar(toolbar)
                 .withActionBarDrawerToggle(true)
                 .withActionBarDrawerToggleAnimated(true)
-                .withHeader(R.layout.drawer_header)
                 .withTranslucentStatusBar(false);
 
         // make drawer items

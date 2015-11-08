@@ -1,8 +1,8 @@
 package us.v4lk.transrock;
 
-import android.app.Fragment;
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -25,54 +25,50 @@ import us.v4lk.transrock.fragments.RoutesFragment;
 public class MainActivity extends AppCompatActivity {
 
     @Bind(R.id.main_toolbar) Toolbar toolbar;
-    /** the current fragment being displayed */
-    Fragment current;
-    /** mapFragment fragment */
-    Fragment mapFragment;
-    /** route fragment */
-    Fragment routeFragment;
+    @Bind(R.id.fragment_pager) ViewPager pager;
+
     /** the nav drawer */
     Drawer drawer;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+
         setSupportActionBar(toolbar);
-        mapFragment = new MapFragment();
-        routeFragment = new RoutesFragment();
+
+        FragmentPagerAdapter adapter = new FragmentPagerAdapter(getSupportFragmentManager()) {
+
+            Fragment mapFragment = new MapFragment();
+            Fragment routeFragment = new RoutesFragment();
+
+            @Override
+            public android.support.v4.app.Fragment getItem(int position) {
+                switch (position) {
+                    case 0:
+                        return mapFragment;
+                    case 1:
+                        return routeFragment;
+                    default:
+                        return mapFragment;
+                }
+            }
+
+            @Override
+            public int getCount() {
+                return 2;
+            }
+        };
+        pager.setAdapter(adapter);
 
         // build drawer
         drawer = buildDrawer(R.id.drawer_container);
-
-        // add mapFragment fragment
-        FragmentTransaction tx = getFragmentManager().beginTransaction();
-        tx.add(R.id.frame_container, mapFragment).commit();
-        current = mapFragment;
-        toolbar.setTitle(R.string.title_activity_map);
     }
     @Override
     protected void onStop() {
         super.onStop();
-    }
-
-    /**
-     * Convenience method that switches the current fragment for the given fragment.
-     *
-     * @param fragment  the fragment to switch to
-     * @param title     the new title of the activity in the toolbar
-     */
-    private void setContentFragment(Fragment fragment, int title) {
-
-        FragmentManager manager = getFragmentManager();
-        FragmentTransaction transaction = manager.beginTransaction();
-        transaction.setCustomAnimations(R.animator.slide_in_left, R.animator.slide_out_right);
-        transaction.replace(R.id.frame_container, fragment);
-        transaction.addToBackStack(null);
-        transaction.commit();
-
-        toolbar.setTitle(title);
     }
 
     private Drawer buildDrawer(int rootView) {
@@ -100,10 +96,10 @@ public class MainActivity extends AppCompatActivity {
             public boolean onItemClick(AdapterView<?> adapterView, View view, int i, long l, IDrawerItem iDrawerItem) {
                 switch (i) {
                     case 0:
-                        setContentFragment(mapFragment, R.string.title_activity_map);
+                        pager.setCurrentItem(0);
                         break;
                     case 1:
-                        setContentFragment(routeFragment, R.string.title_activity_routelist);
+                        pager.setCurrentItem(1);
                         break;
                 }
                 return false;

@@ -203,6 +203,12 @@ public class RoutesFragment extends Fragment {
 
         @Override
         protected void onPostExecute(Collection<TransrockRoute> result) {
+            // for the new routes, keep the activated status if it was previously set
+            Map<String, TransrockRoute> storageRoutes = RouteStorage.getMap();
+            for (TransrockRoute route : result)
+                if (storageRoutes.containsKey(route.route_id))
+                    route.setActivated(storageRoutes.get(route.route_id).isActivated());
+
             RouteStorage.clear();
             RouteStorage.putRoute(result);
             updateRoutelist();

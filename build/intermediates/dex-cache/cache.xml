@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        jar="/usr/local/android-sdk/extras/android/m2repository/com/android/support/support-annotations/23.1.0/support-annotations-23.1.0.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="92e3fc113ec3ee36b64603a38857b95700025633">
+        <dex dex="/home/qly/documents/projects/TransRock/app/build/intermediates/pre-dexed/debug/support-annotations-23.1.0-0f5a800e741941281ca755140c4ddbaf39e33e75.jar" />
+    </item>
+    <item
+        jar="/home/qly/documents/projects/TransRock/app/build/intermediates/exploded-aar/com.android.support/support-v4/23.1.0/jars/libs/internal_impl-23.1.0.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="8716243bf04bae8d6c9ca94d27b9a9be7236f0a3">
+        <dex dex="/home/qly/documents/projects/TransRock/app/build/intermediates/pre-dexed/debug/internal_impl-23.1.0-7d4443015be329b17949fc14b2a2dbcb22f06cd3.jar" />
+    </item>
+    <item
+        jar="/home/qly/documents/projects/TransRock/app/build/intermediates/exploded-aar/com.pkmmte.view/circularimageview/1.1/jars/classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="c341a7ad32bc2eef9dcfab239262b77ac60788cc">
+        <dex dex="/home/qly/documents/projects/TransRock/app/build/intermediates/pre-dexed/debug/classes-b1ada96b44ee012a7b5bbac72748b8f5f97bf0b0.jar" />
+    </item>
+    <item
+        jar="/home/qly/documents/projects/TransRock/app/build/intermediates/exploded-aar/com.android.support/support-v4/23.1.0/jars/classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="ddde541c289c8b816a8f8fd6c325d80788c522a6">
+        <dex dex="/home/qly/documents/projects/TransRock/app/build/intermediates/pre-dexed/debug/classes-45cd4e7f4b99392c9435445a97a8aa65482eb066.jar" />
+    </item>
+    <item
+        jar="/home/qly/documents/projects/TransRock/app/build/intermediates/exploded-aar/com.android.support/design/23.1.0/jars/classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="19026d31f5d3ae868db81319671a642be5fbba08">
+        <dex dex="/home/qly/documents/projects/TransRock/app/build/intermediates/pre-dexed/debug/classes-196d91820dab51656a35dadf26cc0af5acdd8a6c.jar" />
+    </item>
+    <item
+        jar="/home/qly/.gradle/caches/modules-2/files-2.1/com.google.code.gson/gson/2.3.1/ecb6e1f8e4b0e84c4b886c2f14a1500caf309757/gson-2.3.1.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="ecb6e1f8e4b0e84c4b886c2f14a1500caf309757">
+        <dex dex="/home/qly/documents/projects/TransRock/app/build/intermediates/pre-dexed/debug/gson-2.3.1-8e4604d024303068644a31d7520077a9da7da534.jar" />
+    </item>
+    <item
+        jar="/home/qly/documents/projects/TransRock/app/build/intermediates/exploded-aar/com.mikepenz/iconics/1.2.0/jars/classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="720dcbcd8744b145da58d835d7e4dbc546886df7">
+        <dex dex="/home/qly/documents/projects/TransRock/app/build/intermediates/pre-dexed/debug/classes-ae5ca62841e421470fdd91c096ec3b75f9cf7832.jar" />
+    </item>
+    <item
+        jar="/home/qly/.gradle/caches/modules-2/files-2.1/org.apache.commons/commons-lang3/3.3.2/90a3822c38ec8c996e84c16a3477ef632cbc87a3/commons-lang3-3.3.2.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="90a3822c38ec8c996e84c16a3477ef632cbc87a3">
+        <dex dex="/home/qly/documents/projects/TransRock/app/build/intermediates/pre-dexed/debug/commons-lang3-3.3.2-dfdce2393c6cf0e85c3ebc224d24634addac2c9a.jar" />
+    </item>
+    <item
+        jar="/home/qly/documents/projects/TransRock/app/build/intermediates/exploded-aar/com.flipboard/bottomsheet-core/1.1.0/jars/classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="94ce32defdb748549d09ff3bc13241f430b57e9b">
+        <dex dex="/home/qly/documents/projects/TransRock/app/build/intermediates/pre-dexed/debug/classes-8edf299de1b70c20a052405aedc58a9190d5b25a.jar" />
+    </item>
+    <item
+        jar="/home/qly/documents/projects/TransRock/app/build/intermediates/exploded-aar/com.mikepenz/materialdrawer/3.1.2/jars/classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="c9b5ab5d31472e2edec0b741355aa2fc18d16a0c">
+        <dex dex="/home/qly/documents/projects/TransRock/app/build/intermediates/pre-dexed/debug/classes-eca1a7d794cff6ddd80e3361995010bd171b3874.jar" />
+    </item>
+    <item
+        jar="/home/qly/documents/projects/TransRock/app/build/intermediates/exploded-aar/com.github.orhanobut/hawk/1.19/jars/classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="b5e1acfb53f6f0c6b7214bd08db069af1f35d7a9">
+        <dex dex="/home/qly/documents/projects/TransRock/app/build/intermediates/pre-dexed/debug/classes-5289edcd728a1ef14aece950d25c37504af56af0.jar" />
+    </item>
+    <item
+        jar="/home/qly/.gradle/caches/modules-2/files-2.1/com.jakewharton/butterknife/7.0.1/d5d13ea991eab0252e3710e5df3d6a9d4b21d461/butterknife-7.0.1.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="d5d13ea991eab0252e3710e5df3d6a9d4b21d461">
+        <dex dex="/home/qly/documents/projects/TransRock/app/build/intermediates/pre-dexed/debug/butterknife-7.0.1-131a4cbe11b1be31b7c4004de2db59f0bc7ef5f8.jar" />
+    </item>
+    <item
+        jar="/home/qly/documents/projects/TransRock/app/build/intermediates/exploded-aar/com.google.android.gms/play-services-basement/8.1.0/jars/classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="d0dda274b703dd9c5bb056867649d22b4171ae7d">
+        <dex dex="/home/qly/documents/projects/TransRock/app/build/intermediates/pre-dexed/debug/classes-df17b9326f36f63fad8d38ff5150423dc44bfa8b.jar" />
+    </item>
+    <item
+        jar="/home/qly/.gradle/caches/modules-2/files-2.1/org.osmdroid/osmdroid-android/4.3/2fcf7bc3cb27daa6e67c8990ea418d19f6b5b296/osmdroid-android-4.3.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="2fcf7bc3cb27daa6e67c8990ea418d19f6b5b296">
+        <dex dex="/home/qly/documents/projects/TransRock/app/build/intermediates/pre-dexed/debug/osmdroid-android-4.3-d0f44890b2fcc5989e3ddb6e1fdc16c6e1d0b429.jar" />
+    </item>
+    <item
+        jar="/home/qly/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-simple/1.6.1/58e59bfb3e247097b8122243b3bfe0049c8cfae8/slf4j-simple-1.6.1.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="58e59bfb3e247097b8122243b3bfe0049c8cfae8">
+        <dex dex="/home/qly/documents/projects/TransRock/app/build/intermediates/pre-dexed/debug/slf4j-simple-1.6.1-d6f70e46f02e30111c4f2954cdcd0a3236fa8c71.jar" />
+    </item>
+    <item
+        jar="/home/qly/documents/projects/TransRock/app/build/intermediates/exploded-aar/com.google.android.gms/play-services-maps/8.1.0/jars/classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="2a7e47da654546f9457deb6132364f1bf33a1857">
+        <dex dex="/home/qly/documents/projects/TransRock/app/build/intermediates/pre-dexed/debug/classes-d2c14d8dbfb215be74b3d29d4429f53612e8191a.jar" />
+    </item>
+    <item
+        jar="/home/qly/documents/projects/TransRock/app/build/intermediates/exploded-aar/com.google.android.gms/play-services-base/8.1.0/jars/classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="82825756edeeb3b56b15e73b2edd56e93da5a444">
+        <dex dex="/home/qly/documents/projects/TransRock/app/build/intermediates/pre-dexed/debug/classes-0dd467a708648c2ccfdcd4a350ee53baedec94a2.jar" />
+    </item>
+    <item
+        jar="/home/qly/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-api/1.6.1/6f3b8a24bf970f17289b234284c94f43eb42f0e4/slf4j-api-1.6.1.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="6f3b8a24bf970f17289b234284c94f43eb42f0e4">
+        <dex dex="/home/qly/documents/projects/TransRock/app/build/intermediates/pre-dexed/debug/slf4j-api-1.6.1-d00cc436bd3a10fe03aa4503fde398e1ec109ca4.jar" />
+    </item>
+    <item
+        jar="/home/qly/documents/projects/TransRock/app/build/intermediates/exploded-aar/com.android.support/recyclerview-v7/23.1.0/jars/classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="3f151e49c316a5ab2c065969a3b3b55ef9b393fc">
+        <dex dex="/home/qly/documents/projects/TransRock/app/build/intermediates/pre-dexed/debug/classes-37636acfc92c9c478ce0a05d5059be6e6e3a059c.jar" />
+    </item>
+    <item
+        jar="/home/qly/documents/projects/TransRock/app/build/intermediates/exploded-aar/com.google.android.gms/play-services-location/8.1.0/jars/classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="3aed37c38c56679602255dd72ef356da5d327cda">
+        <dex dex="/home/qly/documents/projects/TransRock/app/build/intermediates/pre-dexed/debug/classes-cbce6c27eac5b72a4eed5ee1b747a0683b5e1231.jar" />
+    </item>
+    <item
+        jar="/home/qly/documents/projects/TransRock/app/build/intermediates/exploded-aar/se.emilsjolander/stickylistheaders/2.7.0/jars/classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="3bdf77dbe58e0ec53a0178de532372e7c00859b9">
+        <dex dex="/home/qly/documents/projects/TransRock/app/build/intermediates/pre-dexed/debug/classes-fdde13d0d6726d72209a8987e2634736e0d5f6fb.jar" />
+    </item>
+    <item
+        jar="/home/qly/documents/projects/TransRock/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/23.1.0/jars/classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="57ae0d750ff83f0c738d21720224ac7ea866a094">
+        <dex dex="/home/qly/documents/projects/TransRock/app/build/intermediates/pre-dexed/debug/classes-5856366de9cad72282b14bef33737e68648073f2.jar" />
+    </item>
+    <item
+        jar="/home/qly/documents/projects/TransRock/app/build/intermediates/exploded-aar/osmbonuspack_v5.3/jars/classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="637ae129dc2a146eb1457a600df79a4c80a551f0">
+        <dex dex="/home/qly/documents/projects/TransRock/app/build/intermediates/pre-dexed/debug/classes-8503e59dd2c3b22027d3722adc8371fc32cd81a6.jar" />
+    </item>
+
+</items>

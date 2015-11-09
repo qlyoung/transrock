@@ -291,11 +291,14 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            // add route path overlays to map
+            // clear all path and stop overlays
+            mapWrap.removeAllRouteOverlays();
+            mapWrap.removeStopsOverlay();
+
+            // add new path and stop overlays to map
             for (TransrockRoute route : polylines.keySet())
                 mapWrap.addRouteOverlay(route.route_id, polylines.get(route));
 
-            // set stop overlay
             mapWrap.setStopsOverlay(stopOverlay);
 
             // invalidate map

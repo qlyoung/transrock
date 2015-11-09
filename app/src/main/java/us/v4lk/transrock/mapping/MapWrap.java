@@ -94,7 +94,8 @@ public class MapWrap {
         return new GeoPoint(l.getLatitude(), l.getLongitude());
     }
 
-    public OverlayItem putMarkerAt(GeoPoint p, Drawable markerDrawable) {
+    /* map controls */
+    private OverlayItem putMarkerAt(GeoPoint p, Drawable markerDrawable) {
         OverlayItem markerItem = makeMarker(p, markerDrawable);
         markersOverlay.addItem(markerItem);
         map.invalidate();
@@ -142,6 +143,11 @@ public class MapWrap {
     public void centerAndZoomOnPosition(Location l, boolean animate) {
         centerAndZoomOnPosition(toGeoPoint(l), animate);
     }
+    public void invalidate() { map.invalidate(); }
+    public MapView getMapView() {
+        return map;
+    }
+    public Context getContext() { return context; }
 
     /* overlays */
     public void addOverlay(Overlay... overlays) {
@@ -190,12 +196,7 @@ public class MapWrap {
         this.stopOverlay = null;
     }
 
-    public void invalidate() { map.invalidate(); }
-    public MapView getMapView() {
-        return map;
-    }
-    public Context getContext() { return context; }
-
+    /* marker convenience */
     private OverlayItem makeMarker(GeoPoint p, Drawable markerDrawable, String title, String snippet) {
         OverlayItem marker = new OverlayItem(title, snippet, p);
         marker.setMarker(markerDrawable);

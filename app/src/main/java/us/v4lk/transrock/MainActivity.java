@@ -37,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
             case SmartViewPager.ROUTE_PAGE:
                 pager.setAllowSwiping(true);
                 drawer.setSelection(position);
+                break;
         }
     }
 

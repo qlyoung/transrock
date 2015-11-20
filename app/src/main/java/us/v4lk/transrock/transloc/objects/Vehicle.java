@@ -35,23 +35,23 @@ public class Vehicle {
         }
     }
 
-    String
+    public String
             description,
             call_name,
             vehicle_id,
             segment_id,
             route_id;
-    int
+    public int
             passenger_load,
             standing_capacity,
             seating_capacity,
             speed,
             heading;
 
-    ArrayList<ArrivalEstimate> arrival_estimates;
-    Vector<Double> location;
-    Date last_updated_on;
-    Boolean tracking_status;
+    public ArrayList<ArrivalEstimate> arrival_estimates;
+    public Vector<Double> location;
+    public Date last_updated_on;
+    public boolean tracking_status;
 
     public Vehicle(JSONObject vo) throws JSONException {
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ") {

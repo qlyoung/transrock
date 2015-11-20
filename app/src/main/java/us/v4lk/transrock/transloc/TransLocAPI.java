@@ -380,8 +380,10 @@ public class TransLocAPI {
      * Gets latest vehicles for the given agency and routes
      * @param agencyId agency
      * @param routeId route ids to retrieve vehicles for; should be limited to agency specified
+     * @return list of vehicles currently running on the given route. If there are none currently
+     *         running, an empty list is returned.
      */
-    public static List<Vehicle> getVehicles(int agencyId, int routeId)
+    public static List<Vehicle> getVehicles(int agencyId, String routeId)
             throws NetworkErrorException, SocketTimeoutException, JSONException {
         StringBuilder builder = new StringBuilder();
         builder
@@ -397,10 +399,21 @@ public class TransLocAPI {
         // call api
         JSONObject response = callApi(request);
 
+        //Currently this throws an exception; it should return a list of size 0.
         ArrayList<Vehicle> result = new ArrayList<>();
-        JSONArray agblock = response.getJSONObject(DATA).getJSONArray(String.valueOf(agencyId));
-        for (int i = 0; i < agblock.length(); i++)
-            result.add(new Vehicle(agblock.getJSONObject(i)));
+        JSONArray vehicleArray;
+
+        try {
+            // get array of vehicles organized by route & agency if it exists
+            vehicleArray = response.getJSONObject(DATA).getJSONArray(String.valueOf(agencyId));
+        } catch (JSONException e) {
+            // if there is no entry corresponding to the agency id, then the agency has no vehicles
+            // running; return empty list
+            return new ArrayList<>();
+        }
+        // otherwise pull out the vehicles and put them in an array
+        for (int i = 0; i < vehicleArray.length(); i++)
+            result.add(new Vehicle(vehicleArray.getJSONObject(i)));
 
         return result;
     }

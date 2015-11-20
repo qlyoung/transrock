@@ -1,6 +1,7 @@
 package us.v4lk.transrock.util;
 
 import us.v4lk.transrock.transloc.objects.Route;
+import us.v4lk.transrock.transloc.objects.Stop;
 
 /**
  * Full Route object for use on client side.
@@ -26,7 +27,7 @@ public class TransrockRoute {
             type;
     public final int agency_id;
     public final String[] segments;
-    public final String[] stopIds;
+    public final Stop[] stops;
 
     private Route route;
 
@@ -37,8 +38,8 @@ public class TransrockRoute {
      * Constructs a new TransRock route with deactivated status.
      * @param r the route
      */
-    public TransrockRoute(Route r, String[] segments) {
-        this(r, false, segments);
+    public TransrockRoute(Route r, String[] segments, Stop[] stops) {
+        this(r, false, segments, stops);
     }
 
     /**
@@ -46,21 +47,20 @@ public class TransrockRoute {
      * @param r the route
      * @param activated whether this route should be displayed on the map
      */
-    public TransrockRoute(Route r, boolean activated, String[] segments) {
-        description = r.description;
-        short_name = r.short_name;
-        route_id = r.route_id;
-        color = r.color;
-        text_color = r.text_color;
-        long_name = r.long_name;
-        url = r.url;
-        type = r.type;
-        agency_id = r.agency_id;
-        stopIds = r.stops;
+    public TransrockRoute(Route r, boolean activated, String[] segments, Stop[] stops) {
+        this.description = r.description;
+        this.short_name = r.short_name;
+        this.route_id = r.route_id;
+        this.color = r.color;
+        this.text_color = r.text_color;
+        this.long_name = r.long_name;
+        this.url = r.url;
+        this.type = r.type;
+        this.agency_id = r.agency_id;
         this.segments = segments;
         this.activated = activated;
-
         this.route = r;
+        this.stops = stops;
     }
 
     /**

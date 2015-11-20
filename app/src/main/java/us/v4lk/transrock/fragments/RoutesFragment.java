@@ -32,6 +32,7 @@ import us.v4lk.transrock.R;
 import us.v4lk.transrock.adapters.TransrockRouteAdapter;
 import us.v4lk.transrock.transloc.objects.Route;
 import us.v4lk.transrock.transloc.TransLocAPI;
+import us.v4lk.transrock.transloc.objects.Stop;
 import us.v4lk.transrock.util.RouteStorage;
 import us.v4lk.transrock.util.SmartViewPager;
 import us.v4lk.transrock.util.TransrockRoute;
@@ -205,10 +206,30 @@ public class RoutesFragment extends Fragment implements ViewPager.OnPageChangeLi
             // it in internal storage
             for (Route route : params) {
                 try {
+                    // get segments for this route
                     Map<String, String> segments = TransLocAPI.getSegments(route);
-                    TransrockRoute trr = new TransrockRoute(route, segments.values().toArray(new String[0]));
+
+                    // get stops for this route's agency
+                    Map<String, Stop>   stops    = TransLocAPI.getStops(route.agency_id);
+
+                    // get stops for just this route
+                    ArrayList<Stop> routeStops = new ArrayList<>();
+                    for (Stop stop : stops.values())
+                        for (String route_id : stop.routes)
+                            if (route_id.equals(route.route_id))
+                                routeStops.add(stop);
+
+                    // build a new TransrockRoute
+                    TransrockRoute trr = new TransrockRoute(route,
+                                                            segments.values().toArray(new String[0]),
+                                                            routeStops.toArray(new Stop[0]));
+
+                    // set it to active
                     trr.setActivated(true);
+
+                    // add it it to the resultant
                     result.add(trr);
+
                 } catch (SocketTimeoutException e) {
                     publishProgress(R.string.error_network_timeout);
                     this.cancel(true);

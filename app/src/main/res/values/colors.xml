@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <!-- app theme colors -->
-    <color name="color_primary">#212121</color>
-    <color name="color_primary_dark">#5D4037</color>
-    <color name="color_primary_light">#D7CCC8</color>
-    <color name="color_accent">#03A9F4</color>
-    <color name="color_text_primary">#212121</color>
-    <color name="color_text_secondary">#727272</color>
-    <color name="color_icons">#FFFFFF</color>
-    <color name="color_divider">#B6B6B6</color>
-    <color name="transparent">#00000000</color>
+    <color name="color_primary">@color/md_green_700</color>
+    <color name="color_primary_dark">@color/md_green_500</color>
+    <color name="color_primary_light">@color/md_green_100</color>
+    <color name="color_accent">@color/md_grey_500</color>
+    <color name="color_text_primary">@color/md_grey_900</color>
+    <color name="color_text_secondary">@color/md_grey_600</color>
+    <color name="color_icons">@color/md_white_1000</color>
+    <color name="color_divider">@color/md_grey_400</color>
+    <color name="transparent">@color/transparent</color>
 
     <!-- badge colors -->
     <color name="agency_badge">#0091EA</color>

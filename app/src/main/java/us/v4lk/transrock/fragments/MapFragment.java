@@ -123,7 +123,9 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
             case R.id.map_menu_center_location:
                 // enable follow-me user on location updates && simulate location update
                 followMe = true;
-                mapWrap.centerAndZoomOnPosition(locationManager.getLocation(), true);
+                Location loc = locationManager.getLocation();
+                if (loc != null)
+                    mapWrap.centerAndZoomOnPosition(loc, true);
                 break;
             // if test button selected do test stuff
             case R.id.map_menu_testing_button:

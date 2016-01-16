@@ -49,16 +49,20 @@ import us.v4lk.transrock.util.Util;
  * Allows the user to select which routes they want to track.
  * Routes are organized by agency.
  *
- * This activity mains a list of API route objects that represents
- * all routes the user has currently selected. Each time the user
- * selects or deselects a route, this list is updated.
+ * This activity will fetch and display all routes available for
+ * selection. Its display reflects currently saved selections as well.
+ *
+ * The user makes changes to this list, selecting and deselecting items
+ * as desired. When the activity exits, the resultant list is written
+ * out to storage, updating the application's internal list.
  *
  * When the activity exits, a copy of the list is put as a Serializable
  * extra in the result intent. The receiving activity should use this list
- * to update the on-disk list. The preferred method is by launching a
- * generalized AsyncTask to accomplish this goal and update the UI after completion.
+ * to update the on-disk list, and then update its own view to reflect
+ * the new values on disk.
  *
- * The key is "routeFragment" and the type is HashMap<String, Route>.
+ * The key for the returned serializable is "routeFragment" and the type
+ * is HashMap<String, Route>.
  * e.g. data.getSerializableExtra("routeFragment");
  */
 public class SelectRoutesActivity extends AppCompatActivity {

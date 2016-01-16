@@ -1,6 +1,5 @@
 package us.v4lk.transrock.mapping;
 
-import android.app.Application;
 import android.content.Context;
 import android.location.Location;
 import android.os.Bundle;

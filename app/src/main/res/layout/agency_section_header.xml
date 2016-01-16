@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingTop="4dp"
-    android:background="@color/background_material_dark">
+    android:background="?android:attr/windowBackground">
 
     <TextView
         android:id="@+id/agency_section_header_text"
@@ -16,6 +16,6 @@
         android:layout_height="1px"
         android:layout_width="match_parent"
         android:paddingBottom="4dp"
-        android:background="@color/color_accent" />
+        android:background="?attr/colorAccent" />
 
 </LinearLayout>

@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
         android:minHeight="?attr/actionBarSize"
-        android:background="?attr/colorPrimary" />
+        android:background="?attr/colorPrimary"/>
 
     <!-- the layout which will contain (host) the drawerLayout -->
     <FrameLayout
@@ -21,7 +21,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <!-- the layout which will be the content of the activity (which will be hosted inside the drawer (NOT the list of the drawer)) -->
+        <!-- the layout which will be the content of the activity
+        (which will be hosted inside the drawer (NOT the list of the drawer)) -->
         <FrameLayout
             android:id="@+id/frame_container"
             android:layout_width="match_parent"

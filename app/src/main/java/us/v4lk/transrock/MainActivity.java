@@ -63,10 +63,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public android.support.v4.app.Fragment getItem(int position) {
                 switch (position) {
-                    case 0:
-                        return mapFragment;
                     case 1:
                         return routeFragment;
+                    case 0:
                     default:
                         return mapFragment;
                 }

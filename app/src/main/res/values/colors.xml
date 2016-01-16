@@ -10,7 +10,6 @@
     <color name="color_text_secondary">@color/md_grey_600</color>
     <color name="color_icons">@color/md_white_1000</color>
     <color name="color_divider">@color/md_grey_400</color>
-    <color name="transparent">@color/transparent</color>
 
     <!-- badge colors -->
     <color name="agency_badge">#0091EA</color>

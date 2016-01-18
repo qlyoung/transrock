@@ -2,8 +2,8 @@
 <resources>
 
     <!-- app theme colors -->
-    <color name="color_primary">@color/md_green_700</color>
-    <color name="color_primary_dark">@color/md_green_500</color>
+    <color name="color_primary">@color/md_green_500</color>
+    <color name="color_primary_dark">@color/md_green_700</color>
     <color name="color_primary_light">@color/md_green_100</color>
     <color name="color_accent">@color/md_grey_500</color>
     <color name="color_text_primary">@color/md_grey_900</color>
@@ -25,4 +25,5 @@
     <color name="material_drawer_selected">#202020</color>
     <color name="material_drawer_selected_text">@color/material_drawer_primary</color>
     <color name="material_drawer_header_selection_text">#FFF</color>
+
 </resources>

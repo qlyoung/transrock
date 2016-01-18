@@ -7,22 +7,21 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <!-- activity action bar -->
     <android.support.v7.widget.Toolbar
         android:id="@+id/main_toolbar"
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
-        android:minHeight="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"/>
+        style="@style/AppActionBar" />
 
-    <!-- the layout which will contain (host) the drawerLayout -->
+    <!-- This frame contains another frame that has the actual activity content. This frame
+         is just a container to anchor the drawer to. -->
     <FrameLayout
-        android:layout_below="@id/main_toolbar"
         android:id="@+id/drawer_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <!-- the layout which will be the content of the activity
-        (which will be hosted inside the drawer (NOT the list of the drawer)) -->
+        <!-- the activity content, encapsulated in a FrameLayout for convenience -->
         <FrameLayout
             android:id="@+id/frame_container"
             android:layout_width="match_parent"

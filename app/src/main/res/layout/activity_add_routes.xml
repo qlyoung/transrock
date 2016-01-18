@@ -14,8 +14,7 @@
             android:id="@+id/addroute_toolbar"
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
-            android:minHeight="?attr/actionBarSize"
-            android:background="?attr/colorPrimary" />
+            style="@style/AppActionBar" />
 
         <ProgressBar
             android:id="@+id/addroute_body_progressbar"

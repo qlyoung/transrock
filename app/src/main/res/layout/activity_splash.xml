@@ -16,6 +16,6 @@
         android:layout_centerVertical="true"
         android:paddingBottom="150dp"
         android:textSize="18pt"
-        android:textStyle="bold|italic"/>
+        android:textStyle="bold|italic" />
 
 </RelativeLayout>

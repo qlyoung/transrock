@@ -3,20 +3,26 @@ package us.v4lk.transrock.mapping;
 import android.accounts.NetworkErrorException;
 import android.content.ClipData;
 import android.content.Context;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.ArcShape;
+import android.location.Location;
 import android.os.AsyncTask;
 import android.provider.Telephony;
+import android.view.MotionEvent;
+import android.view.View;
 
 import org.json.JSONException;
 import org.osmdroid.bonuspack.overlays.Polygon;
 import org.osmdroid.bonuspack.overlays.Polyline;
 import org.osmdroid.util.GeoPoint;
+import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.ItemizedIconOverlay;
+import org.osmdroid.views.overlay.Overlay;
 import org.osmdroid.views.overlay.OverlayItem;
 
 import java.net.SocketTimeoutException;
@@ -27,6 +33,8 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import butterknife.BindDrawable;
+import butterknife.ButterKnife;
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.transloc.TransLocAPI;
 import us.v4lk.transrock.transloc.objects.Stop;
@@ -35,7 +43,7 @@ import us.v4lk.transrock.util.RouteStorage;
 import us.v4lk.transrock.util.TransrockRoute;
 
 /**
- * Created by qly on 1/18/16.
+ * Takes care of asynchronously updating the map.
  */
 public class MapManager {
 
@@ -43,16 +51,33 @@ public class MapManager {
     ArrayList<TransrockRoute> routes;
     Context context;
 
-    public MapManager(MapWrap map, Context context) {
-        this.map = map;
+    /** whether to center the map on the user's location each time we get a location update */
+    boolean followMe;
+
+    @BindDrawable(R.drawable.location_marker) Drawable location_marker;
+    @BindDrawable(R.drawable.stop_marker) Drawable stop_marker;
+
+    public MapManager(MapView map, Context context, View root) {
         this.context = context;
         this.routes = new ArrayList<>();
+
+        ButterKnife.bind(this, root);
+
+        // setup map
+        this.map = new MapWrap(context, map);
+        this.map.setLocationMarkerDrawable(location_marker);
+        this.map.setDefaultMarkerDrawable(stop_marker);
+        this.map.setScaleBar(true);
+
+        // add follow-me watchdog overlay
+        TouchOverlay touchOverlay = new TouchOverlay(map.getContext());
+        touchOverlay.setEnabled(true);
+        map.getOverlayManager().add(touchOverlay);
     }
 
     /**
-     * Takes a list of TransrockRoutes and does everything necessary to
-     * draw all components of the route onto the map.
-     * Builds polyline overlays, fetches stops from the network,
+     * Takes a list of TransrockRoutes and sets up the map to display
+     * all relevant information related to those routes.
      * @param routes
      */
     public void setRoutes(Collection<TransrockRoute> routes) {
@@ -61,9 +86,26 @@ public class MapManager {
         SetRoutesTask srt = new SetRoutesTask();
         srt.execute(routes);
     }
+    /**
+     * Updates position markers for vehicles on all routes.
+     */
     public void updateVehicles() {
         UpdateVehiclesTask uvt = new UpdateVehiclesTask();
         uvt.execute(routes);
+    }
+    /**
+     * Handles a change in user location
+     * @param loc the new location
+     */
+    public void updateLocation(Location loc) {
+        map.setLocationMarkerPosition(loc);
+        map.setLocationMarkerOn(true);
+        if (followMe)
+            map.centerAndZoomOnPosition(loc, true);
+    }
+
+    public void setFollowMe(boolean followMe) {
+        this.followMe = followMe;
     }
     class SetRoutesTask extends AsyncTask<Collection<TransrockRoute>, Void, Void> {
 
@@ -223,6 +265,28 @@ public class MapManager {
         protected void onPostExecute(ItemizedIconOverlay vehicleOverlay) {
             super.onPostExecute(vehicleOverlay);
             map.invalidate();
+        }
+    }
+
+    /**
+     * Hacky workaround for all of MapView's touch callbacks being hosed.
+     * This overlay covers the whole map and breaks follow-me when touched.
+     */
+    class TouchOverlay extends Overlay {
+        Context context;
+
+        public TouchOverlay(Context c) {
+            super(c);
+            context = c;
+        }
+
+        @Override
+        protected void draw(Canvas c, MapView osmv, boolean shadow) { }
+        @Override
+        public boolean onDown(MotionEvent e, MapView mapView) {
+            // disable follow-me; user goes to manual mode
+            setFollowMe(false);
+            return super.onDown(e, mapView);
         }
     }
 }

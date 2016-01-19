@@ -3,7 +3,12 @@ package us.v4lk.transrock.fragments;
 import android.accounts.NetworkErrorException;
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.DashPathEffect;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
+import android.graphics.drawable.ShapeDrawable;
+import android.graphics.drawable.shapes.ArcShape;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -20,23 +25,30 @@ import android.view.ViewGroup;
 import com.google.android.gms.location.LocationListener;
 
 import org.json.JSONException;
+import org.osmdroid.bonuspack.overlays.Polyline;
+import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.ItemizedIconOverlay;
 import org.osmdroid.views.overlay.Overlay;
+import org.osmdroid.views.overlay.OverlayItem;
 
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.TimerTask;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import butterknife.BindDrawable;
 import butterknife.ButterKnife;
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.mapping.LocationManager;
+import us.v4lk.transrock.mapping.MapManager;
 import us.v4lk.transrock.mapping.MapWrap;
+import us.v4lk.transrock.mapping.Polylines;
 import us.v4lk.transrock.transloc.TransLocAPI;
+import us.v4lk.transrock.transloc.objects.Stop;
 import us.v4lk.transrock.transloc.objects.Vehicle;
 import us.v4lk.transrock.util.RouteStorage;
 import us.v4lk.transrock.util.SmartViewPager;
@@ -54,6 +66,8 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
     LocationManager locationManager;
     /** map wrapper */
     MapWrap mapWrap;
+    /** Manager for map */
+    MapManager mapManager;
     /** root view */
     View root;
     /** whether to center the map on the user's location each time we get a location update */
@@ -86,6 +100,9 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
         touchOverlay.setEnabled(true);
         mapWrap.getMapView().getOverlays().add(touchOverlay);
 
+        // initialize manager
+        mapManager = new MapManager(mapWrap, getActivity());
+
         // get a reference to the location manager
         locationManager = LocationManager.getInstance(this.getActivity().getApplicationContext());
 
@@ -104,9 +121,10 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
             mapWrap.setLocationMarkerOn(true);
         }
 
-        // update routes
-        mapWrap.setRoutes( RouteStorage.getActivatedRoutes() );
+        Collection<TransrockRoute> activated = RouteStorage.getActivatedRoutes();
+        mapManager.setRoutes(activated);
     }
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();
@@ -129,7 +147,7 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
                 break;
             // if test button selected do test stuff
             case R.id.map_menu_testing_button:
-                new UpdateVehicles().execute();
+                mapManager.updateVehicles();
                 break;
         }
 
@@ -141,7 +159,7 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
     public void onPageSelected(int position) {
         switch (position) {
             case SmartViewPager.MAP_PAGE:
-                mapWrap.setRoutes( RouteStorage.getActivatedRoutes() );
+                mapManager.setRoutes(RouteStorage.getActivatedRoutes());
                 break;
             case SmartViewPager.ROUTE_PAGE:
             default:
@@ -183,46 +201,6 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
             return super.onDown(e, mapView);
         }
     }
-    /**
-     * Fetches vehicles and updates map
-     */
-    class UpdateVehicles extends AsyncTask<Void, Void, Collection<Vehicle>> {
 
-        Collection<TransrockRoute> routes;
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            routes = RouteStorage.getActivatedRoutes();
-        }
-
-        @Override
-        protected Collection<Vehicle> doInBackground(Void... params) {
-            // fetch vehicles
-            ArrayList<Vehicle> vehicles = new ArrayList<>();
-            try {
-                for (TransrockRoute route : routes)
-                    vehicles.addAll(TransLocAPI.getVehicles(route.agency_id, route.route_id));
-            }
-            catch (NetworkErrorException e) {
-
-            }
-            catch (SocketTimeoutException e) {
-
-            }
-            catch (JSONException e) {
-
-            }
-
-            return vehicles;
-        }
-
-        @Override
-        protected void onPostExecute(Collection<Vehicle> vehicles) {
-            super.onPostExecute(vehicles);
-            mapWrap.setVehicles(vehicles);
-            mapWrap.invalidate();
-        }
-    }
 
 }

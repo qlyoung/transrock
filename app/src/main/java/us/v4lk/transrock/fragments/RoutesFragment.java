@@ -26,6 +26,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 import us.v4lk.transrock.MainActivity;
 import us.v4lk.transrock.SelectRoutesActivity;
 import us.v4lk.transrock.R;
@@ -37,12 +40,29 @@ import us.v4lk.transrock.util.RouteStorage;
 import us.v4lk.transrock.util.SmartViewPager;
 import us.v4lk.transrock.util.TransrockRoute;
 
-/** Route list fragment. */
+/**
+ * Route list fragment.
+ */
 public class RoutesFragment extends Fragment implements ViewPager.OnPageChangeListener {
 
-    /** ListView holding all route items */
+    @Bind(R.id.routelist)
     ListView routeList;
-    /** request code for route selection activity */
+    @Bind(R.id.routelist_addroute_fab)
+    FloatingActionButton fab;
+    @Bind(R.id.routelist_noroutes_message)
+    View noRoutesMessage;
+
+    @OnClick(R.id.routelist_addroute_fab)
+    void onFabClick() {
+        // start add routes activity
+        Intent intent = new Intent(getActivity(), SelectRoutesActivity.class);
+        startActivityForResult(intent, SELECT_ROUTES_REQUESTCODE);
+    }
+
+
+    /**
+     * request code for route selection activity
+     */
     public static final int SELECT_ROUTES_REQUESTCODE = 0;
 
     /* lifecycle */
@@ -51,29 +71,20 @@ public class RoutesFragment extends Fragment implements ViewPager.OnPageChangeLi
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
     }
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // inflate layout
         View root = inflater.inflate(R.layout.fragment_routelist, container, false);
 
-        // capture list
-        routeList = (ListView) root.findViewById(R.id.routelist);
-
-        // capture & setup fab
-        FloatingActionButton addRoutesFab = (FloatingActionButton) root.findViewById(R.id.routelist_addroute_fab);
-        addRoutesFab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // start add routes activity
-                Intent intent = new Intent(getActivity(), SelectRoutesActivity.class);
-                startActivityForResult(intent, SELECT_ROUTES_REQUESTCODE);
-            }
-        });
+        // bind
+        ButterKnife.bind(this, root);
 
         // return whatever should be the root of this fragment's view hierarchy
         return root;
     }
+
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
@@ -81,16 +92,19 @@ public class RoutesFragment extends Fragment implements ViewPager.OnPageChangeLi
         // set empty adapter; will be filled later in onResume()
         routeList.setAdapter(new TransrockRouteAdapter(getActivity(), R.layout.route_list_item));
     }
+
     @Override
     public void onResume() {
         super.onResume();
         updateRoutelist();
     }
+
     @Override
     public void onPause() {
         super.onPause();
         persistRoutelist();
     }
+
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.menu_routelist, menu);
@@ -102,19 +116,22 @@ public class RoutesFragment extends Fragment implements ViewPager.OnPageChangeLi
         switch (position) {
             case SmartViewPager.MAP_PAGE:
                 persistRoutelist();
-                break;
-            case SmartViewPager.ROUTE_PAGE:
             default:
                 break;
         }
     }
+
     @Override
     public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) { /* don't care */ }
+
     @Override
     public void onPageScrollStateChanged(int state) { /* don't care */ }
 
     /* methods that save & read route list */
-    /** Loads in routes to routelist from persistence */
+
+    /**
+     * Loads in routes to routelist from persistence
+     */
     private void updateRoutelist() {
         // get routes from db
         Collection<TransrockRoute> routes = RouteStorage.getAllRoutes();
@@ -127,28 +144,29 @@ public class RoutesFragment extends Fragment implements ViewPager.OnPageChangeLi
         if (routes.size() != 0) {
             adapter.addAll(routes);
             routeList.setVisibility(View.VISIBLE);
-            getView().findViewById(R.id.routelist_noroutes_message).setVisibility(View.GONE);
-        }
-        else {
+            noRoutesMessage.setVisibility(View.GONE);
+        } else {
             routeList.setVisibility(View.GONE);
-            getView().findViewById(R.id.routelist_noroutes_message).setVisibility(View.VISIBLE);
+            noRoutesMessage.setVisibility(View.VISIBLE);
         }
 
         adapter.notifyDataSetChanged();
     }
+
     /**
      * Writes modified routes to persistence.
-     *
      * Each time a user turns a route on or off, the corresponding field
      * is set in the backing route object. These changes need to be saved to disk.
-     * Instead of writing to disk each time a switch is flipped, it's more
-     * efficient to wait until we leave the activity and batch persist them.
+     * Instead of writing to disk each time a switch is flipped, it's more to batch persist
+     * them. This method writes out the memory model to disk.
+     * Typically called when the user navigates away from this fragment.
      */
     public void persistRoutelist() {
         TransrockRoute[] all = ((TransrockRouteAdapter) routeList.getAdapter()).getAll();
         Set<TransrockRoute> modifiedRoutes = new HashSet<>(all.length);
-        for (int i = 0; i < all.length; i++)
-            modifiedRoutes.add(all[i]);
+
+        for (TransrockRoute route : all)
+            modifiedRoutes.add(route);
 
         RouteStorage.putRoute(modifiedRoutes);
     }
@@ -166,10 +184,12 @@ public class RoutesFragment extends Fragment implements ViewPager.OnPageChangeLi
     }
 
     /* tasks */
+
     /**
      * Takes a list of routes, gets necessary data to build TransrockRoutes, sets
      * internal storage to the resulting list (not additive), and then updates
      * this routelist.
+     * This is used after getting a list of raw Route API objects from the route selector.
      */
     class FetchRoutesTask extends AsyncTask<Route, Integer, Collection<TransrockRoute>> {
 
@@ -183,9 +203,9 @@ public class RoutesFragment extends Fragment implements ViewPager.OnPageChangeLi
             updateRoutelist();
             // show snackbar
             snackbar = Snackbar.make(
-                            RoutesFragment.this.getView(),
-                            R.string.updating_routes,
-                            Snackbar.LENGTH_SHORT);
+                    RoutesFragment.this.getView(),
+                    R.string.updating_routes,
+                    Snackbar.LENGTH_SHORT);
             snackbar.setAction(R.string.dismiss, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -210,7 +230,7 @@ public class RoutesFragment extends Fragment implements ViewPager.OnPageChangeLi
                     Map<String, String> segments = TransLocAPI.getSegments(route);
 
                     // get stops for this route's agency
-                    Map<String, Stop>   stops    = TransLocAPI.getStops(route.agency_id);
+                    Map<String, Stop> stops = TransLocAPI.getStops(route.agency_id);
 
                     // get stops for just this route
                     ArrayList<Stop> routeStops = new ArrayList<>();
@@ -221,8 +241,8 @@ public class RoutesFragment extends Fragment implements ViewPager.OnPageChangeLi
 
                     // build a new TransrockRoute
                     TransrockRoute trr = new TransrockRoute(route,
-                                                            segments.values().toArray(new String[0]),
-                                                            routeStops.toArray(new Stop[0]));
+                            segments.values().toArray(new String[0]),
+                            routeStops.toArray(new Stop[0]));
 
                     // set it to active
                     trr.setActivated(true);

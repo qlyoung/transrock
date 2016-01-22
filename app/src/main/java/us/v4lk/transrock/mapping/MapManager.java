@@ -1,7 +1,6 @@
 package us.v4lk.transrock.mapping;
 
 import android.accounts.NetworkErrorException;
-import android.content.ClipData;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -12,12 +11,10 @@ import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.ArcShape;
 import android.location.Location;
 import android.os.AsyncTask;
-import android.provider.Telephony;
 import android.view.MotionEvent;
 import android.view.View;
 
 import org.json.JSONException;
-import org.osmdroid.bonuspack.overlays.Polygon;
 import org.osmdroid.bonuspack.overlays.Polyline;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
@@ -31,7 +28,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 import butterknife.BindDrawable;
 import butterknife.ButterKnife;
@@ -39,15 +35,15 @@ import us.v4lk.transrock.R;
 import us.v4lk.transrock.transloc.TransLocAPI;
 import us.v4lk.transrock.transloc.objects.Stop;
 import us.v4lk.transrock.transloc.objects.Vehicle;
-import us.v4lk.transrock.util.RouteStorage;
 import us.v4lk.transrock.util.TransrockRoute;
+import us.v4lk.transrock.util.Util;
 
 /**
  * Takes care of asynchronously updating the map.
  */
 public class MapManager {
 
-    MapWrap map;
+    Map map;
     ArrayList<TransrockRoute> routes;
     Context context;
 
@@ -64,7 +60,7 @@ public class MapManager {
         ButterKnife.bind(this, root);
 
         // setup map
-        this.map = new MapWrap(context, map);
+        this.map = new Map(context, map);
         this.map.setLocationMarkerDrawable(location_marker);
         this.map.setDefaultMarkerDrawable(stop_marker);
         this.map.setScaleBar(true);
@@ -109,7 +105,7 @@ public class MapManager {
     }
     class SetRoutesTask extends AsyncTask<Collection<TransrockRoute>, Void, Void> {
 
-        private Map<String, Collection<Polyline>> routelines;
+        private HashMap<String, Collection<Polyline>> routelines;
         private ItemizedIconOverlay stopoverlay;
 
         @Override
@@ -117,7 +113,7 @@ public class MapManager {
             Collection<TransrockRoute> routes = params[0];
 
             // calculate how many times each segment is reused across all routes
-            Map<String, Integer> totalCount = new LinkedHashMap<>(routes.size());
+            LinkedHashMap<String, Integer> totalCount = new LinkedHashMap<>(routes.size());
             for (TransrockRoute route : routes)
                 for (String segment : route.segments) {
                     int prevCount = totalCount.get(segment) == null ? 0 : totalCount.get(segment);
@@ -127,12 +123,11 @@ public class MapManager {
             /* ------------ SEGMENTS --------------- */
 
             // build overlays
-            Map<String, Integer> visitedCount = new LinkedHashMap<>(totalCount.size());
+            LinkedHashMap<String, Integer> visitedCount = new LinkedHashMap<>(totalCount.size());
             int basePolylineSize = 10;
             float dashScale = 100;
             routelines = new HashMap<>();
 
-            Map<String, Collection<Polyline>> routeOverlays = new HashMap<>();
             for (TransrockRoute route : routes) {
                 ArrayList<Polyline> segments = new ArrayList<>();
 
@@ -140,7 +135,7 @@ public class MapManager {
                     int timesVisited = visitedCount.get(segment) == null ? 0 : visitedCount.get(segment);
 
                     // get the polyline
-                    Polyline p = Polylines.encodedPolylineToOverlay(segment, context);
+                    Polyline p = Util.encodedPolylineToOverlay(segment, context);
 
                     p.setWidth(basePolylineSize);
                     p.setColor(Color.parseColor("#" + route.color));
@@ -170,7 +165,7 @@ public class MapManager {
             stopoverlay = new ItemizedIconOverlay<>(context, new ArrayList<OverlayItem>(), null);
 
             // map each stop to the routes containing it
-            Map<Stop, Collection<TransrockRoute>> stopsToRoutes = new LinkedHashMap<>();
+            HashMap<Stop, Collection<TransrockRoute>> stopsToRoutes = new LinkedHashMap<>();
             for (TransrockRoute route : routes) {
                 for (Stop stop : route.stops) {
                     Collection<TransrockRoute> existing = stopsToRoutes.get(stop);

@@ -1,19 +1,12 @@
 package us.v4lk.transrock.mapping;
 
 import android.content.Context;
-import android.graphics.Color;
-import android.graphics.DashPathEffect;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.LayerDrawable;
-import android.graphics.drawable.ShapeDrawable;
-import android.graphics.drawable.shapes.ArcShape;
 import android.location.Location;
-import android.os.AsyncTask;
 
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.ResourceProxy;
 import org.osmdroid.ResourceProxy.bitmap;
-import org.osmdroid.bonuspack.overlays.Polygon;
 import org.osmdroid.bonuspack.overlays.Polyline;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
@@ -26,22 +19,15 @@ import org.osmdroid.views.overlay.ScaleBarOverlay;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import us.v4lk.transrock.R;
-import us.v4lk.transrock.transloc.objects.Stop;
-import us.v4lk.transrock.transloc.objects.Vehicle;
-import us.v4lk.transrock.util.TransrockRoute;
 
 /**
- * Convenience wrapper for MapView that encapsulates many common
- * tasks into easy-to-use methods. Also tracks different classes
- * and groups of overlays for easy addition and removal.
+ * Wrapper for MapView.
+ * Acts as an interface between view and model.
+ * Streamlines common tasks for manipulating the map programatically.
+ *
+ * @author Quentin Young
  */
-public class MapWrap {
+public class Map {
 
     /** map zoom level */
     final int MAP_ZOOM_LEVEL;
@@ -64,10 +50,10 @@ public class MapWrap {
      * @param c context
      * @param mapView the mapview to wrap
      */
-    public MapWrap(Context c, MapView mapView) {
+    public Map(Context c, MapView mapView) {
         this(c, mapView, 17);
     }
-    public MapWrap(Context c, MapView mapView, int defaultZoomLevel) {
+    public Map(Context c, MapView mapView, int defaultZoomLevel) {
         // context & map
         context = c;
         map = mapView;

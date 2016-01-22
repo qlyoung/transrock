@@ -1,14 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="ring"
-    android:innerRadius="7dp"
-    android:thickness="1dp"
-    android:useLevel="false">
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <solid android:color="@color/color_primary" />
+    <!-- colored sectors comprising a disk will be programatically added here -->
+    <item android:id="@+id/disk_layer_drawable">
+        <layer-list />
+    </item>
 
-    <size
-        android:height="12dp"
-        android:width="12dp" />
-</shape>
+    <!-- colored ring border -->
+    <item>
+        <shape
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:innerRadius="7dp"
+            android:shape="ring"
+            android:thickness="1dp"
+            android:useLevel="false">
+
+            <solid android:color="@color/color_primary_dark" />
+        </shape>
+    </item>
+
+</layer-list>
+
+
+
+
+
+
+

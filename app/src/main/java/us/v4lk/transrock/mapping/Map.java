@@ -126,7 +126,7 @@ public class Map {
     public void centerAndZoomOnPosition(Location l, boolean animate) {
         centerAndZoomOnPosition(toGeoPoint(l), animate);
     }
-    public void invalidate() { map.invalidate(); }
+    public void invalidate() {  map.invalidate(); }
     public MapView getMapView() {
         return map;
     }

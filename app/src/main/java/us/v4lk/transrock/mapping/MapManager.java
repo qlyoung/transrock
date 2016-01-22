@@ -50,7 +50,7 @@ public class MapManager {
     /** whether to center the map on the user's location each time we get a location update */
     boolean followMe;
 
-    @BindDrawable(R.drawable.location_marker) Drawable location_marker;
+    @BindDrawable(R.drawable.default_marker) Drawable location_marker;
     @BindDrawable(R.drawable.stop_marker) Drawable stop_marker;
 
     public MapManager(MapView map, Context context, View root) {
@@ -162,7 +162,7 @@ public class MapManager {
 
             /* ------------ STOPS ----------------- */
 
-            stopoverlay = new ItemizedIconOverlay<>(context, new ArrayList<OverlayItem>(), null);
+            stopoverlay = new ItemizedIconOverlay<OverlayItem>(context, new ArrayList<OverlayItem>(), null);
 
             // map each stop to the routes containing it
             HashMap<Stop, Collection<TransrockRoute>> stopsToRoutes = new LinkedHashMap<>();
@@ -178,30 +178,31 @@ public class MapManager {
 
             // calculate & place marker items
             for (Stop stop : stopsToRoutes.keySet()) {
+                // get the routes for this stop
                 Collection<TransrockRoute> stopRoutes = stopsToRoutes.get(stop);
                 int numRoutes = stopRoutes.size();
 
-                // build drawable for this stop
-                Drawable[] drawables = new Drawable[numRoutes + 1];
+                // get base marker drawable
+                LayerDrawable stopmarker = (LayerDrawable) context.getResources().getDrawable(R.drawable.stop_marker);
+
+                // add colored arcs, one for each route, that together form an evenly partitioned disk
+                Drawable[] arcs = new Drawable[numRoutes];
                 float sweep = 360f / numRoutes;
                 int i = 0;
                 for (TransrockRoute route : stopRoutes) {
-                    // create arc section for this route
-                    ShapeDrawable arcDrawable = new ShapeDrawable(new ArcShape(sweep * i, sweep));
-                    arcDrawable.setIntrinsicWidth(30);
-                    arcDrawable.setIntrinsicHeight(30);
-                    arcDrawable.getPaint().setColor(Color.parseColor("#" + route.color));
-                    // add to composite drawable list
-                    drawables[i] = arcDrawable;
-                    i++;
+                    ShapeDrawable arc = new ShapeDrawable(new ArcShape(sweep * i, sweep));
+                    arc.setIntrinsicWidth(30);
+                    arc.setIntrinsicHeight(30);
+                    arc.getPaint().setColor(Color.parseColor("#" + route.color));
+                    arcs[i++] = arc;
                 }
-                drawables[numRoutes] = context.getResources().getDrawable(R.drawable.stop_marker); // border
-                LayerDrawable stopMarkerDrawable = new LayerDrawable(drawables);
+                // set the result as the disk drawable
+                stopmarker.setDrawableByLayerId(R.id.disk_layer_drawable, new LayerDrawable(arcs));
 
                 // make new OverlayItem for this stop
                 GeoPoint stopMarkerLocation = new GeoPoint(stop.location.get(0), stop.location.get(1));
                 OverlayItem item = new OverlayItem(stop.name, stop.description, stopMarkerLocation);
-                item.setMarker(stopMarkerDrawable);
+                item.setMarker(stopmarker);
 
                 // add it to the overlay
                 stopoverlay.addItem(item);

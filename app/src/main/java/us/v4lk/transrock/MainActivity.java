@@ -58,8 +58,10 @@ public class MainActivity extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mapFragment = new MapFragment();
-        routeFragment = new RoutesFragment();
+        if (savedInstanceState == null) {
+            mapFragment = new MapFragment();
+            routeFragment = new RoutesFragment();
+        }
 
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);

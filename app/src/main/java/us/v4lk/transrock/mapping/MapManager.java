@@ -83,20 +83,8 @@ public class MapManager {
     public void setRoutes(Collection<TransrockRoute> routes) {
         SetRoutesTask srt = new SetRoutesTask();
         srt.execute(routes);
-
     }
-    /**
-     * Takes the list of TransrockRoutes from storage and sets up the map to display
-     * all relevant information related to those routes.
-     * Executes asynchronously.
-     */
-    public void setRoutesFromStorage() {
 
-        SetRoutesFromStorageTask srfst = new SetRoutesFromStorageTask();
-        srfst.execute(routes);
-
-
-    }
     /**
      * Updates position markers for vehicles on all routes.
      */
@@ -247,13 +235,7 @@ public class MapManager {
             map.invalidate();
         }
     }
-    class SetRoutesFromStorageTask extends SetRoutesTask {
 
-        @Override
-        protected Void doInBackground(Collection<TransrockRoute>... params) {
-            return super.doInBackground(RouteStorage.getActivatedRoutes());
-        }
-    }
     class UpdateVehiclesTask extends AsyncTask<Collection<TransrockRoute>, Void, ItemizedIconOverlay> {
 
         @Override

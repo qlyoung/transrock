@@ -15,14 +15,11 @@ import com.google.android.gms.location.LocationListener;
 
 import org.osmdroid.views.MapView;
 
-import java.util.Collection;
-
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.mapping.LocationManager;
 import us.v4lk.transrock.mapping.MapManager;
 import us.v4lk.transrock.util.RouteStorage;
 import us.v4lk.transrock.util.SmartViewPager;
-import us.v4lk.transrock.util.TransrockRoute;
 
 /**
  * Map fragment.
@@ -84,8 +81,7 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
         }
 
         // set the routes the map should draw
-        Collection<TransrockRoute> activated = RouteStorage.getActivatedRoutes();
-        mapManager.setRoutes(activated);
+        mapManager.setRoutes(RouteStorage.getActivatedRoutes());
     }
 
     @Override
@@ -120,7 +116,7 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
 
         switch (position) {
             case SmartViewPager.MAP_PAGE:
-                mapManager.setRoutesFromStorage();
+                mapManager.setRoutes(RouteStorage.getActivatedRoutes());
             default:
                 break;
         }

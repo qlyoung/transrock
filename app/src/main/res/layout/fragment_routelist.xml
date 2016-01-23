@@ -7,23 +7,24 @@
         android:id="@+id/routelist_noroutes_message"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="20dp"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
+        android:layout_margin="20dp"
+        android:gravity="center_horizontal"
         android:paddingBottom="15dp"
         android:text="@string/no_routes"
-        android:gravity="center_horizontal"
-        android:textSize="@dimen/abc_text_size_medium_material"
         android:textIsSelectable="false"
+        android:textSize="@dimen/abc_text_size_medium_material"
         android:visibility="gone" />
 
     <ListView
         android:id="@+id/routelist"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingStart="@dimen/spec_activity_horizontal_margin"
+        android:divider="@null"
         android:paddingEnd="@dimen/spec_activity_horizontal_margin"
-        android:divider="@null" />
+        android:paddingStart="@dimen/spec_activity_horizontal_margin" />
+
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/routelist_addroute_fab"
@@ -31,9 +32,10 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
-        android:onClick="addRoute"
-        android:src="@drawable/ic_add_white_24dp"
         android:layout_margin="24dp"
-        app:elevation="6dp" />
+        android:src="@drawable/ic_add_white_24dp"
+        app:elevation="6dp"
+        app:layout_behavior="us.v4lk.transrock.util.FloatingActionButtonBehavior" />
+
 
 </RelativeLayout>

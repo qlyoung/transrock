@@ -98,6 +98,11 @@ public class RoutesFragment extends Fragment implements ViewPager.OnPageChangeLi
     @Override
     public void onPause() {
         super.onPause();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
         persistRoutelist();
     }
 

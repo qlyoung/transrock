@@ -24,9 +24,13 @@ import us.v4lk.transrock.util.SmartViewPager;
  */
 public class MainActivity extends AppCompatActivity {
 
-    @Bind(R.id.main_toolbar) Toolbar toolbar;
-    @Bind(R.id.fragment_pager) SmartViewPager pager;
-    @OnPageChange(R.id.fragment_pager) void onPageSelected(int position) {
+    @Bind(R.id.main_toolbar)
+    Toolbar toolbar;
+    @Bind(R.id.fragment_pager)
+    SmartViewPager pager;
+
+    @OnPageChange(R.id.fragment_pager)
+    void onPageSelected(int position) {
         switch (position) {
             case SmartViewPager.MAP_PAGE:
                 pager.setAllowSwiping(false);
@@ -39,24 +43,27 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /** fragments this activity hosts */
+    /**
+     * fragments this activity hosts
+     */
     MapFragment mapFragment;
     RoutesFragment routeFragment;
 
-    /** the nav drawer */
+    /**
+     * the nav drawer
+     */
     Drawer drawer;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_main);
-        ButterKnife.bind(this);
-
-        setSupportActionBar(toolbar);
-
         mapFragment = new MapFragment();
         routeFragment = new RoutesFragment();
+
+        setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
+        setSupportActionBar(toolbar);
 
         // setup ViewPager's fragment adapter
         FragmentPagerAdapter adapter = new FragmentPagerAdapter(getSupportFragmentManager()) {
@@ -70,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
                         return mapFragment;
                 }
             }
+
             @Override
             public int getCount() {
                 return 2;

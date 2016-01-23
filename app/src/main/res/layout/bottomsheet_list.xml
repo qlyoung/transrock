@@ -6,7 +6,8 @@
     android:id="@+id/bottomsheet"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="@color/color_text_secondary">
 
     <TextView
         android:id="@+id/bottomsheet_title"
@@ -14,7 +15,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="start"
         android:padding="8dp"
-        android:textSize="@dimen/abc_text_size_headline_material"/>
+        android:textSize="@dimen/abc_text_size_headline_material" />
 
     <ListView
         android:id="@+id/bottomsheet_list"

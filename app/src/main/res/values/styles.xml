@@ -8,6 +8,9 @@
         <item name="colorPrimaryDark">@color/color_primary_dark</item>
         <item name="colorAccent">@color/color_accent</item>
 
+        <!-- AppCompat action bar style -->
+        <item name="android:actionBarStyle">@style/TransrockActionBarStyle</item>
+
         <!-- Material drawer color attrs -->
         <item name="material_drawer_background">@color/material_drawer_background</item>
         <item name="material_drawer_icons">@color/material_drawer_icons</item>
@@ -21,7 +24,7 @@
         <item name="material_drawer_header_selection_text">@color/material_drawer_header_selection_text</item>
     </style>
 
-    <style name="AppActionBar" parent="Widget.AppCompat.Toolbar">
+    <style name="TransrockActionBarStyle" parent="Widget.AppCompat.Toolbar">
         <item name="android:background">@color/color_primary</item>
         <item name="android:minHeight">?attr/actionBarSize</item>
     </style>

@@ -12,7 +12,7 @@
     <color name="color_divider">@color/md_grey_400</color>
 
     <!-- badge colors -->
-    <color name="agency_badge">#0091EA</color>
+    <color name="color_agency_badge">#0091EA</color>
 
     <!-- material drawer colors -->
     <color name="material_drawer_background">#303030</color>

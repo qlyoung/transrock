@@ -4,7 +4,7 @@
     tools:context="us.v4lk.transrock.SelectRoutesActivity"
     android:id="@+id/addroute_bottomsheetlayout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent" >
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -13,8 +13,7 @@
         <android.support.v7.widget.Toolbar
             android:id="@+id/addroute_toolbar"
             android:layout_height="wrap_content"
-            android:layout_width="match_parent"
-            style="@style/AppActionBar" />
+            android:layout_width="match_parent" />
 
         <ProgressBar
             android:id="@+id/addroute_body_progressbar"
@@ -37,7 +36,6 @@
             android:gravity="center_horizontal"
             android:visibility="gone"/>
 
-        <!-- padding on this guy is a little jank to make room for horizontal progress bar -->
         <se.emilsjolander.stickylistheaders.StickyListHeadersListView
             android:id="@+id/addroute_agency_list"
             android:layout_width="match_parent"

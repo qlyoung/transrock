@@ -73,7 +73,7 @@ public class AgencyAdapter extends ArrayAdapter<Agency> implements StickyListHea
         TextView text = (TextView) convertView.findViewById(R.id.agency_list_item_text);
 
         // set badge and text views
-        int color = getContext().getResources().getColor(R.color.agency_badge);
+        int color = getContext().getResources().getColor(R.color.color_agency_badge);
         badge.setImageBitmap(Util.colorToBitmap(color, 50, 50));
         text.setText(getItem(position).long_name);
 

@@ -51,7 +51,7 @@ public class MapManager {
     Context context;
 
     /** whether to center the map on the user's location each time we get a location update */
-    boolean followMe;
+    boolean followMe = true;
 
     @BindDrawable(R.drawable.default_marker) Drawable location_marker;
     @BindDrawable(R.drawable.stop_marker) Drawable stop_marker;
@@ -113,6 +113,14 @@ public class MapManager {
         map.setLocationMarkerOn(true);
         if (followMe)
             map.centerAndZoomOnPosition(loc, true);
+    }
+
+    /**
+     * Sets the location the map should be initially centered on.
+     * Does not update location marker. Does not animate.
+     */
+    public void setMapPosition(Location loc) {
+        map.centerAndZoomOnPosition(loc, false);
     }
 
     public void setFollowMe(boolean followMe) {

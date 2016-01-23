@@ -1,14 +1,13 @@
-<com.flipboard.bottomsheet.BottomSheetLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.flipboard.bottomsheet.BottomSheetLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="us.v4lk.transrock.SelectRoutesActivity"
     android:id="@+id/addroute_bottomsheetlayout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" >
+    android:layout_height="match_parent">
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent" >
+        android:layout_height="match_parent">
 
         <android.support.v7.widget.Toolbar
             android:id="@+id/addroute_toolbar"
@@ -34,7 +33,7 @@
             android:textSize="@dimen/abc_text_size_medium_material"
             android:textIsSelectable="false"
             android:gravity="center_horizontal"
-            android:visibility="gone"/>
+            android:visibility="gone" />
 
         <se.emilsjolander.stickylistheaders.StickyListHeadersListView
             android:id="@+id/addroute_agency_list"
@@ -43,7 +42,7 @@
             android:layout_below="@id/addroute_toolbar"
             android:paddingLeft="@dimen/spec_activity_horizontal_margin"
             android:paddingRight="@dimen/spec_activity_horizontal_margin"
-            android:divider="@null"/>
+            android:divider="@null" />
 
         <ProgressBar
             android:id="@+id/addroute_toolbar_progressbar"

@@ -78,7 +78,10 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
 
         // do a proactive call to try to get location directly on resume
         Location loc = locationManager.getLocation();
-        if (loc != null) mapManager.updateLocation(loc);
+        if (loc != null) {
+            mapManager.setMapPosition(loc);
+            mapManager.updateLocation(loc);
+        }
 
         // set the routes the map should draw
         Collection<TransrockRoute> activated = RouteStorage.getActivatedRoutes();

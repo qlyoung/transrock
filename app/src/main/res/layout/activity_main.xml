@@ -10,7 +10,8 @@
     <android.support.v7.widget.Toolbar
         android:id="@+id/main_toolbar"
         android:layout_height="wrap_content"
-        android:layout_width="match_parent" />
+        android:layout_width="match_parent"
+        style="@style/TransrockActionBarStyle" />
 
     <!-- This frame contains another frame that has the actual activity content. This frame
          is just a container to anchor the drawer to. -->

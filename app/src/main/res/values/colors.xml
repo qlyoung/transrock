@@ -2,28 +2,28 @@
 <resources>
 
     <!-- app theme colors -->
-    <color name="color_primary">@color/md_green_500</color>
-    <color name="color_primary_dark">@color/md_green_700</color>
-    <color name="color_primary_light">@color/md_green_100</color>
-    <color name="color_accent">@color/md_grey_500</color>
-    <color name="color_text_primary">@color/md_grey_900</color>
-    <color name="color_text_secondary">@color/md_grey_600</color>
-    <color name="color_icons">@color/md_white_1000</color>
+    <color name="color_primary">@color/md_grey_800</color>
+    <color name="color_primary_dark">@color/md_grey_900</color>
+    <color name="color_primary_light">@color/md_grey_700</color>
+    <color name="color_accent">@color/md_indigo_500</color>
+    <color name="color_text_primary">@color/md_grey_100</color>
+    <color name="color_text_secondary">@color/md_grey_200</color>
+    <color name="color_icons">@color/md_grey_100</color>
     <color name="color_divider">@color/md_grey_400</color>
 
     <!-- badge colors -->
-    <color name="color_agency_badge">#0091EA</color>
+    <color name="color_agency_badge">@color/md_indigo_400</color>
 
     <!-- material drawer colors -->
-    <color name="material_drawer_background">#303030</color>
-    <color name="material_drawer_icons">#000</color>
-    <color name="material_drawer_primary_text">#DEFFFFFF</color>
-    <color name="material_drawer_primary_icon">#8AFFFFFF</color>
-    <color name="material_drawer_secondary_text">#8AFFFFFF</color>
-    <color name="material_drawer_hint_text">#42FFFFFF</color>
-    <color name="material_drawer_divider">#1FFFFFFF</color>
-    <color name="material_drawer_selected">#202020</color>
-    <color name="material_drawer_selected_text">@color/material_drawer_primary</color>
-    <color name="material_drawer_header_selection_text">#FFF</color>
+    <color name="material_drawer_background">@color/color_primary</color>
+    <color name="material_drawer_icons">@color/color_icons</color>
+    <color name="material_drawer_primary_icon">@color/color_icons</color>
+    <color name="material_drawer_primary_text">@color/color_text_primary</color>
+    <color name="material_drawer_secondary_text">@color/color_text_secondary</color>
+    <color name="material_drawer_hint_text">@color/color_text_secondary</color>
+    <color name="material_drawer_divider">@color/color_divider</color>
+    <color name="material_drawer_selected">@color/color_primary_dark</color>
+    <color name="material_drawer_selected_text">@color/color_accent</color>
+    <color name="material_drawer_header_selection_text">@color/color_text_primary</color>
 
 </resources>

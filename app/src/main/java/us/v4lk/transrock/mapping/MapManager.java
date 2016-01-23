@@ -11,9 +11,11 @@ import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.ArcShape;
 import android.location.Location;
 import android.os.AsyncTask;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
+import org.apache.commons.lang3.time.StopWatch;
 import org.json.JSONException;
 import org.osmdroid.bonuspack.overlays.Polyline;
 import org.osmdroid.util.GeoPoint;
@@ -35,6 +37,7 @@ import us.v4lk.transrock.R;
 import us.v4lk.transrock.transloc.TransLocAPI;
 import us.v4lk.transrock.transloc.objects.Stop;
 import us.v4lk.transrock.transloc.objects.Vehicle;
+import us.v4lk.transrock.util.RouteStorage;
 import us.v4lk.transrock.util.TransrockRoute;
 import us.v4lk.transrock.util.Util;
 
@@ -74,13 +77,25 @@ public class MapManager {
     /**
      * Takes a list of TransrockRoutes and sets up the map to display
      * all relevant information related to those routes.
+     * Executes asynchronously.
      * @param routes
      */
     public void setRoutes(Collection<TransrockRoute> routes) {
-        this.routes.clear();
-        this.routes.addAll(routes);
         SetRoutesTask srt = new SetRoutesTask();
         srt.execute(routes);
+
+    }
+    /**
+     * Takes the list of TransrockRoutes from storage and sets up the map to display
+     * all relevant information related to those routes.
+     * Executes asynchronously.
+     */
+    public void setRoutesFromStorage() {
+
+        SetRoutesFromStorageTask srfst = new SetRoutesFromStorageTask();
+        srfst.execute(routes);
+
+
     }
     /**
      * Updates position markers for vehicles on all routes.
@@ -110,7 +125,8 @@ public class MapManager {
 
         @Override
         protected Void doInBackground(Collection<TransrockRoute>... params) {
-            Collection<TransrockRoute> routes = params[0];
+            routes.clear();
+            routes.addAll(params[0]);
 
             // calculate how many times each segment is reused across all routes
             LinkedHashMap<String, Integer> totalCount = new LinkedHashMap<>(routes.size());
@@ -221,6 +237,13 @@ public class MapManager {
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
             map.invalidate();
+        }
+    }
+    class SetRoutesFromStorageTask extends SetRoutesTask {
+
+        @Override
+        protected Void doInBackground(Collection<TransrockRoute>... params) {
+            return super.doInBackground(RouteStorage.getActivatedRoutes());
         }
     }
     class UpdateVehiclesTask extends AsyncTask<Collection<TransrockRoute>, Void, ItemizedIconOverlay> {

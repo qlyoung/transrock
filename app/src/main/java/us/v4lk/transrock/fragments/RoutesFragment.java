@@ -9,6 +9,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -16,6 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 
+import org.apache.commons.lang3.time.StopWatch;
 import org.json.JSONException;
 
 import java.net.SocketTimeoutException;
@@ -75,20 +77,14 @@ public class RoutesFragment extends Fragment implements ViewPager.OnPageChangeLi
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        // inflate layout
         View root = inflater.inflate(R.layout.fragment_routelist, container, false);
-
-        // bind
         ButterKnife.bind(this, root);
-
-        // return whatever should be the root of this fragment's view hierarchy
         return root;
     }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-
         // set empty adapter; will be filled later in onResume()
         routeList.setAdapter(new TransrockRouteAdapter(getActivity(), R.layout.route_list_item));
     }
@@ -127,14 +123,12 @@ public class RoutesFragment extends Fragment implements ViewPager.OnPageChangeLi
     @Override
     public void onPageScrollStateChanged(int state) { /* don't care */ }
 
-    /* methods that save & read route list */
-
     /**
      * Loads in routes to routelist from persistence
      */
     private void updateRoutelist() {
         // get routes from db
-        Collection<TransrockRoute> routes = RouteStorage.getAllRoutes();
+        Collection<TransrockRoute> routes = RouteStorage.getMap().values();
 
         // clear adapter
         TransrockRouteAdapter adapter = (TransrockRouteAdapter) routeList.getAdapter();
@@ -290,7 +284,6 @@ public class RoutesFragment extends Fragment implements ViewPager.OnPageChangeLi
             // show snackbar with error message
             int messageResId = values[0];
             if (RoutesFragment.this.getView() != null) {
-                // make allahu snackbar
                 Snackbar errorSnackbar = Snackbar.make(RoutesFragment.this.getView(), messageResId, Snackbar.LENGTH_LONG);
 
                 // allow user to retry this task in case of error

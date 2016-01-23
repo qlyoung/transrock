@@ -25,15 +25,23 @@ import us.v4lk.transrock.util.SmartViewPager;
 import us.v4lk.transrock.util.TransrockRoute;
 
 /**
- * Map fragment. Draws routes and lets the user move around the map.
+ * Map fragment.
+ * Handles user interactions with the map, displaying routes & stops & vehicles,
+ * monitors location & updates map accordingly.
  */
 public class MapFragment extends Fragment implements LocationListener, ViewPager.OnPageChangeListener {
 
-    /** location manager */
+    /**
+     * location manager
+     */
     LocationManager locationManager;
-    /** map manager */
+    /**
+     * map manager
+     */
     MapManager mapManager;
-    /** root view */
+    /**
+     * root view
+     */
     View root;
 
     /* lifecycle */
@@ -42,11 +50,13 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
     }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         root = inflater.inflate(R.layout.fragment_map, container, false);
         return root;
     }
+
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
@@ -61,13 +71,14 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
         // get location updates
         locationManager.addLocationListener(this);
     }
+
     @Override
     public void onResume() {
         super.onResume();
 
         // do a proactive call to try to get location directly on resume
-        Location l = locationManager.getLocation();
-        if (l != null) mapManager.updateLocation(l);
+        Location loc = locationManager.getLocation();
+        if (loc != null) mapManager.updateLocation(loc);
 
         // set the routes the map should draw
         Collection<TransrockRoute> activated = RouteStorage.getActivatedRoutes();
@@ -83,6 +94,7 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.menu_map, menu);
     }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -102,27 +114,29 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
     /* pager callbacks */
     @Override
     public void onPageSelected(int position) {
+
         switch (position) {
             case SmartViewPager.MAP_PAGE:
-                mapManager.setRoutes(RouteStorage.getActivatedRoutes());
-                break;
-            case SmartViewPager.ROUTE_PAGE:
+                mapManager.setRoutesFromStorage();
             default:
                 break;
         }
+
     }
+
     @Override
-    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) { }
+    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+    }
+
     @Override
-    public void onPageScrollStateChanged(int state) { }
+    public void onPageScrollStateChanged(int state) {
+    }
 
     /* play services location api callback */
     @Override
     public void onLocationChanged(Location location) {
         mapManager.updateLocation(location);
     }
-
-
 
 
 }

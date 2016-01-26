@@ -100,8 +100,8 @@ public class Util {
     /**
      * Converts a color to a bitmap of given size.
      *
-     * @param color  color int
-     * @param width  da width of da bitmap
+     * @param color color int
+     * @param width da width of da bitmap
      * @param height da height of da bitmap
      * @return da bitmap
      */
@@ -126,7 +126,7 @@ public class Util {
      * Polyline decoder.
      * https://github.com/scoutant/polyline-decoder/blob/master/src/main/java/org/scoutant/polyline/PolylineDecoder.java
      *
-     * @param encoded   the encoded polyline string
+     * @param encoded the encoded polyline string
      * @param precision precision to decode to (should be ~ 1e5 or 1e6)
      * @return a list of geopoints corresponding to the encoded polyline
      */
@@ -166,7 +166,7 @@ public class Util {
      * Converts list of GeoPoints to a single Polyline overlay.
      *
      * @param waypoints the points defining the line
-     * @param context   the context
+     * @param context the context
      * @return a Polyline overlay
      */
     public static Polyline pointsToOverlay(ArrayList<GeoPoint> waypoints, Context context) {
@@ -180,7 +180,7 @@ public class Util {
      * Converts an encoded polyline string to a Polyline overlay.
      *
      * @param encodedPolyline encoded polyline string
-     * @param context         the context
+     * @param context the context
      * @return a Polyline overlay
      */
     public static Polyline encodedPolylineToOverlay(String encodedPolyline, Context context) {

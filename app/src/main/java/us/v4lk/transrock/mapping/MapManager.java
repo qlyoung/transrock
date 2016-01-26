@@ -11,6 +11,7 @@ import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.ArcShape;
 import android.location.Location;
 import android.os.AsyncTask;
+import android.support.v4.graphics.drawable.DrawableCompat;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -24,12 +25,14 @@ import org.osmdroid.views.overlay.ItemizedIconOverlay;
 import org.osmdroid.views.overlay.Overlay;
 import org.osmdroid.views.overlay.OverlayItem;
 
+import java.lang.reflect.Array;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 import butterknife.BindDrawable;
 import butterknife.ButterKnife;
@@ -114,6 +117,7 @@ public class MapManager {
     public void setFollowMe(boolean followMe) {
         this.followMe = followMe;
     }
+
     class SetRoutesTask extends AsyncTask<Collection<TransrockRoute>, Void, Void> {
 
         private HashMap<String, Collection<Polyline>> routelines;
@@ -241,10 +245,13 @@ public class MapManager {
         @Override
         protected ItemizedIconOverlay doInBackground(Collection<TransrockRoute>... params) {
             // fetch vehicles
-            ArrayList<Vehicle> vehicles = new ArrayList<>();
+            HashMap<TransrockRoute, List<Vehicle>> vehicles = new HashMap<>();
+
             try {
-                for (TransrockRoute route : routes)
-                    vehicles.addAll(TransLocAPI.getVehicles(route.agency_id, route.route_id));
+                for (TransrockRoute route : routes){
+                    List<Vehicle> v = TransLocAPI.getVehicles(route.agency_id, route.route_id);
+                    vehicles.put(route, v);
+                }
             }
             catch (NetworkErrorException e) {
 
@@ -256,14 +263,19 @@ public class MapManager {
 
             }
 
-            ItemizedIconOverlay<OverlayItem> vehicleOverlay =
-                    new ItemizedIconOverlay<OverlayItem>(context, new ArrayList<OverlayItem>(), null);
+            ItemizedIconOverlay<OverlayItem> vehicleOverlay = new ItemizedIconOverlay<>(context, new ArrayList<OverlayItem>(), null);
+            Drawable vehicleMarker = DrawableCompat.wrap(context.getResources().getDrawable(R.drawable.ic_directions_bus_white_24dp));
 
             // build overlay
-            for (Vehicle v : vehicles) {
-                GeoPoint loc = new GeoPoint(v.location.firstElement(), v.location.lastElement());
-                OverlayItem marker = map.makeMarker(loc, map.defaultMarkerDrawable, v.call_name, v.description);
-                vehicleOverlay.addItem(marker);
+            for (TransrockRoute route : vehicles.keySet()) {
+                // tint marker to match route color
+                DrawableCompat.setTint(vehicleMarker.mutate(), Color.parseColor("#" + route.color));
+
+                for (Vehicle vehicle : vehicles.get(route)) {
+                    GeoPoint loc = new GeoPoint(vehicle.location.firstElement(), vehicle.location.lastElement());
+                    OverlayItem marker = map.makeMarker(loc, vehicleMarker, vehicle.call_name, vehicle.description);
+                    vehicleOverlay.addItem(marker);
+                }
             }
 
             map.setVehiclesOverlay(vehicleOverlay);

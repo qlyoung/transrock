@@ -2,6 +2,7 @@ package us.v4lk.transrock.fragments;
 
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
@@ -40,12 +41,17 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
      * root view
      */
     View root;
+    /** Handles messages & tasks on this thread's queue. */
+    Handler handler;
+    /** Time between vehicles updates, in milliseconds */
+    int UPDATE_VEHICLES_INTERVAL = 3000;
 
     /* lifecycle */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+        handler = new Handler();
     }
 
     @Override
@@ -82,6 +88,16 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
 
         // set the routes the map should draw
         mapManager.setRoutes(RouteStorage.getActivatedRoutes());
+
+        // set a recurring task on the handler to update vehicles
+        Runnable updateVehiclesRunnable = new Runnable() {
+            @Override
+            public void run() {
+                mapManager.updateVehicles();
+                handler.postDelayed(this, UPDATE_VEHICLES_INTERVAL);
+            }
+        };
+        handler.post(updateVehiclesRunnable);
     }
 
     @Override

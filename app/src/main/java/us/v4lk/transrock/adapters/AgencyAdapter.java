@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.transloc.objects.Agency;
+import us.v4lk.transrock.util.RouteStorage;
 import us.v4lk.transrock.util.Util;
 
 /**
@@ -71,10 +72,13 @@ public class AgencyAdapter extends ArrayAdapter<Agency> implements StickyListHea
         // capture badge and text views
         ImageView badge = (ImageView) convertView.findViewById(R.id.agency_list_item_badge);
         TextView text = (TextView) convertView.findViewById(R.id.agency_list_item_text);
+        TextView badgeText = (TextView) convertView.findViewById(R.id.agency_list_item_badge_text);
 
         // set badge and text views
         int color = getContext().getResources().getColor(R.color.color_agency_badge);
+        String numSavedRoutes = String.valueOf(RouteStorage.getRoutesByAgency(getItem(position).agency_id).length);
         badge.setImageBitmap(Util.colorToBitmap(color, 50, 50));
+        badgeText.setText(numSavedRoutes);
         text.setText(getItem(position).long_name);
 
         // tag list item with the object it is sourced from

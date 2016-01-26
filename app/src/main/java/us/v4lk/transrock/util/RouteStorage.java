@@ -102,6 +102,14 @@ public class RouteStorage {
         return getMap().containsKey(id);
     }
 
+    public static synchronized TransrockRoute[] getRoutesByAgency(int agencyId) {
+        ArrayList<TransrockRoute> result = new ArrayList<>();
+        for (TransrockRoute route : getMap().values()) {
+            if (route.agency_id == agencyId) result.add(route);
+        }
+        return result.toArray(new TransrockRoute[result.size()]);
+    }
+
     public static synchronized void clear() {
         Hawk.remove(ROUTES_STORAGE_KEY);
         initialize();

@@ -2,6 +2,7 @@ package us.v4lk.transrock.mapping;
 
 import android.accounts.NetworkErrorException;
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
@@ -236,7 +237,7 @@ public class MapManager {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            map.invalidate();
+            new UpdateVehiclesTask().execute(routes);
         }
     }
 
@@ -264,11 +265,11 @@ public class MapManager {
             }
 
             ItemizedIconOverlay<OverlayItem> vehicleOverlay = new ItemizedIconOverlay<>(context, new ArrayList<OverlayItem>(), null);
-            Drawable vehicleMarker = DrawableCompat.wrap(context.getResources().getDrawable(R.drawable.ic_directions_bus_white_24dp));
 
             // build overlay
             for (TransrockRoute route : vehicles.keySet()) {
                 // tint marker to match route color
+                Drawable vehicleMarker = DrawableCompat.wrap(context.getResources().getDrawable(R.drawable.ic_directions_bus_white_24dp));
                 DrawableCompat.setTint(vehicleMarker.mutate(), Color.parseColor("#" + route.color));
 
                 for (Vehicle vehicle : vehicles.get(route)) {

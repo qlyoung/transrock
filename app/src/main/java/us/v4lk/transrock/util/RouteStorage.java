@@ -1,6 +1,7 @@
 package us.v4lk.transrock.util;
 
 import android.os.AsyncTask;
+import android.util.Log;
 
 import com.orhanobut.hawk.Hawk;
 
@@ -12,7 +13,7 @@ import java.util.Set;
 
 /**
  * Wrapper for Hawk that offers a convenient way to access routes in storage.
- * <p>
+ * <p/>
  * Hawk is backed by Android's SQLite interface which requires synchronous access. Hawk
  * doesn't make this explicit, so I've done so in this wrapper.
  */

@@ -78,6 +78,7 @@ public class AgencyAdapter extends ArrayAdapter<Agency> implements StickyListHea
         int color = getContext().getResources().getColor(R.color.color_agency_badge);
         //TODO: this operation is O(n * m) where n = num saved routes and m = num agencies
         //TODO: for e.g. 10 saved agencies this comes out to around 500 comparisons and 50 arraylist creations
+        //TODO: need to do this ONLY for activated routes; all others should be 0
         String numSavedRoutes = String.valueOf(RouteStorage.getRoutesByAgency(getItem(position).agency_id).length);
         badge.setImageBitmap(Util.colorToBitmap(color, 50, 50));
         badgeText.setText(numSavedRoutes);

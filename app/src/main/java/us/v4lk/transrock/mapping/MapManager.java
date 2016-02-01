@@ -101,10 +101,11 @@ public class MapManager {
      * @param loc the new location
      */
     public void updateLocation(Location loc) {
-        map.setLocationMarkerPosition(loc);
+        GeoPoint location = Util.toGeoPoint(loc);
+        map.setLocationMarkerPosition(location);
         map.setLocationMarkerOn(true);
         if (followMe)
-            map.centerAndZoomOnPosition(loc, true);
+            map.centerAndZoomOnPosition(location, true);
     }
 
     /**
@@ -112,7 +113,7 @@ public class MapManager {
      * Does not update location marker. Does not animate.
      */
     public void setMapPosition(Location loc) {
-        map.centerAndZoomOnPosition(loc, false);
+        map.centerAndZoomOnPosition(Util.toGeoPoint(loc), false);
     }
 
     public void setFollowMe(boolean followMe) {

@@ -2,7 +2,6 @@ package us.v4lk.transrock.mapping;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-import android.location.Location;
 
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.ResourceProxy;
@@ -83,9 +82,7 @@ public class Map {
         MAP_ZOOM_LEVEL = defaultZoomLevel;
     }
 
-    public static GeoPoint toGeoPoint(Location l) {
-        return new GeoPoint(l.getLatitude(), l.getLongitude());
-    }
+
     public void setScaleBar(boolean on) {
         scaleBarOverlay.setEnabled(on);
     }
@@ -96,9 +93,6 @@ public class Map {
         locationMarkerOverlay.removeAllItems();
         OverlayItem locationMarker = makeMarker(p, locationMarkerDrawable);
         locationMarkerOverlay.addItem(locationMarker);
-    }
-    public void setLocationMarkerPosition(Location l) {
-        setLocationMarkerPosition(toGeoPoint(l));
     }
     public void setLocationMarkerDrawable(Drawable d) {
         locationMarkerDrawable = d;
@@ -113,9 +107,6 @@ public class Map {
         else
             map.getController().setCenter(center);
     }
-    public void centerOnPosition(Location l, boolean animate) {
-        centerOnPosition(toGeoPoint(l), animate);
-    }
     public void centerAndZoomOnPosition(GeoPoint center, boolean animate) {
         map.getController().setZoom(MAP_ZOOM_LEVEL);
         if (animate)
@@ -123,13 +114,7 @@ public class Map {
         else
             map.getController().setCenter(center);
     }
-    public void centerAndZoomOnPosition(Location l, boolean animate) {
-        centerAndZoomOnPosition(toGeoPoint(l), animate);
-    }
     public void invalidate() {  map.invalidate(); }
-    public MapView getMapView() {
-        return map;
-    }
     public Context getContext() { return context; }
 
     /* overlays */

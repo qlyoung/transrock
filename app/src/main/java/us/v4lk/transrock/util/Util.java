@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.ColorDrawable;
+import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
@@ -190,6 +191,10 @@ public class Util {
         Polyline segmentPolyline = pointsToOverlay(segmentGeoPoints, context);
         // return polyline
         return segmentPolyline;
+    }
+
+    public static GeoPoint toGeoPoint(Location l) {
+        return new GeoPoint(l.getLatitude(), l.getLongitude());
     }
 
 }

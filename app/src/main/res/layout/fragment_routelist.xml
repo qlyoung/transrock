@@ -34,7 +34,7 @@
         android:layout_alignParentEnd="true"
         android:layout_margin="24dp"
         android:src="@drawable/ic_add_white_24dp"
-        app:elevation="6dp"
+        app:elevation="9dp"
         app:layout_behavior="us.v4lk.transrock.util.FloatingActionButtonBehavior" />
 
 

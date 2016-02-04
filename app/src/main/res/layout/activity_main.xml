@@ -11,6 +11,7 @@
         android:id="@+id/main_toolbar"
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
+        android:elevation="10dp"
         style="@style/TransrockActionBarStyle" />
 
     <!-- This frame contains another frame that has the actual activity content. This frame
@@ -18,7 +19,8 @@
     <FrameLayout
         android:id="@+id/drawer_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:foreground="?android:windowContentOverlay">
 
         <!-- the activity content, encapsulated in a FrameLayout for convenience -->
         <FrameLayout

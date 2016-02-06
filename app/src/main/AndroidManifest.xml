@@ -26,10 +26,10 @@
         <activity
             android:name=".MainActivity"
             android:label="@string/title_activity_main"
-            android:configChanges="keyboardHidden|orientation"></activity>
+            android:configChanges="keyboardHidden|orientation" />
         <activity
             android:name=".SelectRoutesActivity"
-            android:label="@string/title_activity_add_route"></activity>
+            android:label="@string/title_activity_add_route" />
     </application>
 
 </manifest>

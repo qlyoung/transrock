@@ -9,7 +9,6 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -17,7 +16,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 
-import org.apache.commons.lang3.time.StopWatch;
 import org.json.JSONException;
 
 import java.net.SocketTimeoutException;
@@ -31,14 +29,13 @@ import java.util.Set;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import us.v4lk.transrock.MainActivity;
 import us.v4lk.transrock.SelectRoutesActivity;
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.adapters.TransrockRouteAdapter;
 import us.v4lk.transrock.transloc.objects.Route;
 import us.v4lk.transrock.transloc.TransLocAPI;
 import us.v4lk.transrock.transloc.objects.Stop;
-import us.v4lk.transrock.util.RouteStorage;
+import us.v4lk.transrock.util.RouteManager;
 import us.v4lk.transrock.util.SmartViewPager;
 import us.v4lk.transrock.util.TransrockRoute;
 
@@ -133,7 +130,7 @@ public class RoutesFragment extends Fragment implements ViewPager.OnPageChangeLi
      */
     private void updateRoutelist() {
         // get routes from db
-        Collection<TransrockRoute> routes = RouteStorage.getMap().values();
+        Collection<TransrockRoute> routes = RouteManager.getMap().values();
 
         // clear adapter
         TransrockRouteAdapter adapter = (TransrockRouteAdapter) routeList.getAdapter();
@@ -167,7 +164,7 @@ public class RoutesFragment extends Fragment implements ViewPager.OnPageChangeLi
         for (TransrockRoute route : all)
             modifiedRoutes.add(route);
 
-        RouteStorage.putRoute(modifiedRoutes);
+        RouteManager.putRoute(modifiedRoutes);
     }
 
     /* called when we return from SelectRoutesActivity */
@@ -267,15 +264,15 @@ public class RoutesFragment extends Fragment implements ViewPager.OnPageChangeLi
         @Override
         protected void onPostExecute(Collection<TransrockRoute> result) {
             // for the new routes, keep the activated status if it was previously set
-            Map<String, TransrockRoute> storageRoutes = RouteStorage.getMap();
+            Map<String, TransrockRoute> storageRoutes = RouteManager.getMap();
             for (TransrockRoute route : result)
                 if (storageRoutes.containsKey(route.route_id))
                     route.setActivated(storageRoutes.get(route.route_id).isActivated());
 
             // remove all previously stored routes
-            RouteStorage.clear();
+            RouteManager.clear();
             // put all new routes
-            RouteStorage.putRoute(result);
+            RouteManager.putRoute(result);
             // update views
             updateRoutelist();
             // dismiss snackbar

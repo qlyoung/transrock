@@ -2,7 +2,6 @@ package us.v4lk.transrock.mapping;
 
 import android.accounts.NetworkErrorException;
 import android.content.Context;
-import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
@@ -13,11 +12,9 @@ import android.graphics.drawable.shapes.ArcShape;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.support.v4.graphics.drawable.DrawableCompat;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
-import org.apache.commons.lang3.time.StopWatch;
 import org.json.JSONException;
 import org.osmdroid.bonuspack.overlays.Polyline;
 import org.osmdroid.util.GeoPoint;
@@ -26,7 +23,6 @@ import org.osmdroid.views.overlay.ItemizedIconOverlay;
 import org.osmdroid.views.overlay.Overlay;
 import org.osmdroid.views.overlay.OverlayItem;
 
-import java.lang.reflect.Array;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -41,7 +37,6 @@ import us.v4lk.transrock.R;
 import us.v4lk.transrock.transloc.TransLocAPI;
 import us.v4lk.transrock.transloc.objects.Stop;
 import us.v4lk.transrock.transloc.objects.Vehicle;
-import us.v4lk.transrock.util.RouteStorage;
 import us.v4lk.transrock.util.TransrockRoute;
 import us.v4lk.transrock.util.Util;
 

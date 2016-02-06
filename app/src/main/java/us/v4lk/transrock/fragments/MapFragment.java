@@ -19,7 +19,7 @@ import org.osmdroid.views.MapView;
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.mapping.LocationManager;
 import us.v4lk.transrock.mapping.MapManager;
-import us.v4lk.transrock.util.RouteStorage;
+import us.v4lk.transrock.util.RouteManager;
 import us.v4lk.transrock.util.SmartViewPager;
 
 /**
@@ -87,7 +87,7 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
         }
 
         // set the routes the map should draw
-        mapManager.setRoutes(RouteStorage.getActivatedRoutes());
+        mapManager.setRoutes(RouteManager.getActivatedRoutes());
 
         // set a recurring task on the handler to update vehicles
         Runnable updateVehiclesRunnable = new Runnable() {
@@ -132,7 +132,7 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
 
         switch (position) {
             case SmartViewPager.MAP_PAGE:
-                mapManager.setRoutes(RouteStorage.getActivatedRoutes());
+                mapManager.setRoutes(RouteManager.getActivatedRoutes());
             default:
                 break;
         }

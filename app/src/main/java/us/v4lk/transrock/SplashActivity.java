@@ -12,7 +12,7 @@ import com.orhanobut.hawk.LogLevel;
 
 import us.v4lk.transrock.transloc.TransLocAPI;
 import us.v4lk.transrock.mapping.LocationManager;
-import us.v4lk.transrock.util.RouteStorage;
+import us.v4lk.transrock.util.RouteManager;
 
 /**
  * Shows a splash screen, loads some resources and starts MainActivity
@@ -56,7 +56,7 @@ public class SplashActivity extends AppCompatActivity {
                 .build();
 
             // initialize route storage
-            RouteStorage.initialize();
+            RouteManager.initialize();
 
             // initialize api
             TransLocAPI.initialize();

@@ -21,7 +21,6 @@ import com.flipboard.bottomsheet.BottomSheetLayout;
 
 import org.json.JSONException;
 
-import java.io.Serializable;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,8 +31,6 @@ import java.util.Map;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
-import butterknife.OnItemClick;
 import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
 import us.v4lk.transrock.adapters.AgencyAdapter;
 import us.v4lk.transrock.adapters.RouteSwitchAdapter;
@@ -41,7 +38,7 @@ import us.v4lk.transrock.transloc.objects.Agency;
 import us.v4lk.transrock.transloc.objects.Route;
 import us.v4lk.transrock.transloc.TransLocAPI;
 import us.v4lk.transrock.mapping.LocationManager;
-import us.v4lk.transrock.util.RouteStorage;
+import us.v4lk.transrock.util.RouteManager;
 import us.v4lk.transrock.util.TransrockRoute;
 import us.v4lk.transrock.util.Util;
 
@@ -128,7 +125,7 @@ public class SelectRoutesActivity extends AppCompatActivity {
 
         // build mapFragment
         routelist = new HashMap<>();
-        for (TransrockRoute route : RouteStorage.getAllRoutes())
+        for (TransrockRoute route : RouteManager.getAllRoutes())
             routelist.put(route.route_id, route.getRoute());
     }
     @Override
@@ -321,7 +318,7 @@ public class SelectRoutesActivity extends AppCompatActivity {
             Location loc = locationManager.getLocation();
 
             // get agency ids of stored routes
-            Collection<TransrockRoute> storedRoutes = RouteStorage.getAllRoutes();
+            Collection<TransrockRoute> storedRoutes = RouteManager.getAllRoutes();
             int[] storedAgencyIds = Util.getAgencyIds(storedRoutes.toArray(new TransrockRoute[storedRoutes.size()]));
 
             Agency[] active = null, local = null, all = null;

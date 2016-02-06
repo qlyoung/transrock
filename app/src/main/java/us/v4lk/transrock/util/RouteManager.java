@@ -17,7 +17,7 @@ import java.util.Set;
  * Hawk is backed by Android's SQLite interface which requires synchronous access. Hawk
  * doesn't make this explicit, so I've done so in this wrapper.
  */
-public class RouteStorage {
+public class RouteManager {
 
     private static final String ROUTES_STORAGE_KEY = "routes";
 
@@ -29,22 +29,6 @@ public class RouteStorage {
 
     public static synchronized Collection<TransrockRoute> getAllRoutes() {
         return getMap().values();
-    }
-
-    public static synchronized Set<String> getAllRoutesIds() {
-        return getMap().keySet();
-    }
-
-    public static synchronized TransrockRoute getRoute(String id) {
-        return getMap().get(id);
-    }
-
-    public static synchronized TransrockRoute putRoute(TransrockRoute route) {
-        Map<String, TransrockRoute> map = getMap();
-        TransrockRoute previous = map.put(route.route_id, route);
-        new PutRoutesTask().execute(map);
-
-        return previous;
     }
 
     public static synchronized TransrockRoute[] putRoute(Collection<TransrockRoute> routes) {
@@ -60,31 +44,6 @@ public class RouteStorage {
         return previous;
     }
 
-    public static synchronized TransrockRoute removeRoute(String id) {
-        Map<String, TransrockRoute> map = getMap();
-        TransrockRoute removed = map.remove(id);
-        new PutRoutesTask().execute(map);
-
-        return removed;
-    }
-
-    public static synchronized TransrockRoute removeRoute(TransrockRoute route) {
-        return removeRoute(route.route_id);
-    }
-
-    public static synchronized TransrockRoute[] removeRoute(Collection<TransrockRoute> routes) {
-        TransrockRoute[] removed = new TransrockRoute[routes.size()];
-
-        final Map<String, TransrockRoute> map = getMap();
-        int i = 0;
-        for (TransrockRoute route : routes)
-            removed[i++] = map.remove(route.route_id);
-
-        new PutRoutesTask().execute(map);
-
-        return removed;
-    }
-
     public static synchronized Collection<TransrockRoute> getActivatedRoutes() {
         Collection<TransrockRoute> routes = getAllRoutes();
         ArrayList<TransrockRoute> actives = new ArrayList<>();
@@ -93,14 +52,6 @@ public class RouteStorage {
                 actives.add(route);
 
         return actives;
-    }
-
-    public static synchronized boolean contains(TransrockRoute route) {
-        return contains(route.route_id);
-    }
-
-    public static synchronized boolean contains(String id) {
-        return getMap().containsKey(id);
     }
 
     public static synchronized TransrockRoute[] getRoutesByAgency(int agencyId) {

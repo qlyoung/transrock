@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.transloc.objects.Agency;
-import us.v4lk.transrock.util.RouteStorage;
+import us.v4lk.transrock.util.RouteManager;
 import us.v4lk.transrock.util.Util;
 
 /**
@@ -79,7 +79,7 @@ public class AgencyAdapter extends ArrayAdapter<Agency> implements StickyListHea
         //TODO: this operation is O(n * m) where n = num saved routes and m = num agencies
         //TODO: for e.g. 10 saved agencies this comes out to around 500 comparisons and 50 arraylist creations
         //TODO: need to do this ONLY for activated routes; all others should be 0
-        String numSavedRoutes = String.valueOf(RouteStorage.getRoutesByAgency(getItem(position).agency_id).length);
+        String numSavedRoutes = String.valueOf(RouteManager.getRoutesByAgency(getItem(position).agency_id).length);
         badge.setImageBitmap(Util.colorToBitmap(color, 50, 50));
         badgeText.setText(numSavedRoutes);
         text.setText(getItem(position).long_name);

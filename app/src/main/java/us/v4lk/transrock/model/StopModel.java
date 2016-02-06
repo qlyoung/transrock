@@ -13,7 +13,7 @@ import io.realm.annotations.PrimaryKey;
 public class StopModel extends RealmObject {
 
     @PrimaryKey
-    String routeId;
+    String stopId;
 
     String
             code,
@@ -25,14 +25,15 @@ public class StopModel extends RealmObject {
             name;
 
     RealmList<RouteModel> routes;
+    RealmList<AgencyModel> agencies;
     double latitude, longitude;
 
-    public String getRouteId() {
-        return routeId;
+    public String getStopId() {
+        return stopId;
     }
 
-    public void setRouteId(String routeId) {
-        this.routeId = routeId;
+    public void setStopId(String stopId) {
+        this.stopId = stopId;
     }
 
     public String getCode() {
@@ -115,7 +116,18 @@ public class StopModel extends RealmObject {
         this.longitude = longitude;
     }
 
-    public static void set(RouteModel model, JSONObject route) throws JSONException {
-        //TODO: IMPLEMENT
+    public static void set(StopModel model, JSONObject stop) throws JSONException {
+        model.setCode(stop.getString("code"));
+        model.setDescription(stop.getString("description"));
+        model.setUrl(stop.getString("url"));
+        model.setParentStationId(stop.getString("parent_station_id"));
+        model.setStationId(stop.getString("station_id"));
+        model.setLocationType(stop.getString("location_type"));
+        model.setStopId(stop.getString("stop_id"));
+        model.setName(stop.getString("name"));
+
+        JSONObject loc = stop.getJSONObject("location");
+        model.setLatitude(loc.getDouble("lat"));
+        model.setLongitude(loc.getDouble("lng"));
     }
 }

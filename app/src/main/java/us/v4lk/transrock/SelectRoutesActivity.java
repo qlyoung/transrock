@@ -36,7 +36,6 @@ import us.v4lk.transrock.adapters.AgencyAdapter;
 import us.v4lk.transrock.adapters.RouteSwitchAdapter;
 import us.v4lk.transrock.transloc.objects.Agency;
 import us.v4lk.transrock.transloc.objects.Route;
-import us.v4lk.transrock.transloc.TransLocAPI;
 import us.v4lk.transrock.mapping.LocationManager;
 import us.v4lk.transrock.util.RouteManager;
 import us.v4lk.transrock.util.TransrockRoute;
@@ -193,7 +192,7 @@ public class SelectRoutesActivity extends AppCompatActivity {
 
                 Route[] routes = null;
 
-                try { routes = TransLocAPI.getRoutes(id); }
+                try { routes = TransLocAPIOLD.getRoutes(id); }
 
                 catch (SocketTimeoutException e) {
                     publishProgress(R.string.error_network_timeout);
@@ -327,12 +326,12 @@ public class SelectRoutesActivity extends AppCompatActivity {
 
                 // fetch the various routes from the various sources
                 active = storedAgencyIds.length != 0 ?
-                        TransLocAPI.getAgencies(storedAgencyIds) :
+                        TransLocAPIOLD.getAgencies(storedAgencyIds) :
                         new Agency[0];
 
                 // if we couldn't get the location, don't display that section
-                local = loc != null ? TransLocAPI.getAgencies(loc, 10000) : new Agency[0];
-                all = TransLocAPI.getAgencies();
+                local = loc != null ? TransLocAPIOLD.getAgencies(loc, 10000) : new Agency[0];
+                all = TransLocAPIOLD.getAgencies();
 
             } catch (SocketTimeoutException e) {
                 publishProgress(R.string.error_network_timeout);

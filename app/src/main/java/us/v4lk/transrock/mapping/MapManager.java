@@ -34,7 +34,6 @@ import java.util.List;
 import butterknife.BindDrawable;
 import butterknife.ButterKnife;
 import us.v4lk.transrock.R;
-import us.v4lk.transrock.transloc.TransLocAPI;
 import us.v4lk.transrock.transloc.objects.Stop;
 import us.v4lk.transrock.transloc.objects.Vehicle;
 import us.v4lk.transrock.util.TransrockRoute;
@@ -246,7 +245,7 @@ public class MapManager {
 
             try {
                 for (TransrockRoute route : routes){
-                    List<Vehicle> v = TransLocAPI.getVehicles(route.agency_id, route.route_id);
+                    List<Vehicle> v = TransLocAPIOLD.getVehicles(route.agency_id, route.route_id);
                     vehicles.put(route, v);
                 }
             }

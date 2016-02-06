@@ -11,7 +11,6 @@ import com.orhanobut.hawk.HawkBuilder;
 import com.orhanobut.hawk.LogLevel;
 
 import io.realm.Realm;
-import us.v4lk.transrock.transloc.TransLocAPI;
 import us.v4lk.transrock.mapping.LocationManager;
 import us.v4lk.transrock.util.RouteManager;
 import us.v4lk.transrock.util.Util;
@@ -41,9 +40,6 @@ public class SplashActivity extends AppCompatActivity {
     class StarterUpper extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... params) {
-            // cache agencies
-            try { TransLocAPI.getAgencies(); }
-            catch (Exception e) { Log.e("TransRock", e.getMessage()); }
 
             // initialize a location manager
             LocationManager manager = LocationManager.getInstance(getApplicationContext());
@@ -62,9 +58,6 @@ public class SplashActivity extends AppCompatActivity {
 
             // initialize db
             Util.realm = Realm.getInstance(getApplicationContext());
-
-            // initialize api
-            TransLocAPI.initialize();
 
             return null;
         }

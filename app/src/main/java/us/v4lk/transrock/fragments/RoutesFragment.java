@@ -33,7 +33,6 @@ import us.v4lk.transrock.SelectRoutesActivity;
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.adapters.TransrockRouteAdapter;
 import us.v4lk.transrock.transloc.objects.Route;
-import us.v4lk.transrock.transloc.TransLocAPI;
 import us.v4lk.transrock.transloc.objects.Stop;
 import us.v4lk.transrock.util.RouteManager;
 import us.v4lk.transrock.util.SmartViewPager;
@@ -223,10 +222,10 @@ public class RoutesFragment extends Fragment implements ViewPager.OnPageChangeLi
             for (Route route : params) {
                 try {
                     // get segments for this route
-                    Map<String, String> segments = TransLocAPI.getSegments(route);
+                    Map<String, String> segments = TransLocAPIOLD.getSegments(route);
 
                     // get stops for this route's agency
-                    Map<String, Stop> stops = TransLocAPI.getStops(route.agency_id);
+                    Map<String, Stop> stops = TransLocAPIOLD.getStops(route.agency_id);
 
                     // get stops for just this route
                     ArrayList<Stop> routeStops = new ArrayList<>();

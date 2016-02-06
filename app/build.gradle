@@ -43,6 +43,8 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     // tha hawk
     compile 'com.github.orhanobut:hawk:1.19'
+    // sugar
+    compile 'com.github.satyan:sugar:1.4'
     // material drawer
     compile('com.mikepenz:materialdrawer:3.1.2@aar') { transitive = true }
     // magic butterknife

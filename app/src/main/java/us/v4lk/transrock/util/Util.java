@@ -21,6 +21,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import io.realm.Realm;
+
 /**
  * Miscellaneous static helper functions & global vars
  */
@@ -31,6 +33,11 @@ public class Util {
      * Global network timeout.
      */
     public static final int GLOBAL_NETWORK_TIMEOUT = 3000;
+
+    /* global things */
+
+    public static Realm realm;
+
 
     /* global utility functions */
 

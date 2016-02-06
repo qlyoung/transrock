@@ -10,9 +10,11 @@ import com.orhanobut.hawk.Hawk;
 import com.orhanobut.hawk.HawkBuilder;
 import com.orhanobut.hawk.LogLevel;
 
+import io.realm.Realm;
 import us.v4lk.transrock.transloc.TransLocAPI;
 import us.v4lk.transrock.mapping.LocationManager;
 import us.v4lk.transrock.util.RouteManager;
+import us.v4lk.transrock.util.Util;
 
 /**
  * Shows a splash screen, loads some resources and starts MainActivity
@@ -57,6 +59,9 @@ public class SplashActivity extends AppCompatActivity {
 
             // initialize route storage
             RouteManager.initialize();
+
+            // initialize db
+            Util.realm = Realm.getInstance(getApplicationContext());
 
             // initialize api
             TransLocAPI.initialize();

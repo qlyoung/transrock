@@ -22,7 +22,6 @@ import us.v4lk.transrock.model.AgencyModel;
 import us.v4lk.transrock.model.RouteModel;
 import us.v4lk.transrock.model.SegmentModel;
 import us.v4lk.transrock.model.StopModel;
-import us.v4lk.transrock.transloc.objects.Stop;
 import us.v4lk.transrock.transloc.objects.Vehicle;
 import us.v4lk.transrock.util.Util;
 
@@ -89,7 +88,7 @@ public class TransLocAPI {
         ArrayList<AgencyModel> agencies = new ArrayList<>();
         for (int i = 0; i < data.length(); i++) {
             JSONObject agency = data.getJSONObject(i);
-            AgencyModel model = Util.realm.createObject(AgencyModel.class);
+            AgencyModel model = new AgencyModel();
             AgencyModel.set(model, agency);
         }
 
@@ -168,7 +167,7 @@ public class TransLocAPI {
             RouteModel[] routes = new RouteModel[routelist.length()];
             for (int j = 0; j < routelist.length(); j++) {
                 JSONObject route = routelist.getJSONObject(j);
-                RouteModel model = Util.realm.createObject(RouteModel.class);
+                RouteModel model = new RouteModel();
                 RouteModel.set(model, route);
                 routes[j] = model;
             }
@@ -207,7 +206,7 @@ public class TransLocAPI {
         Iterator<String> keys = data.keys();
         while (keys.hasNext()) {
             String key = keys.next();
-            SegmentModel model = Util.realm.createObject(SegmentModel.class);
+            SegmentModel model = new SegmentModel();
             SegmentModel.set(model, key, data.getString(key));
             segments.add(model);
         }
@@ -237,7 +236,7 @@ public class TransLocAPI {
 
         for (int i = 0; i < data.length(); i++) {
             JSONObject stop = data.getJSONObject(i);
-            StopModel model = Util.realm.createObject(StopModel.class);
+            StopModel model = new StopModel();
             StopModel.set(model, stop);
         }
 

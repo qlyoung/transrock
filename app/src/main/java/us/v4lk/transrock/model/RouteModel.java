@@ -1,14 +1,11 @@
 package us.v4lk.transrock.model;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import io.realm.RealmList;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
-import us.v4lk.transrock.transloc.objects.Route;
-import us.v4lk.transrock.transloc.objects.Stop;
 
 /**
  * Full Route object for use on client side.

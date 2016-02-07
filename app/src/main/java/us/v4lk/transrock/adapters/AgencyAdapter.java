@@ -12,19 +12,19 @@ import java.util.ArrayList;
 
 import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
 import us.v4lk.transrock.R;
-import us.v4lk.transrock.transloc.objects.Agency;
-import us.v4lk.transrock.util.RouteManager;
+import us.v4lk.transrock.model.AgencyModel;
+import us.v4lk.transrock.model.RouteModel;
 import us.v4lk.transrock.util.Util;
 
 /**
  * Adapts agency --> layout/agency_list_item.
  */
-public class AgencyAdapter extends ArrayAdapter<Agency> implements StickyListHeadersAdapter {
+public class AgencyAdapter extends ArrayAdapter<AgencyModel> implements StickyListHeadersAdapter {
 
     /**
      * Separate lists for separate sections
      */
-    ArrayList<Agency> active, local;
+    ArrayList<AgencyModel> active, local;
     /**
      * Header id's for StickyListHeaders
      */
@@ -44,7 +44,7 @@ public class AgencyAdapter extends ArrayAdapter<Agency> implements StickyListHea
      * @param numActive number of active agencies
      * @param numLocal number of local agencies
      */
-    public AgencyAdapter(Context context, int resource, Agency[] agencies, int numActive, int numLocal) {
+    public AgencyAdapter(Context context, int resource, AgencyModel[] agencies, int numActive, int numLocal) {
         super(context, resource, agencies);
 
         // build list of active & local agencies to reference later for headers
@@ -62,6 +62,8 @@ public class AgencyAdapter extends ArrayAdapter<Agency> implements StickyListHea
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
+        AgencyModel item = getItem(position);
+
         // capture inflater
         LayoutInflater inflater = LayoutInflater.from(getContext());
 
@@ -76,13 +78,11 @@ public class AgencyAdapter extends ArrayAdapter<Agency> implements StickyListHea
 
         // set badge and text views
         int color = getContext().getResources().getColor(R.color.color_agency_badge);
-        //TODO: this operation is O(n * m) where n = num saved routes and m = num agencies
-        //TODO: for e.g. 10 saved agencies this comes out to around 500 comparisons and 50 arraylist creations
-        //TODO: need to do this ONLY for activated routes; all others should be 0
-        String numSavedRoutes = String.valueOf(RouteManager.getRoutesByAgency(getItem(position).agency_id).length);
+        long numRoutesForAgency = Util.realm.where(RouteModel.class).equalTo("agencyId", item.getAgencyId()).count();
+        String numSavedRoutes = String.valueOf(numRoutesForAgency);
         badge.setImageBitmap(Util.colorToBitmap(color, 50, 50));
         badgeText.setText(numSavedRoutes);
-        text.setText(getItem(position).long_name);
+        text.setText(getItem(position).getLongName());
 
         // tag list item with the object it is sourced from
         convertView.setTag(getItem(position));
@@ -97,7 +97,7 @@ public class AgencyAdapter extends ArrayAdapter<Agency> implements StickyListHea
      */
     @Override
     public long getHeaderId(int position) {
-        Agency agency = getItem(position);
+        AgencyModel agency = getItem(position);
 
         // determine appropriate id for given position
         int id;
@@ -124,7 +124,7 @@ public class AgencyAdapter extends ArrayAdapter<Agency> implements StickyListHea
         LayoutInflater inflater = LayoutInflater.from(getContext());
 
         // capture item
-        Agency agency = getItem(position);
+        AgencyModel agency = getItem(position);
 
         // inflate section header
         view = inflater.inflate(R.layout.agency_section_header, null);

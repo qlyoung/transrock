@@ -21,20 +21,14 @@ public class SplashActivity extends AppCompatActivity {
 
         // initialize a location manager
         LocationManager manager = LocationManager.getInstance(getApplicationContext());
+
         // try to cache location
         manager.getLocation();
-
-        // initialize storage
-        Hawk.init(SplashActivity.this)
-                .setEncryptionMethod(HawkBuilder.EncryptionMethod.NO_ENCRYPTION)
-                .setStorage(HawkBuilder.newSqliteStorage(SplashActivity.this))
-                .setLogLevel(LogLevel.FULL)
-                .build();
-
 
         // set content
         setContentView(R.layout.activity_splash);
 
+        // start
         Intent intent = new Intent(SplashActivity.this, MainActivity.class);
         startActivity(intent);
     }

@@ -171,6 +171,9 @@ public class SelectRoutesActivity extends AppCompatActivity {
      * @param agency the agency whose routes should be displayed in the bottom sheet
      */
     private void showRouteBottomSheet(AgencyModel agency) {
+        // if sheet is already showing, do nothing
+        if (root.isSheetShowing()) return;
+
         // this AsyncTask will fetch the routes and call the other overload when it finishes.
         AsyncTask<AgencyModel, Integer, RouteModel[]> fetchRoutes = new AsyncTask<AgencyModel, Integer, RouteModel[]>() {
 
@@ -268,12 +271,13 @@ public class SelectRoutesActivity extends AppCompatActivity {
         routeList.setAdapter(adapter);
 
         // show bottom sheet
-        localRealm.beginTransaction();
         root.showWithSheetView(bottomSheet);
-        // commit transaction after sheet closes
+
+        // open and close localrealm transaction on sheet show / hide
         root.getSheetView().addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
             @Override
             public void onViewAttachedToWindow(View v) {
+                localRealm.beginTransaction();
             }
 
             @Override

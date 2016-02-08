@@ -1,6 +1,5 @@
 package us.v4lk.transrock.model;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -14,9 +13,9 @@ import io.realm.annotations.PrimaryKey;
 public class AgencyModel extends RealmObject {
 
     @PrimaryKey
-    String agencyId;
+    private String agencyId;
 
-    String
+    private String
             longName,
             language,
             name,
@@ -25,7 +24,7 @@ public class AgencyModel extends RealmObject {
             url,
             timezone;
 
-    double latitude, longitude;
+    private double latitude, longitude;
 
     public String getAgencyId() {
         return agencyId;

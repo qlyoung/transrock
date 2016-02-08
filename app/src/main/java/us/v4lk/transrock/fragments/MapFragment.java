@@ -1,11 +1,9 @@
 package us.v4lk.transrock.fragments;
 
-import android.accounts.NetworkErrorException;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
@@ -17,24 +15,16 @@ import android.view.ViewGroup;
 
 import com.google.android.gms.location.LocationListener;
 
-import org.json.JSONException;
 import org.osmdroid.views.MapView;
 
-import java.net.SocketTimeoutException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Map;
 
+import io.realm.Realm;
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.mapping.LocationManager;
 import us.v4lk.transrock.mapping.MapManager;
 import us.v4lk.transrock.model.RouteModel;
-import us.v4lk.transrock.model.SegmentModel;
-import us.v4lk.transrock.model.StopModel;
-import us.v4lk.transrock.transloc.TransLocAPI;
-import us.v4lk.transrock.util.RouteManager;
 import us.v4lk.transrock.util.SmartViewPager;
-import us.v4lk.transrock.util.TransrockRoute;
 
 /**
  * Map fragment.
@@ -59,6 +49,8 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
     Handler handler;
     /** Time between vehicles updates, in milliseconds */
     int UPDATE_VEHICLES_INTERVAL = 3000;
+
+    Realm realm;
 
     /* lifecycle */
     @Override
@@ -90,6 +82,12 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+        realm = Realm.getDefaultInstance();
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
 
@@ -101,13 +99,13 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
         }
 
         // set the routes the map should draw
-        mapManager.setRoutes(RouteManager.getActivatedRoutes());
+        //mapManager.setRoutes(realm.where(RouteModel.class).equalTo("activated", true).findAll());
 
         // set a recurring task on the handler to update vehicles
         Runnable updateVehiclesRunnable = new Runnable() {
             @Override
             public void run() {
-                mapManager.updateVehicles();
+                //mapManager.updateVehicles();
                 handler.postDelayed(this, UPDATE_VEHICLES_INTERVAL);
             }
         };
@@ -117,6 +115,12 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+    }
+
+    @Override
+    public void onStop() {
+        realm.close();
+        super.onStop();
     }
 
     @Override
@@ -146,7 +150,7 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
 
         switch (position) {
             case SmartViewPager.MAP_PAGE:
-                mapManager.setRoutes(RouteManager.getActivatedRoutes());
+                //mapManager.setRoutes(realm.where(RouteModel.class).equalTo("activated", true).findAll());
             default:
                 break;
         }
@@ -167,35 +171,15 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
         mapManager.updateLocation(location);
     }
 
+    /*
     /**
      * Takes a list of routes and updates the map with relevant markers for these routes. If relevant
      * data is in realm, that is used, otherwise data is fetched from the network and added to realm
      * for next time.
-     */
+
     class FetchRoutesTask extends AsyncTask<RouteModel, Integer, Collection<TransrockRoute>> {
 
-        Snackbar snackbar;
         RouteModel[] routes;
-
-        @Override
-        protected void onPreExecute() {
-            // add currently stored routes to listview before pulling new ones
-            // avoids empty routelist while waiting for this task to finish
-            updateRoutelist();
-            // show snackbar
-            snackbar = Snackbar.make(
-                    RoutesFragment.this.getView(),
-                    R.string.updating_routes,
-                    Snackbar.LENGTH_SHORT);
-            snackbar.setAction(R.string.dismiss, new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    snackbar.dismiss();
-                }
-            });
-            snackbar.show();
-            super.onPreExecute();
-        }
 
         @Override
         protected Collection<TransrockRoute> doInBackground(RouteModel... params) {
@@ -233,6 +217,7 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
                     // add it it to the resultant
                     result.add(trr);
 
+
                 } catch (SocketTimeoutException e) {
                     publishProgress(R.string.error_network_timeout);
                     this.cancel(true);
@@ -243,6 +228,7 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
                     publishProgress(R.string.error_bad_parse);
                     this.cancel(true);
                 }
+
             }
 
             return result;
@@ -288,6 +274,6 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
             }
         }
     }
-
+    */
 
 }

@@ -15,7 +15,6 @@ import com.pkmmte.view.CircularImageView;
 
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.model.RouteModel;
-import us.v4lk.transrock.util.TransrockRoute;
 import us.v4lk.transrock.util.Util;
 
 /**

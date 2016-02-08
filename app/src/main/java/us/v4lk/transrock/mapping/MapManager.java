@@ -34,9 +34,11 @@ import java.util.List;
 import butterknife.BindDrawable;
 import butterknife.ButterKnife;
 import us.v4lk.transrock.R;
-import us.v4lk.transrock.transloc.objects.Stop;
-import us.v4lk.transrock.transloc.objects.Vehicle;
-import us.v4lk.transrock.util.TransrockRoute;
+import us.v4lk.transrock.model.RouteModel;
+import us.v4lk.transrock.model.SegmentModel;
+import us.v4lk.transrock.model.StopModel;
+import us.v4lk.transrock.model.Vehicle;
+import us.v4lk.transrock.transloc.TransLocAPI;
 import us.v4lk.transrock.util.Util;
 
 /**
@@ -45,7 +47,7 @@ import us.v4lk.transrock.util.Util;
 public class MapManager {
 
     Map map;
-    ArrayList<TransrockRoute> routes;
+    ArrayList<RouteModel> routes;
     Context context;
 
     /** whether to center the map on the user's location each time we get a location update */
@@ -78,9 +80,12 @@ public class MapManager {
      * Executes asynchronously.
      * @param routes
      */
-    public void setRoutes(Collection<TransrockRoute> routes) {
+    public void setRoutes(Collection<RouteModel> routes) {
+        routes.clear();
+        routes.addAll(routes);
+
         SetRoutesTask srt = new SetRoutesTask();
-        srt.execute(routes);
+        srt.execute();
     }
 
     /**
@@ -114,20 +119,25 @@ public class MapManager {
         this.followMe = followMe;
     }
 
-    class SetRoutesTask extends AsyncTask<Collection<TransrockRoute>, Void, Void> {
+    class SetRoutesTask extends AsyncTask<Void, Void, Void> {
 
         private HashMap<String, Collection<Polyline>> routelines;
         private ItemizedIconOverlay stopoverlay;
 
         @Override
-        protected Void doInBackground(Collection<TransrockRoute>... params) {
-            routes.clear();
-            routes.addAll(params[0]);
+        protected Void doInBackground(Void... params) {
+
+            // first, fetch segments if we don't have them already
+            for (RouteModel route : routes) {
+                if (route.getSegments() == null) {
+                    // fetch segments and add to realm
+                }
+            }
 
             // calculate how many times each segment is reused across all routes
-            LinkedHashMap<String, Integer> totalCount = new LinkedHashMap<>(routes.size());
-            for (TransrockRoute route : routes)
-                for (String segment : route.segments) {
+            LinkedHashMap<SegmentModel, Integer> totalCount = new LinkedHashMap<>(routes.size());
+            for (RouteModel route : routes)
+                for (SegmentModel segment : route.getSegments()) {
                     int prevCount = totalCount.get(segment) == null ? 0 : totalCount.get(segment);
                     totalCount.put(segment, prevCount + 1);
                 }
@@ -135,22 +145,22 @@ public class MapManager {
             /* ------------ SEGMENTS --------------- */
 
             // build overlays
-            LinkedHashMap<String, Integer> visitedCount = new LinkedHashMap<>(totalCount.size());
+            LinkedHashMap<SegmentModel, Integer> visitedCount = new LinkedHashMap<>(totalCount.size());
             int basePolylineSize = 10;
             float dashScale = 100;
             routelines = new HashMap<>();
 
-            for (TransrockRoute route : routes) {
+            for (RouteModel route : routes) {
                 ArrayList<Polyline> segments = new ArrayList<>();
 
-                for (String segment : route.segments) {
+                for (SegmentModel segment : route.getSegments()) {
                     int timesVisited = visitedCount.get(segment) == null ? 0 : visitedCount.get(segment);
 
                     // get the polyline
-                    Polyline p = Util.encodedPolylineToOverlay(segment, context);
+                    Polyline p = Util.encodedPolylineToOverlay(segment.getSegment(), context);
 
                     p.setWidth(basePolylineSize);
-                    p.setColor(Color.parseColor("#" + route.color));
+                    p.setColor(Color.parseColor("#" + route.getColor()));
 
                     // calculate the dash effect
                     float split = 1f / totalCount.get(segment);             // ratio of this line : all other lines
@@ -168,7 +178,7 @@ public class MapManager {
                     segments.add(p);
                 }
 
-                routelines.put(route.route_id, segments);
+                routelines.put(route.getRouteId(), segments);
             }
 
 
@@ -177,10 +187,10 @@ public class MapManager {
             stopoverlay = new ItemizedIconOverlay<OverlayItem>(context, new ArrayList<OverlayItem>(), null);
 
             // map each stop to the routes containing it
-            HashMap<Stop, Collection<TransrockRoute>> stopsToRoutes = new LinkedHashMap<>();
-            for (TransrockRoute route : routes) {
-                for (Stop stop : route.stops) {
-                    Collection<TransrockRoute> existing = stopsToRoutes.get(stop);
+            HashMap<StopModel, Collection<RouteModel>> stopsToRoutes = new LinkedHashMap<>();
+            for (RouteModel route : routes) {
+                for (StopModel stop : route.getStops()) {
+                    Collection<RouteModel> existing = stopsToRoutes.get(stop);
                     if (existing == null)
                         existing = new HashSet<>();
                     existing.add(route);
@@ -189,9 +199,9 @@ public class MapManager {
             }
 
             // calculate & place marker items
-            for (Stop stop : stopsToRoutes.keySet()) {
+            for (StopModel stop : stopsToRoutes.keySet()) {
                 // get the routes for this stop
-                Collection<TransrockRoute> stopRoutes = stopsToRoutes.get(stop);
+                Collection<RouteModel> stopRoutes = stopsToRoutes.get(stop);
                 int numRoutes = stopRoutes.size();
 
                 // get base marker drawable
@@ -201,19 +211,19 @@ public class MapManager {
                 Drawable[] arcs = new Drawable[numRoutes];
                 float sweep = 360f / numRoutes;
                 int i = 0;
-                for (TransrockRoute route : stopRoutes) {
+                for (RouteModel route : stopRoutes) {
                     ShapeDrawable arc = new ShapeDrawable(new ArcShape(sweep * i, sweep));
                     arc.setIntrinsicWidth(30);
                     arc.setIntrinsicHeight(30);
-                    arc.getPaint().setColor(Color.parseColor("#" + route.color));
+                    arc.getPaint().setColor(Color.parseColor("#" + route.getColor()));
                     arcs[i++] = arc;
                 }
                 // set the result as the disk drawable
                 stopmarker.setDrawableByLayerId(R.id.disk_layer_drawable, new LayerDrawable(arcs));
 
                 // make new OverlayItem for this stop
-                GeoPoint stopMarkerLocation = new GeoPoint(stop.location.get(0), stop.location.get(1));
-                OverlayItem item = new OverlayItem(stop.name, stop.description, stopMarkerLocation);
+                GeoPoint stopMarkerLocation = new GeoPoint(stop.getLatitude(), stop.getLongitude());
+                OverlayItem item = new OverlayItem(stop.getName(), stop.getDescription(), stopMarkerLocation);
                 item.setMarker(stopmarker);
 
                 // add it to the overlay
@@ -236,16 +246,16 @@ public class MapManager {
         }
     }
 
-    class UpdateVehiclesTask extends AsyncTask<Collection<TransrockRoute>, Void, ItemizedIconOverlay> {
+    class UpdateVehiclesTask extends AsyncTask<Collection<RouteModel>, Void, ItemizedIconOverlay> {
 
         @Override
-        protected ItemizedIconOverlay doInBackground(Collection<TransrockRoute>... params) {
+        protected ItemizedIconOverlay doInBackground(Collection<RouteModel>... params) {
             // fetch vehicles
-            HashMap<TransrockRoute, List<Vehicle>> vehicles = new HashMap<>();
+            HashMap<RouteModel, List<Vehicle>> vehicles = new HashMap<>();
 
             try {
-                for (TransrockRoute route : routes){
-                    List<Vehicle> v = TransLocAPIOLD.getVehicles(route.agency_id, route.route_id);
+                for (RouteModel route : routes){
+                    List<Vehicle> v = TransLocAPI.getVehicles(route.getAgencyId(), route.getRouteId());
                     vehicles.put(route, v);
                 }
             }
@@ -262,10 +272,10 @@ public class MapManager {
             ItemizedIconOverlay<OverlayItem> vehicleOverlay = new ItemizedIconOverlay<>(context, new ArrayList<OverlayItem>(), null);
 
             // build overlay
-            for (TransrockRoute route : vehicles.keySet()) {
+            for (RouteModel route : vehicles.keySet()) {
                 // tint marker to match route color
                 Drawable vehicleMarker = DrawableCompat.wrap(context.getResources().getDrawable(R.drawable.ic_directions_bus_white_24dp));
-                DrawableCompat.setTint(vehicleMarker.mutate(), Color.parseColor("#" + route.color));
+                DrawableCompat.setTint(vehicleMarker.mutate(), Color.parseColor("#" + route.getColor()));
 
                 for (Vehicle vehicle : vehicles.get(route)) {
                     GeoPoint loc = new GeoPoint(vehicle.location.firstElement(), vehicle.location.lastElement());

@@ -8,6 +8,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -22,9 +23,12 @@ import org.json.JSONException;
 
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import io.realm.Realm;
+import io.realm.RealmConfiguration;
 import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
 import us.v4lk.transrock.adapters.AgencyAdapter;
 import us.v4lk.transrock.adapters.RouteSwitchAdapter;
@@ -36,23 +40,11 @@ import us.v4lk.transrock.util.Util;
 
 /**
  * Allows the user to select which routes they want to track.
- * Routes are organized by agency.
- * <p/>
- * This activity will fetch and display all routes available for
- * selection. Its display reflects currently saved selections as well.
- * <p/>
- * The user makes changes to this list, selecting and deselecting items
- * as desired. When the activity exits, the resultant list is written
- * out to storage, updating the application's internal list.
- * <p/>
- * When the activity exits, a copy of the list is put as a Serializable
- * extra in the result intent. The receiving activity should use this list
- * to update the on-disk list, and then update its own view to reflect
- * the new values on disk.
- * <p/>
- * The key for the returned serializable is "routeFragment" and the type
- * is HashMap<String, Route>.
- * e.g. data.getSerializableExtra("routeFragment");
+ *
+ * The user makes changes to a list of routes, selecting and deselecting
+ * specific routes as desired. When the activity exits, the resultant list
+ * is written out to storage, updating the application's internal list.
+ *
  */
 public class SelectRoutesActivity extends AppCompatActivity {
 
@@ -67,6 +59,8 @@ public class SelectRoutesActivity extends AppCompatActivity {
     @Bind(R.id.addroute_toolbar)
     Toolbar toolbar;
     LocationManager locationManager;
+
+    Realm localRealm, globalRealm;
 
     public void onAgencyItemClicked(View v) {
         AgencyModel agency = (AgencyModel) v.getTag();
@@ -94,6 +88,18 @@ public class SelectRoutesActivity extends AppCompatActivity {
         // build location manager
         locationManager = LocationManager.getInstance(this.getApplicationContext());
 
+        // initialize in-memory realm
+        RealmConfiguration.Builder builder = new RealmConfiguration.Builder(this);
+        RealmConfiguration config = builder.name("selectroutes.realm").inMemory().build();
+        localRealm = Realm.getInstance(config);
+
+        // get a reference to global realm
+        globalRealm = Realm.getDefaultInstance();
+        // copy routes from global realm to local realm
+        List<RouteModel> fromRealm = globalRealm.copyFromRealm(globalRealm.allObjects(RouteModel.class));
+        localRealm.beginTransaction();
+        localRealm.copyToRealmOrUpdate(fromRealm);
+        localRealm.commitTransaction();
     }
 
     @Override
@@ -109,8 +115,25 @@ public class SelectRoutesActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onPause() {
+        // copy local changes to global realm
+        globalRealm.beginTransaction();
+        globalRealm.clear(RouteModel.class);
+        globalRealm.copyToRealm(localRealm.where(RouteModel.class).equalTo("saved", true).findAll());
+        globalRealm.commitTransaction();
+
+        super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        localRealm.close();
+        globalRealm.close();
+        super.onDestroy();
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_add_route, menu);
         return true;
     }
@@ -132,8 +155,12 @@ public class SelectRoutesActivity extends AppCompatActivity {
      */
     @Override
     public void onBackPressed() {
-        if (root.isSheetShowing())
+        if (root.isSheetShowing()) {
             root.dismissSheet();
+            return;
+        }
+
+        super.onBackPressed();
     }
 
     /**
@@ -145,7 +172,7 @@ public class SelectRoutesActivity extends AppCompatActivity {
      */
     private void showRouteBottomSheet(AgencyModel agency) {
         // this AsyncTask will fetch the routes and call the other overload when it finishes.
-        AsyncTask fetchRoutes = new AsyncTask<AgencyModel, Integer, RouteModel[]>() {
+        AsyncTask<AgencyModel, Integer, RouteModel[]> fetchRoutes = new AsyncTask<AgencyModel, Integer, RouteModel[]>() {
 
             @Override
             protected void onPreExecute() {
@@ -160,7 +187,6 @@ public class SelectRoutesActivity extends AppCompatActivity {
             @Override
             protected RouteModel[] doInBackground(AgencyModel... params) {
                 AgencyModel agency = params[0];
-
                 RouteModel[] routes = null;
 
                 try {
@@ -181,8 +207,27 @@ public class SelectRoutesActivity extends AppCompatActivity {
 
             @Override
             protected void onPostExecute(RouteModel[] routes) {
+                // if no routes were returned, show an error
+                if (routes.length == 0) {
+                    showPopupError(R.string.error_no_routes);
+                    return;
+                }
+
+                // copy fetched routes to realm if they do not already exist
+                localRealm.beginTransaction();
+                for (int i = 0; i < routes.length; i++) {
+                    if (localRealm.where(RouteModel.class).equalTo("routeId", routes[i].getRouteId()).count() == 0)
+                        routes[i] = localRealm.copyToRealm(routes[i]);
+                }
+                localRealm.commitTransaction();
+
+                // fetch all matching routes from local realm & show sheet
+                RouteModel[] result = localRealm.where(RouteModel.class)
+                                                .equalTo("agencyId", routes[0].getAgencyId())
+                                                .findAll()
+                                                .toArray(new RouteModel[0]);
+                showRouteBottomSheet(result);
                 toolbarProgressBar.setVisibility(View.INVISIBLE);
-                showRouteBottomSheet(routes);
             }
 
             @Override
@@ -223,7 +268,19 @@ public class SelectRoutesActivity extends AppCompatActivity {
         routeList.setAdapter(adapter);
 
         // show bottom sheet
+        localRealm.beginTransaction();
         root.showWithSheetView(bottomSheet);
+        // commit transaction after sheet closes
+        root.getSheetView().addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+            @Override
+            public void onViewAttachedToWindow(View v) {
+            }
+
+            @Override
+            public void onViewDetachedFromWindow(View v) {
+                localRealm.commitTransaction();
+            }
+        });
     }
 
     private void showBodyError(int errorStringResource) {
@@ -269,11 +326,14 @@ public class SelectRoutesActivity extends AppCompatActivity {
 
             // get last location, if known
             Location loc = locationManager.getLocation();
+            // get instance of realm
+            //Realm realm = null;
 
             AgencyModel[] stored = null, local = null, all = null;
 
             try {
-                stored = Util.realm.where(AgencyModel.class).findAllSorted("longName").toArray(new AgencyModel[0]);
+                //realm = Realm.getDefaultInstance();
+                stored = new AgencyModel[0]; //realm.where(AgencyModel.class).findAllSorted("longName").toArray(new AgencyModel[0]);
                 all = TransLocAPI.getAgencies();
                 if (loc != null)
                     local = TransLocAPI.getAgencies(loc, 10000);
@@ -289,6 +349,8 @@ public class SelectRoutesActivity extends AppCompatActivity {
             } catch (JSONException e) {
                 publishProgress(R.string.error_bad_parse);
                 this.cancel(true);
+            } finally {
+                //realm.close();
             }
 
             ArrayList<AgencyModel> result = new ArrayList<>(stored.length + local.length + all.length);

@@ -1,6 +1,7 @@
 package us.v4lk.transrock.adapters;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -56,20 +57,15 @@ public class RouteSwitchAdapter extends ArrayAdapter<RouteModel> {
         // set the switch's checked value and listener
         final Switch routeToggleSwitch = (Switch) convertView.findViewById(R.id.route_switch_item_switch);
 
-
         // set checked state to reflect realm record
-        routeToggleSwitch.setChecked(item.isActivated());
+        routeToggleSwitch.setChecked(item.isSaved());
 
         // when the switch is toggled, update the corresponding realm record
         routeToggleSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    item.setActivated(true);
-                }
-                else {
-                    item.removeFromRealm();
-                }
+                item.setSaved(isChecked);
+                Log.d(item.getLongName(), String.valueOf(item.isSaved()));
             }
         });
 

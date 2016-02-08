@@ -20,7 +20,6 @@ import us.v4lk.transrock.R;
 import us.v4lk.transrock.SelectRoutesActivity;
 import us.v4lk.transrock.adapters.RouteAdapter;
 import us.v4lk.transrock.model.RouteModel;
-import us.v4lk.transrock.util.Util;
 
 /**
  * Route list fragment.
@@ -67,14 +66,19 @@ public class RoutesFragment extends Fragment {
     }
 
     @Override
-    public void onResume() {
+    public void onStart() {
+        super.onStart();
         realm = Realm.getDefaultInstance();
+    }
+
+    @Override
+    public void onResume() {
         realm.beginTransaction();
 
         // pull routes from realm and update list
         RouteAdapter adapter = (RouteAdapter) routeList.getAdapter();
         adapter.clear();
-        adapter.addAll(Util.realm.allObjects(RouteModel.class));
+        adapter.addAll(realm.allObjects(RouteModel.class));
         adapter.notifyDataSetChanged();
 
         // update UI if list is empty or full
@@ -97,8 +101,9 @@ public class RoutesFragment extends Fragment {
     }
 
     @Override
-    public void onDestroyView() {
-        super.onDestroyView();
+    public void onStop() {
+        realm.close();
+        super.onStop();
     }
 
     @Override

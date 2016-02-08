@@ -13,9 +13,9 @@ import io.realm.annotations.PrimaryKey;
 public class StopModel extends RealmObject {
 
     @PrimaryKey
-    String stopId;
+    private String stopId;
 
-    String
+    private String
             code,
             description,
             url,
@@ -24,9 +24,8 @@ public class StopModel extends RealmObject {
             locationType,
             name;
 
-    RealmList<RouteModel> routes;
-    RealmList<AgencyModel> agencies;
-    double latitude, longitude;
+    private RealmList<RouteModel> routes;
+    private double latitude, longitude;
 
     public String getStopId() {
         return stopId;

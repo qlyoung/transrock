@@ -20,7 +20,7 @@ import io.realm.annotations.PrimaryKey;
 public class RouteModel extends RealmObject {
 
     @PrimaryKey
-    String routeId;
+    private String routeId;
 
     private String
             description,
@@ -32,7 +32,15 @@ public class RouteModel extends RealmObject {
             type,
             agencyId;
 
-    private boolean activated = false;
+    private boolean activated = false, saved = false;
+
+    public boolean isSaved() {
+        return saved;
+    }
+
+    public void setSaved(boolean saved) {
+        this.saved = saved;
+    }
 
     private RealmList<SegmentModel> segments;
     private RealmList<StopModel> stops;

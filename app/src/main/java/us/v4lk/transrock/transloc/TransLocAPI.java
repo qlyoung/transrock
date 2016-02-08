@@ -22,7 +22,7 @@ import us.v4lk.transrock.model.AgencyModel;
 import us.v4lk.transrock.model.RouteModel;
 import us.v4lk.transrock.model.SegmentModel;
 import us.v4lk.transrock.model.StopModel;
-import us.v4lk.transrock.transloc.objects.Vehicle;
+import us.v4lk.transrock.model.Vehicle;
 import us.v4lk.transrock.util.Util;
 
 /**
@@ -90,6 +90,7 @@ public class TransLocAPI {
             JSONObject agency = data.getJSONObject(i);
             AgencyModel model = new AgencyModel();
             AgencyModel.set(model, agency);
+            agencies.add(model);
         }
 
         return agencies.toArray(new AgencyModel[agencies.size()]);
@@ -251,7 +252,7 @@ public class TransLocAPI {
      * @return list of vehicles currently running on the given route. If there are none currently
      * running, an empty list is returned.
      */
-    public static List<Vehicle> getVehicles(int agencyId, String routeId)
+    public static List<Vehicle> getVehicles(String agencyId, String routeId)
             throws NetworkErrorException, SocketTimeoutException, JSONException {
         StringBuilder builder = new StringBuilder();
         builder
@@ -273,7 +274,7 @@ public class TransLocAPI {
 
         try {
             // get array of vehicles organized by route & agency if it exists
-            vehicleArray = response.getJSONObject(DATA).getJSONArray(String.valueOf(agencyId));
+            vehicleArray = response.getJSONObject(DATA).getJSONArray(agencyId);
         } catch (JSONException e) {
             // if there is no entry corresponding to the agency id, then the agency has no vehicles
             // running; return empty list

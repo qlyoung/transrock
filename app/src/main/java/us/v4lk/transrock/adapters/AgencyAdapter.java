@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
+import io.realm.Realm;
 import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.model.AgencyModel;
@@ -63,11 +64,10 @@ public class AgencyAdapter extends ArrayAdapter<AgencyModel> implements StickyLi
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         AgencyModel item = getItem(position);
-
-        // capture inflater
-        LayoutInflater inflater = LayoutInflater.from(getContext());
+        Realm realm = Realm.getDefaultInstance();
 
         // inflate new view if necessary
+        LayoutInflater inflater = LayoutInflater.from(getContext());
         if (convertView == null)
             convertView = inflater.inflate(R.layout.agency_list_item, null);
 
@@ -78,7 +78,7 @@ public class AgencyAdapter extends ArrayAdapter<AgencyModel> implements StickyLi
 
         // set badge and text views
         int color = getContext().getResources().getColor(R.color.color_agency_badge);
-        long numRoutesForAgency = Util.realm.where(RouteModel.class).equalTo("agencyId", item.getAgencyId()).count();
+        long numRoutesForAgency = realm.where(RouteModel.class).equalTo("agencyId", item.getAgencyId()).count();
         String numSavedRoutes = String.valueOf(numRoutesForAgency);
         badge.setImageBitmap(Util.colorToBitmap(color, 50, 50));
         badgeText.setText(numSavedRoutes);
@@ -86,6 +86,8 @@ public class AgencyAdapter extends ArrayAdapter<AgencyModel> implements StickyLi
 
         // tag list item with the object it is sourced from
         convertView.setTag(getItem(position));
+
+        realm.close();
 
         return convertView;
     }

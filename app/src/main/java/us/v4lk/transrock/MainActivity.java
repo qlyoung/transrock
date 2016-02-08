@@ -86,7 +86,6 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         pager.setAdapter(adapter);
-        pager.addOnPageChangeListener(routeFragment);
         pager.addOnPageChangeListener(mapFragment);
 
         // build drawer

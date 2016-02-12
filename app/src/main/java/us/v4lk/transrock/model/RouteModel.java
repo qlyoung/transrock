@@ -45,7 +45,6 @@ public class RouteModel extends RealmObject {
     private RealmList<SegmentModel> segments;
     private RealmList<StopModel> stops;
 
-
     public String getRouteId() {
         return routeId;
     }

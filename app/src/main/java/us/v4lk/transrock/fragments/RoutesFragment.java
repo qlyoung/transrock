@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -20,11 +21,12 @@ import us.v4lk.transrock.R;
 import us.v4lk.transrock.SelectRoutesActivity;
 import us.v4lk.transrock.adapters.RouteAdapter;
 import us.v4lk.transrock.model.RouteModel;
+import us.v4lk.transrock.util.SmartViewPager;
 
 /**
  * Route list fragment.
  */
-public class RoutesFragment extends Fragment {
+public class RoutesFragment extends Fragment implements ViewPager.OnPageChangeListener {
 
     @Bind(R.id.routelist)
     ListView routeList;
@@ -73,8 +75,6 @@ public class RoutesFragment extends Fragment {
 
     @Override
     public void onResume() {
-        realm.beginTransaction();
-
         // pull routes from realm and update list
         RouteAdapter adapter = (RouteAdapter) routeList.getAdapter();
         adapter.clear();
@@ -96,7 +96,6 @@ public class RoutesFragment extends Fragment {
 
     @Override
     public void onPause() {
-        realm.commitTransaction();
         super.onPause();
     }
 
@@ -111,4 +110,26 @@ public class RoutesFragment extends Fragment {
         inflater.inflate(R.menu.menu_routelist, menu);
     }
 
+    @Override
+    public void onPageSelected(int position) {
+        switch (position) {
+            case SmartViewPager.ROUTE_PAGE:
+                realm.beginTransaction();
+                break;
+            case SmartViewPager.MAP_PAGE:
+                realm.commitTransaction();
+                break;
+        }
+    }
+
+
+    // unused callbacks
+    @Override
+    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+    }
+    @Override
+    public void onPageScrollStateChanged(int state) {
+
+    }
 }

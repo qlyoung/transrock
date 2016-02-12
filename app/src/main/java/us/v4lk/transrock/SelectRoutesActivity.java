@@ -216,10 +216,14 @@ public class SelectRoutesActivity extends AppCompatActivity {
                     return;
                 }
 
-                // copy fetched routes to realm if they do not already exist
+                // copy fetched routes to local realm if they do not already exist
                 localRealm.beginTransaction();
                 for (int i = 0; i < routes.length; i++) {
-                    if (localRealm.where(RouteModel.class).equalTo("routeId", routes[i].getRouteId()).count() == 0)
+                    boolean alreadyInRealm = localRealm.where(RouteModel.class)
+                                                        .equalTo("routeId", routes[i].getRouteId())
+                                                        .count() > 0;
+
+                    if (!alreadyInRealm)
                         routes[i] = localRealm.copyToRealm(routes[i]);
                 }
                 localRealm.commitTransaction();
@@ -229,6 +233,7 @@ public class SelectRoutesActivity extends AppCompatActivity {
                                                 .equalTo("agencyId", routes[0].getAgencyId())
                                                 .findAll()
                                                 .toArray(new RouteModel[0]);
+
                 showRouteBottomSheet(result);
                 toolbarProgressBar.setVisibility(View.INVISIBLE);
             }
@@ -271,13 +276,12 @@ public class SelectRoutesActivity extends AppCompatActivity {
         routeList.setAdapter(adapter);
 
         // show bottom sheet
+        localRealm.beginTransaction();
         root.showWithSheetView(bottomSheet);
 
-        // open and close localrealm transaction on sheet show / hide
         root.getSheetView().addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
             @Override
             public void onViewAttachedToWindow(View v) {
-                localRealm.beginTransaction();
             }
 
             @Override

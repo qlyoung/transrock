@@ -11,7 +11,9 @@ import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.ArcShape;
 import android.location.Location;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.support.v4.graphics.drawable.DrawableCompat;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -28,11 +30,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 
 import butterknife.BindDrawable;
 import butterknife.ButterKnife;
+import io.realm.Realm;
+import io.realm.RealmResults;
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.model.RouteModel;
 import us.v4lk.transrock.model.SegmentModel;
@@ -46,8 +51,9 @@ import us.v4lk.transrock.util.Util;
  */
 public class MapManager {
 
+    static int instanceCount = 0;
+
     Map map;
-    ArrayList<RouteModel> routes;
     Context context;
 
     /** whether to center the map on the user's location each time we get a location update */
@@ -58,7 +64,6 @@ public class MapManager {
 
     public MapManager(MapView map, Context context, View root) {
         this.context = context;
-        this.routes = new ArrayList<>();
 
         ButterKnife.bind(this, root);
 
@@ -75,25 +80,17 @@ public class MapManager {
     }
 
     /**
-     * Takes a list of TransrockRoutes and sets up the map to display
-     * all relevant information related to those routes.
-     * Executes asynchronously.
-     * @param routes
+     *
      */
-    public void setRoutes(Collection<RouteModel> routes) {
-        routes.clear();
-        routes.addAll(routes);
-
-        SetRoutesTask srt = new SetRoutesTask();
-        srt.execute();
+    public void buildAndDraw() {
+        new BuildOverlaysTask().execute();
     }
 
     /**
      * Updates position markers for vehicles on all routes.
      */
     public void updateVehicles() {
-        UpdateVehiclesTask uvt = new UpdateVehiclesTask();
-        uvt.execute(routes);
+        new UpdateVehiclesTask().execute();
     }
     /**
      * Handles a change in user location
@@ -115,42 +112,37 @@ public class MapManager {
         map.centerAndZoomOnPosition(Util.toGeoPoint(loc), false);
     }
 
+    /**
+     * Sets whether the map will stay centered on the last known location.
+     * @param followMe whether the map should stay centered on the user's location
+     */
     public void setFollowMe(boolean followMe) {
         this.followMe = followMe;
     }
 
-    class SetRoutesTask extends AsyncTask<Void, Void, Void> {
 
-        private HashMap<String, Collection<Polyline>> routelines;
-        private ItemizedIconOverlay stopoverlay;
+    class BuildOverlaysTask extends AsyncTask<Void, Void, Void> {
 
-        @Override
-        protected Void doInBackground(Void... params) {
+        private RealmResults<RouteModel> activatedRoutes;
 
-            // first, fetch segments if we don't have them already
-            for (RouteModel route : routes) {
-                if (route.getSegments() == null) {
-                    // fetch segments and add to realm
-                }
-            }
+        public void buildSegments() {
+            HashMap<String, Collection<Polyline>> routelines = new HashMap<>();
 
             // calculate how many times each segment is reused across all routes
-            LinkedHashMap<SegmentModel, Integer> totalCount = new LinkedHashMap<>(routes.size());
-            for (RouteModel route : routes)
+            HashMap<SegmentModel, Integer> totalCount = new LinkedHashMap<>(activatedRoutes.size());
+            for (RouteModel route : activatedRoutes)
+                // for each segment in this route, increment that segment's global usage count
                 for (SegmentModel segment : route.getSegments()) {
                     int prevCount = totalCount.get(segment) == null ? 0 : totalCount.get(segment);
                     totalCount.put(segment, prevCount + 1);
                 }
 
-            /* ------------ SEGMENTS --------------- */
-
             // build overlays
             LinkedHashMap<SegmentModel, Integer> visitedCount = new LinkedHashMap<>(totalCount.size());
             int basePolylineSize = 10;
             float dashScale = 100;
-            routelines = new HashMap<>();
 
-            for (RouteModel route : routes) {
+            for (RouteModel route : activatedRoutes) {
                 ArrayList<Polyline> segments = new ArrayList<>();
 
                 for (SegmentModel segment : route.getSegments()) {
@@ -181,14 +173,18 @@ public class MapManager {
                 routelines.put(route.getRouteId(), segments);
             }
 
+            ArrayList<Polyline> allPolylines = new ArrayList<>();
+            for (Collection<Polyline> routeline : routelines.values())
+                allPolylines.addAll(routeline);
 
-            /* ------------ STOPS ----------------- */
-
-            stopoverlay = new ItemizedIconOverlay<OverlayItem>(context, new ArrayList<OverlayItem>(), null);
+            map.setRoutesOverlay(allPolylines);
+        }
+        public void buildStops() {
+            ItemizedIconOverlay stopoverlay = new ItemizedIconOverlay<>(context, new ArrayList<OverlayItem>(), null);
 
             // map each stop to the routes containing it
             HashMap<StopModel, Collection<RouteModel>> stopsToRoutes = new LinkedHashMap<>();
-            for (RouteModel route : routes) {
+            for (RouteModel route : activatedRoutes) {
                 for (StopModel stop : route.getStops()) {
                     Collection<RouteModel> existing = stopsToRoutes.get(stop);
                     if (existing == null)
@@ -230,11 +226,67 @@ public class MapManager {
                 stopoverlay.addItem(item);
             }
 
-            ArrayList<Polyline> allPolylines = new ArrayList<>();
-            for (Collection<Polyline> routeline : routelines.values())
-                allPolylines.addAll(routeline);
-            map.setRoutesOverlay(allPolylines);
             map.setStopsOverlay(stopoverlay);
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+
+            Realm realm = null;
+
+            try {
+                // get a view into the realm
+                realm = Realm.getInstance(context);
+                activatedRoutes = realm.where(RouteModel.class).equalTo("activated", true).findAll();
+
+                // pull segments and stops for routes that don't have them yet (recently added)
+                // TODO: figure out how to deduplicate these in Realm while maintaining relationships
+                realm.beginTransaction();
+                for (int i = 0; i < activatedRoutes.size(); i++) {
+                    RouteModel route = activatedRoutes.get(i);
+
+                    // if route has no segments, fetch them all and add as relation to route
+                    if (route.getSegments().size() == 0) {
+                        SegmentModel[] segments = TransLocAPI.getSegments(route);
+                        for (SegmentModel sm : segments)
+                            route.getSegments().add(sm);
+                    }
+
+                    // if route has no stops, fetch them all and add as relation to route
+                    if (route.getStops().size() == 0) {
+                        StopModel[] stops = TransLocAPI.getStops(route.getAgencyId());
+                        for (StopModel stop : stops) {
+
+                            //TODO: weed null results in TranslocAPI before returning
+                            if (stop == null)
+                                continue;
+
+                            // TODO: only add stops for route
+                            route.getStops().add(stop);
+                        }
+                    }
+                }
+                realm.commitTransaction();
+
+                // build segments and stop overlays
+                buildSegments();
+                buildStops();
+
+            } catch (SocketTimeoutException e) {
+                // TODO: error here
+            } catch (JSONException e) {
+                // TODO: error here
+            } catch (NetworkErrorException e) {
+                // TODO: error here
+            } finally {
+                if (realm != null)
+                    realm.close();
+            }
 
             return null;
         }
@@ -242,19 +294,25 @@ public class MapManager {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            new UpdateVehiclesTask().execute(routes);
+            map.invalidate();
+            new UpdateVehiclesTask().execute();
+            instanceCount--;
         }
     }
 
-    class UpdateVehiclesTask extends AsyncTask<Collection<RouteModel>, Void, ItemizedIconOverlay> {
+    class UpdateVehiclesTask extends AsyncTask<Void, Void, ItemizedIconOverlay> {
 
         @Override
-        protected ItemizedIconOverlay doInBackground(Collection<RouteModel>... params) {
-            // fetch vehicles
-            HashMap<RouteModel, List<Vehicle>> vehicles = new HashMap<>();
+        protected ItemizedIconOverlay doInBackground(Void... params) {
 
+            Realm realm;
+
+            HashMap<RouteModel, List<Vehicle>> vehicles = new HashMap<>();
             try {
-                for (RouteModel route : routes){
+                realm = Realm.getInstance(context);
+                RealmResults<RouteModel> activated = realm.where(RouteModel.class).equalTo("activated", true).findAll();
+
+                for (RouteModel route : activated){
                     List<Vehicle> v = TransLocAPI.getVehicles(route.getAgencyId(), route.getRouteId());
                     vehicles.put(route, v);
                 }

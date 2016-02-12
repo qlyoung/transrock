@@ -239,6 +239,7 @@ public class TransLocAPI {
             JSONObject stop = data.getJSONObject(i);
             StopModel model = new StopModel();
             StopModel.set(model, stop);
+            stops[i] = model;
         }
 
         return stops;

@@ -1,6 +1,7 @@
 package us.v4lk.transrock;
 
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
@@ -19,11 +20,16 @@ public class SplashActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // initialize a location manager
-        LocationManager manager = LocationManager.getInstance(getApplicationContext());
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+                // initialize a location manager
+                LocationManager.getInstance(getApplicationContext());
+                return null;
+            }
+        }.execute();
 
-        // try to cache location
-        manager.getLocation();
+
 
         // set content
         setContentView(R.layout.activity_splash);

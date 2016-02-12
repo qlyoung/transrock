@@ -1,7 +1,6 @@
 package us.v4lk.transrock.fragments;
 
 import android.location.Location;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
@@ -17,13 +16,9 @@ import com.google.android.gms.location.LocationListener;
 
 import org.osmdroid.views.MapView;
 
-import java.util.Collection;
-
-import io.realm.Realm;
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.mapping.LocationManager;
 import us.v4lk.transrock.mapping.MapManager;
-import us.v4lk.transrock.model.RouteModel;
 import us.v4lk.transrock.util.SmartViewPager;
 
 /**
@@ -33,24 +28,14 @@ import us.v4lk.transrock.util.SmartViewPager;
  */
 public class MapFragment extends Fragment implements LocationListener, ViewPager.OnPageChangeListener {
 
-    /**
-     * location manager
-     */
     LocationManager locationManager;
-    /**
-     * map manager
-     */
     MapManager mapManager;
-    /**
-     * root view
-     */
     View root;
+
     /** Handles messages & tasks on this thread's queue. */
     Handler handler;
     /** Time between vehicles updates, in milliseconds */
     int UPDATE_VEHICLES_INTERVAL = 3000;
-
-    Realm realm;
 
     /* lifecycle */
     @Override
@@ -75,7 +60,7 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
         mapManager = new MapManager(map, getActivity(), root);
 
         // get a reference to the location manager
-        locationManager = LocationManager.getInstance(this.getActivity().getApplicationContext());
+        locationManager = LocationManager.getInstance(getActivity().getApplicationContext());
 
         // get location updates
         locationManager.addLocationListener(this);
@@ -84,7 +69,6 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
     @Override
     public void onStart() {
         super.onStart();
-        realm = Realm.getDefaultInstance();
     }
 
     @Override
@@ -98,8 +82,8 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
             mapManager.updateLocation(loc);
         }
 
-        // set the routes the map should draw
-        //mapManager.setRoutes(realm.where(RouteModel.class).equalTo("activated", true).findAll());
+        // build and draw routes
+        mapManager.buildAndDraw();
 
         // set a recurring task on the handler to update vehicles
         Runnable updateVehiclesRunnable = new Runnable() {
@@ -110,17 +94,6 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
             }
         };
         handler.post(updateVehiclesRunnable);
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-    }
-
-    @Override
-    public void onStop() {
-        realm.close();
-        super.onStop();
     }
 
     @Override
@@ -150,7 +123,7 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
 
         switch (position) {
             case SmartViewPager.MAP_PAGE:
-                //mapManager.setRoutes(realm.where(RouteModel.class).equalTo("activated", true).findAll());
+                mapManager.buildAndDraw();
             default:
                 break;
         }
@@ -170,110 +143,5 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
     public void onLocationChanged(Location location) {
         mapManager.updateLocation(location);
     }
-
-    /*
-    /**
-     * Takes a list of routes and updates the map with relevant markers for these routes. If relevant
-     * data is in realm, that is used, otherwise data is fetched from the network and added to realm
-     * for next time.
-
-    class FetchRoutesTask extends AsyncTask<RouteModel, Integer, Collection<TransrockRoute>> {
-
-        RouteModel[] routes;
-
-        @Override
-        protected Collection<TransrockRoute> doInBackground(RouteModel... params) {
-
-            ArrayList<TransrockRoute> result = new ArrayList<>();
-            routes = params;
-
-            // pull segments from network, create a TransrockRoute, and put
-            // it in internal storage
-            for (RouteModel route : params) {
-                try {
-
-                    route.getStops();
-                    // get segments for this route
-                    SegmentModel[] segments = TransLocAPI.getSegments(route);
-
-                    // get stops for this route's agency
-                    StopModel[] stops = TransLocAPI.getStops(route.getAgencyId());
-
-                    // get stops for just this route
-                    ArrayList<StopModel> routeStops = new ArrayList<>();
-                    for (StopModel stop : stops)
-                        for (String route_id : s)
-                            if (route_id.equals(route.route_id))
-                                routeStops.add(stop);
-
-                    // build a new TransrockRoute
-                    TransrockRoute trr = new TransrockRoute(route,
-                            segments.values().toArray(new String[0]),
-                            routeStops.toArray(new Stop[0]));
-
-                    // set it to active
-                    trr.setActivated(true);
-
-                    // add it it to the resultant
-                    result.add(trr);
-
-
-                } catch (SocketTimeoutException e) {
-                    publishProgress(R.string.error_network_timeout);
-                    this.cancel(true);
-                } catch (NetworkErrorException e) {
-                    publishProgress(R.string.error_network_unknown);
-                    this.cancel(true);
-                } catch (JSONException e) {
-                    publishProgress(R.string.error_bad_parse);
-                    this.cancel(true);
-                }
-
-            }
-
-            return result;
-        }
-
-        @Override
-        protected void onPostExecute(Collection<TransrockRoute> result) {
-            // for the new routes, keep the activated status if it was previously set
-            Map<String, TransrockRoute> storageRoutes = RouteManager.getMap();
-            for (TransrockRoute route : result)
-                if (storageRoutes.containsKey(route.route_id))
-                    route.setActivated(storageRoutes.get(route.route_id).isActivated());
-
-            // remove all previously stored routes
-            RouteManager.clear();
-            // put all new routes
-            RouteManager.putRoute(result);
-            // update views
-            updateRoutelist();
-            // dismiss snackbar
-            snackbar.dismiss();
-
-            super.onPostExecute(result);
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer... values) {
-            // show snackbar with error message
-            int messageResId = values[0];
-            if (RoutesFragment.this.getView() != null) {
-                Snackbar errorSnackbar = Snackbar.make(RoutesFragment.this.getView(), messageResId, Snackbar.LENGTH_LONG);
-
-                // allow user to retry this task in case of error
-                errorSnackbar.setAction(R.string.retry, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        // re-run this task
-                        FetchRoutesTask newTask = new FetchRoutesTask();
-                        newTask.execute(routes);
-                    }
-                });
-                errorSnackbar.show();
-            }
-        }
-    }
-    */
 
 }

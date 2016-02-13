@@ -11,11 +11,4 @@
         android:orderInCategory="1"
         app:showAsAction="ifRoom" />
 
-    <item
-        android:id="@+id/map_menu_testing_button"
-        android:icon="@drawable/abc_btn_rating_star_on_mtrl_alpha"
-        android:title="@string/map_menu_center_location_title"
-        android:orderInCategory="2"
-        app:showAsAction="ifRoom" />
-
 </menu>

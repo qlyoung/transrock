@@ -32,8 +32,9 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
     MapManager mapManager;
     View root;
 
-    /** Handles messages & tasks on this thread's queue. */
+    /** Used to post tasks to be executed in the future.. */
     Handler handler;
+
     /** Time between vehicles updates, in milliseconds */
     int UPDATE_VEHICLES_INTERVAL = 3000;
 
@@ -89,7 +90,7 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
         Runnable updateVehiclesRunnable = new Runnable() {
             @Override
             public void run() {
-                //mapManager.updateVehicles();
+                mapManager.updateVehicles();
                 handler.postDelayed(this, UPDATE_VEHICLES_INTERVAL);
             }
         };
@@ -108,9 +109,6 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
                 mapManager.setFollowMe(true);
                 Location loc = locationManager.getLocation();
                 if (loc != null) mapManager.updateLocation(loc);
-                break;
-            case R.id.map_menu_testing_button:
-                mapManager.updateVehicles();
                 break;
         }
 

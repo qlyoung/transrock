@@ -150,15 +150,15 @@ public class Map {
         this.vehiclesOverlay = vehicles;
         addOverlay(vehiclesOverlay);
     }
-    private void clearRouteOverlays() {
+    public void clearRouteOverlays() {
         removeOverlay(routeOverlays);
         routeOverlays.clear();
     }
-    private void clearStopsOverlay() {
+    public void clearStopsOverlay() {
         removeOverlay(this.stopOverlay);
         this.stopOverlay = null;
     }
-    private void clearVehiclesOverlay() {
+    public void clearVehiclesOverlay() {
         removeOverlay(vehiclesOverlay);
         vehiclesOverlay = null;
     }

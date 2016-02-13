@@ -232,6 +232,9 @@ public class MapManager {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
+            map.clearVehiclesOverlay();
+            map.clearStopsOverlay();
+            map.invalidate();
         }
 
         @Override
@@ -284,8 +287,11 @@ public class MapManager {
             } catch (NetworkErrorException e) {
                 // TODO: error here
             } finally {
-                if (realm != null)
+                if (realm != null) {
+                    realm.refresh();
                     realm.close();
+                }
+
             }
 
             return null;
@@ -301,6 +307,11 @@ public class MapManager {
     }
 
     class UpdateVehiclesTask extends AsyncTask<Void, Void, ItemizedIconOverlay> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
 
         @Override
         protected ItemizedIconOverlay doInBackground(Void... params) {

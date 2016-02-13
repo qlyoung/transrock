@@ -13,6 +13,7 @@ import android.widget.TextView;
 
 import com.pkmmte.view.CircularImageView;
 
+import io.realm.Realm;
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.model.RouteModel;
 import us.v4lk.transrock.util.Util;
@@ -22,12 +23,17 @@ import us.v4lk.transrock.util.Util;
  */
 public class RouteAdapter extends ArrayAdapter<RouteModel> {
 
+    /** Interfaces between data and views for list of routes in RoutesFragment */
+    Realm realm;
+
     /**
      * @param context application context.
      * @param resource resource id for list item layout
+     * @param realm the realm that this adapter's dataset is stored in
      */
-    public RouteAdapter(Context context, int resource) {
+    public RouteAdapter(Context context, int resource, Realm realm) {
         super(context, resource);
+        this.realm = realm;
     }
 
     @Override
@@ -70,7 +76,9 @@ public class RouteAdapter extends ArrayAdapter<RouteModel> {
         routeActivationSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                realm.beginTransaction();
                 item.setActivated(isChecked);
+                realm.commitTransaction();
             }
         });
 

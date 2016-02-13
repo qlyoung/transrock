@@ -63,14 +63,14 @@ public class RoutesFragment extends Fragment implements ViewPager.OnPageChangeLi
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        RouteAdapter adapter = new RouteAdapter(getActivity(), R.layout.route_list_item);
-        routeList.setAdapter(adapter);
     }
 
     @Override
     public void onStart() {
         super.onStart();
         realm = Realm.getDefaultInstance();
+        RouteAdapter adapter = new RouteAdapter(getActivity(), R.layout.route_list_item, realm);
+        routeList.setAdapter(adapter);
     }
 
     @Override
@@ -114,10 +114,8 @@ public class RoutesFragment extends Fragment implements ViewPager.OnPageChangeLi
     public void onPageSelected(int position) {
         switch (position) {
             case SmartViewPager.ROUTE_PAGE:
-                realm.beginTransaction();
-                break;
             case SmartViewPager.MAP_PAGE:
-                realm.commitTransaction();
+            default:
                 break;
         }
     }

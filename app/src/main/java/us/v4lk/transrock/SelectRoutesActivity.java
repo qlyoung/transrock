@@ -119,7 +119,7 @@ public class SelectRoutesActivity extends AppCompatActivity {
         // copy local changes to global realm
         globalRealm.beginTransaction();
         globalRealm.clear(RouteModel.class);
-        globalRealm.copyToRealm(localRealm.where(RouteModel.class).equalTo("saved", true).findAll());
+        globalRealm.copyToRealmOrUpdate(localRealm.where(RouteModel.class).equalTo("saved", true).findAll());
         globalRealm.commitTransaction();
 
         super.onPause();

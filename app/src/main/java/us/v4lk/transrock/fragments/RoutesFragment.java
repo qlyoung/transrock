@@ -20,7 +20,7 @@ import io.realm.Realm;
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.SelectRoutesActivity;
 import us.v4lk.transrock.adapters.RouteAdapter;
-import us.v4lk.transrock.model.RouteModel;
+import us.v4lk.transrock.model.Route;
 import us.v4lk.transrock.util.SmartViewPager;
 
 /**
@@ -78,7 +78,7 @@ public class RoutesFragment extends Fragment implements ViewPager.OnPageChangeLi
         // pull routes from realm and update list
         RouteAdapter adapter = (RouteAdapter) routeList.getAdapter();
         adapter.clear();
-        adapter.addAll(realm.allObjects(RouteModel.class));
+        adapter.addAll(realm.allObjects(Route.class));
         adapter.notifyDataSetChanged();
 
         // update UI if list is empty or full

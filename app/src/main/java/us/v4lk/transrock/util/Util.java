@@ -17,13 +17,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-
-import io.realm.Realm;
-import io.realm.RealmResults;
-import us.v4lk.transrock.model.RouteModel;
 
 /**
  * Miscellaneous static helper functions & global vars

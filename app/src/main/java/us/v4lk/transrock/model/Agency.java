@@ -10,7 +10,7 @@ import io.realm.annotations.PrimaryKey;
  * A transit agency.
  */
 
-public class AgencyModel extends RealmObject {
+public class Agency extends RealmObject {
 
     @PrimaryKey
     private String agencyId;
@@ -107,7 +107,7 @@ public class AgencyModel extends RealmObject {
     }
 
     // JSON setter
-    public static void set(AgencyModel model, JSONObject agency) throws JSONException {
+    public static void set(Agency model, JSONObject agency) throws JSONException {
         // unpack returned object
         model.setAgencyId(agency.getString("agency_id"));
         model.setLongName(agency.getString("long_name"));

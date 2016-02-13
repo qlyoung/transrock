@@ -10,7 +10,7 @@ import io.realm.annotations.PrimaryKey;
 /**
  * A stop.
  */
-public class StopModel extends RealmObject {
+public class Stop extends RealmObject {
 
     @PrimaryKey
     private String stopId;
@@ -24,7 +24,7 @@ public class StopModel extends RealmObject {
             locationType,
             name;
 
-    private RealmList<RouteModel> routes;
+    private RealmList<Route> routes;
     private double latitude, longitude;
 
     public String getStopId() {
@@ -91,11 +91,11 @@ public class StopModel extends RealmObject {
         this.name = name;
     }
 
-    public RealmList<RouteModel> getRoutes() {
+    public RealmList<Route> getRoutes() {
         return routes;
     }
 
-    public void setRoutes(RealmList<RouteModel> routes) {
+    public void setRoutes(RealmList<Route> routes) {
         this.routes = routes;
     }
 
@@ -115,7 +115,7 @@ public class StopModel extends RealmObject {
         this.longitude = longitude;
     }
 
-    public static void set(StopModel model, JSONObject stop) throws JSONException {
+    public static void set(Stop model, JSONObject stop) throws JSONException {
         model.setCode(stop.getString("code"));
         model.setDescription(stop.getString("description"));
         model.setUrl(stop.getString("url"));

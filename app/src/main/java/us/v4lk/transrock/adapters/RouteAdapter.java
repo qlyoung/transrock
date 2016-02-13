@@ -15,13 +15,13 @@ import com.pkmmte.view.CircularImageView;
 
 import io.realm.Realm;
 import us.v4lk.transrock.R;
-import us.v4lk.transrock.model.RouteModel;
+import us.v4lk.transrock.model.Route;
 import us.v4lk.transrock.util.Util;
 
 /**
  * Adapts TransrockRoute --> layout/route_list_item.
  */
-public class RouteAdapter extends ArrayAdapter<RouteModel> {
+public class RouteAdapter extends ArrayAdapter<Route> {
 
     /** Interfaces between data and views for list of routes in RoutesFragment */
     Realm realm;
@@ -38,7 +38,7 @@ public class RouteAdapter extends ArrayAdapter<RouteModel> {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        final RouteModel item = getItem(position);
+        final Route item = getItem(position);
 
         // capture layout inflater
         LayoutInflater inflater = LayoutInflater.from(getContext());

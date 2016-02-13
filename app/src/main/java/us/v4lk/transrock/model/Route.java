@@ -17,7 +17,7 @@ import io.realm.annotations.PrimaryKey;
  * here and should be accessed using said keys in conjunction with the
  * TransLoc API.
  */
-public class RouteModel extends RealmObject {
+public class Route extends RealmObject {
 
     @PrimaryKey
     private String routeId;
@@ -42,8 +42,8 @@ public class RouteModel extends RealmObject {
         this.saved = saved;
     }
 
-    private RealmList<SegmentModel> segments;
-    private RealmList<StopModel> stops;
+    private RealmList<Segment> segments;
+    private RealmList<Stop> stops;
 
     public String getRouteId() {
         return routeId;
@@ -125,24 +125,24 @@ public class RouteModel extends RealmObject {
         this.activated = activated;
     }
 
-    public RealmList<SegmentModel> getSegments() {
+    public RealmList<Segment> getSegments() {
         return segments;
     }
 
-    public void setSegments(RealmList<SegmentModel> segments) {
+    public void setSegments(RealmList<Segment> segments) {
         this.segments = segments;
     }
 
-    public RealmList<StopModel> getStops() {
+    public RealmList<Stop> getStops() {
         return stops;
     }
 
-    public void setStops(RealmList<StopModel> stops) {
+    public void setStops(RealmList<Stop> stops) {
         this.stops = stops;
     }
 
     // JSON setter
-    public static void set(RouteModel model, JSONObject route) throws JSONException {
+    public static void set(Route model, JSONObject route) throws JSONException {
         model.setRouteId(route.getString("route_id"));
         model.setDescription(route.getString("description"));
         model.setShortName(route.getString("short_name"));

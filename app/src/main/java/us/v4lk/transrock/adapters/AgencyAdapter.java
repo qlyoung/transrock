@@ -13,19 +13,19 @@ import java.util.ArrayList;
 import io.realm.Realm;
 import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
 import us.v4lk.transrock.R;
-import us.v4lk.transrock.model.AgencyModel;
-import us.v4lk.transrock.model.RouteModel;
+import us.v4lk.transrock.model.Agency;
+import us.v4lk.transrock.model.Route;
 import us.v4lk.transrock.util.Util;
 
 /**
  * Adapts agency --> layout/agency_list_item.
  */
-public class AgencyAdapter extends ArrayAdapter<AgencyModel> implements StickyListHeadersAdapter {
+public class AgencyAdapter extends ArrayAdapter<Agency> implements StickyListHeadersAdapter {
 
     /**
      * Separate lists for separate sections
      */
-    ArrayList<AgencyModel> active, local;
+    ArrayList<Agency> active, local;
     /**
      * Header id's for StickyListHeaders
      */
@@ -45,7 +45,7 @@ public class AgencyAdapter extends ArrayAdapter<AgencyModel> implements StickyLi
      * @param numActive number of active agencies
      * @param numLocal number of local agencies
      */
-    public AgencyAdapter(Context context, int resource, AgencyModel[] agencies, int numActive, int numLocal) {
+    public AgencyAdapter(Context context, int resource, Agency[] agencies, int numActive, int numLocal) {
         super(context, resource, agencies);
 
         // build list of active & local agencies to reference later for headers
@@ -63,7 +63,7 @@ public class AgencyAdapter extends ArrayAdapter<AgencyModel> implements StickyLi
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        AgencyModel item = getItem(position);
+        Agency item = getItem(position);
         Realm realm = Realm.getDefaultInstance();
 
         // inflate new view if necessary
@@ -78,7 +78,7 @@ public class AgencyAdapter extends ArrayAdapter<AgencyModel> implements StickyLi
 
         // set badge and text views
         int color = getContext().getResources().getColor(R.color.color_agency_badge);
-        long numRoutesForAgency = realm.where(RouteModel.class).equalTo("agencyId", item.getAgencyId()).count();
+        long numRoutesForAgency = realm.where(Route.class).equalTo("agencyId", item.getAgencyId()).count();
         String numSavedRoutes = String.valueOf(numRoutesForAgency);
         badge.setImageBitmap(Util.colorToBitmap(color, 50, 50));
         badgeText.setText(numSavedRoutes);
@@ -99,7 +99,7 @@ public class AgencyAdapter extends ArrayAdapter<AgencyModel> implements StickyLi
      */
     @Override
     public long getHeaderId(int position) {
-        AgencyModel agency = getItem(position);
+        Agency agency = getItem(position);
 
         // determine appropriate id for given position
         int id;
@@ -126,7 +126,7 @@ public class AgencyAdapter extends ArrayAdapter<AgencyModel> implements StickyLi
         LayoutInflater inflater = LayoutInflater.from(getContext());
 
         // capture item
-        AgencyModel agency = getItem(position);
+        Agency agency = getItem(position);
 
         // inflate section header
         view = inflater.inflate(R.layout.agency_section_header, null);

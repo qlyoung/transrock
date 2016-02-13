@@ -6,7 +6,7 @@ import io.realm.annotations.PrimaryKey;
 /**
  * Created by qly on 2/6/16.
  */
-public class SegmentModel extends RealmObject {
+public class Segment extends RealmObject {
 
     @PrimaryKey
     private String segmentId;
@@ -28,7 +28,7 @@ public class SegmentModel extends RealmObject {
         this.segment = segment;
     }
 
-    public static void set(SegmentModel model, String segmentId, String segment) {
+    public static void set(Segment model, String segmentId, String segment) {
         model.setSegmentId(segmentId);
         model.setSegment(segment);
     }

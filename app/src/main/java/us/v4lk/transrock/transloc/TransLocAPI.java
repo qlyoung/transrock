@@ -18,10 +18,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import us.v4lk.transrock.model.AgencyModel;
-import us.v4lk.transrock.model.RouteModel;
-import us.v4lk.transrock.model.SegmentModel;
-import us.v4lk.transrock.model.StopModel;
+import us.v4lk.transrock.model.Agency;
+import us.v4lk.transrock.model.Route;
+import us.v4lk.transrock.model.Segment;
+import us.v4lk.transrock.model.Stop;
 import us.v4lk.transrock.model.Vehicle;
 import us.v4lk.transrock.util.Util;
 
@@ -77,7 +77,7 @@ public class TransLocAPI {
      *
      * @return All agencies known to TransLoc API.
      */
-    public static AgencyModel[] getAgencies()
+    public static Agency[] getAgencies()
             throws NetworkErrorException, SocketTimeoutException, JSONException {
 
         // get agencies from api
@@ -85,15 +85,15 @@ public class TransLocAPI {
         JSONArray data = response.getJSONArray(DATA);
 
         // transform into model classes
-        ArrayList<AgencyModel> agencies = new ArrayList<>();
+        ArrayList<Agency> agencies = new ArrayList<>();
         for (int i = 0; i < data.length(); i++) {
             JSONObject agency = data.getJSONObject(i);
-            AgencyModel model = new AgencyModel();
-            AgencyModel.set(model, agency);
+            Agency model = new Agency();
+            Agency.set(model, agency);
             agencies.add(model);
         }
 
-        return agencies.toArray(new AgencyModel[agencies.size()]);
+        return agencies.toArray(new Agency[agencies.size()]);
     }
 
     /**
@@ -105,15 +105,15 @@ public class TransLocAPI {
      * @param radius radius of circle in meters
      * @return all agencies in the specified geoarea
      */
-    public static AgencyModel[] getAgencies(Location center, float radius)
+    public static Agency[] getAgencies(Location center, float radius)
             throws NetworkErrorException, SocketTimeoutException, JSONException {
 
         // get all agencies
-        AgencyModel[] agencies = getAgencies();
-        ArrayList<AgencyModel> agenciesInArea = new ArrayList<>();
+        Agency[] agencies = getAgencies();
+        ArrayList<Agency> agenciesInArea = new ArrayList<>();
 
         // for each agency measure whether distance from location to agency is < radius
-        for (AgencyModel a : agencies) {
+        for (Agency a : agencies) {
             float[] result = new float[1];
             Location.distanceBetween(center.getLatitude(),
                     center.getLongitude(),
@@ -125,7 +125,7 @@ public class TransLocAPI {
                 agenciesInArea.add(a);
         }
 
-        return agenciesInArea.toArray(new AgencyModel[agenciesInArea.size()]);
+        return agenciesInArea.toArray(new Agency[agenciesInArea.size()]);
     }
 
     /**
@@ -134,7 +134,7 @@ public class TransLocAPI {
      * @param agencyId id of the agency to retrieve routes for
      * @return array of routes for the agency
      */
-    public static RouteModel[] getRoutes(String agencyId)
+    public static Route[] getRoutes(String agencyId)
             throws NetworkErrorException, SocketTimeoutException, JSONException {
         // encapsulate the single param in an array and call the more general overload
         return getRoutes(new String[] { agencyId }).get(agencyId);
@@ -146,7 +146,7 @@ public class TransLocAPI {
      * @param agencyIds id's of agencies to retrieve routes for
      * @return hash map with agency ids as keys and corresponding route arrays as values
      */
-    public static Map<String, RouteModel[]> getRoutes(String... agencyIds)
+    public static Map<String, Route[]> getRoutes(String... agencyIds)
             throws NetworkErrorException, SocketTimeoutException, JSONException {
 
         // build request parameter
@@ -161,15 +161,15 @@ public class TransLocAPI {
         JSONObject response = callApi(request);
         JSONObject data = response.getJSONObject(DATA);
 
-        Map<String, RouteModel[]> result = new LinkedHashMap<>(agencyIds.length);
+        Map<String, Route[]> result = new LinkedHashMap<>(agencyIds.length);
         for (String agencyId : agencyIds) {
             JSONArray routelist = data.getJSONArray(agencyId);
 
-            RouteModel[] routes = new RouteModel[routelist.length()];
+            Route[] routes = new Route[routelist.length()];
             for (int j = 0; j < routelist.length(); j++) {
                 JSONObject route = routelist.getJSONObject(j);
-                RouteModel model = new RouteModel();
-                RouteModel.set(model, route);
+                Route model = new Route();
+                Route.set(model, route);
                 routes[j] = model;
             }
 
@@ -186,7 +186,7 @@ public class TransLocAPI {
      * @param r route to fetch segments for
      * @return list of encoded polylines keyed by id
      */
-    public static SegmentModel[] getSegments(RouteModel route)
+    public static Segment[] getSegments(Route route)
             throws NetworkErrorException, SocketTimeoutException, JSONException {
 
         StringBuilder builder = new StringBuilder();
@@ -203,16 +203,16 @@ public class TransLocAPI {
         JSONObject response = callApi(request);
         JSONObject data = response.getJSONObject(DATA);
 
-        ArrayList<SegmentModel> segments = new ArrayList<>();
+        ArrayList<Segment> segments = new ArrayList<>();
         Iterator<String> keys = data.keys();
         while (keys.hasNext()) {
             String key = keys.next();
-            SegmentModel model = new SegmentModel();
-            SegmentModel.set(model, key, data.getString(key));
+            Segment model = new Segment();
+            Segment.set(model, key, data.getString(key));
             segments.add(model);
         }
 
-        return segments.toArray(new SegmentModel[segments.size()]);
+        return segments.toArray(new Segment[segments.size()]);
     }
 
     /**
@@ -221,7 +221,7 @@ public class TransLocAPI {
      * @param agencyId The id of the agency to get stops for
      * @return An array of Stops.
      */
-    public static StopModel[] getStops(String agencyId)
+    public static Stop[] getStops(String agencyId)
             throws NetworkErrorException, SocketTimeoutException, JSONException {
 
         // build request parameter
@@ -233,12 +233,12 @@ public class TransLocAPI {
         JSONObject response = callApi(request);
         JSONArray data = response.getJSONArray(DATA);
 
-        StopModel[] stops = new StopModel[data.length()];
+        Stop[] stops = new Stop[data.length()];
 
         for (int i = 0; i < data.length(); i++) {
             JSONObject stop = data.getJSONObject(i);
-            StopModel model = new StopModel();
-            StopModel.set(model, stop);
+            Stop model = new Stop();
+            Stop.set(model, stop);
             stops[i] = model;
         }
 

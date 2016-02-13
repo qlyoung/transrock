@@ -1,12 +1,14 @@
 package us.v4lk.transrock;
 
 import android.app.Application;
+import android.os.AsyncTask;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
+import us.v4lk.transrock.mapping.LocationManager;
 
 /**
- * Created by qly on 2/7/16.
+ * Does a few housekeeping things at application launch.
  */
 public class TransrockApplication extends Application {
 
@@ -17,6 +19,15 @@ public class TransrockApplication extends Application {
         // initialize realm
         RealmConfiguration realmConfiguration = new RealmConfiguration.Builder(this).build();
         Realm.setDefaultConfiguration(realmConfiguration);
+
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+                // initialize a location manager
+                LocationManager.getInstance(getApplicationContext());
+                return null;
+            }
+        }.execute();
     }
 
 

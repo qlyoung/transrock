@@ -10,23 +10,20 @@ import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.TextView;
 
-import java.util.Map;
-
 import us.v4lk.transrock.R;
-import us.v4lk.transrock.model.RouteModel;
-import us.v4lk.transrock.util.Util;
+import us.v4lk.transrock.model.Route;
 
 /**
  * Adapts StoredRoute --> layout/route_switch_item.
  * Includes convenience constructor that accepts RouteModel[].
  */
-public class RouteSwitchAdapter extends ArrayAdapter<RouteModel> {
+public class RouteSwitchAdapter extends ArrayAdapter<Route> {
 
     /**
      * @param context application context
      * @param resource resource id for layout of desired list item
      */
-    public RouteSwitchAdapter(Context context, int resource, RouteModel[] routes) {
+    public RouteSwitchAdapter(Context context, int resource, Route[] routes) {
         super(context, resource);
 
         this.clear();
@@ -35,7 +32,7 @@ public class RouteSwitchAdapter extends ArrayAdapter<RouteModel> {
 
     @Override
     public View getView(final int position, View convertView, ViewGroup parent) {
-        final RouteModel item = getItem(position);
+        final Route item = getItem(position);
 
         // capture inflater and item
         LayoutInflater inflater = LayoutInflater.from(getContext());

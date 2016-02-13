@@ -11,9 +11,7 @@ import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.ArcShape;
 import android.location.Location;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.support.v4.graphics.drawable.DrawableCompat;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -30,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -39,9 +36,9 @@ import butterknife.ButterKnife;
 import io.realm.Realm;
 import io.realm.RealmResults;
 import us.v4lk.transrock.R;
-import us.v4lk.transrock.model.RouteModel;
-import us.v4lk.transrock.model.SegmentModel;
-import us.v4lk.transrock.model.StopModel;
+import us.v4lk.transrock.model.Route;
+import us.v4lk.transrock.model.Segment;
+import us.v4lk.transrock.model.Stop;
 import us.v4lk.transrock.model.Vehicle;
 import us.v4lk.transrock.transloc.TransLocAPI;
 import us.v4lk.transrock.util.Util;
@@ -123,29 +120,29 @@ public class MapManager {
 
     class BuildOverlaysTask extends AsyncTask<Void, Void, Void> {
 
-        private RealmResults<RouteModel> activatedRoutes;
+        private RealmResults<Route> activatedRoutes;
 
         public void buildSegments() {
             HashMap<String, Collection<Polyline>> routelines = new HashMap<>();
 
             // calculate how many times each segment is reused across all routes
-            HashMap<SegmentModel, Integer> totalCount = new LinkedHashMap<>(activatedRoutes.size());
-            for (RouteModel route : activatedRoutes)
+            HashMap<Segment, Integer> totalCount = new LinkedHashMap<>(activatedRoutes.size());
+            for (Route route : activatedRoutes)
                 // for each segment in this route, increment that segment's global usage count
-                for (SegmentModel segment : route.getSegments()) {
+                for (Segment segment : route.getSegments()) {
                     int prevCount = totalCount.get(segment) == null ? 0 : totalCount.get(segment);
                     totalCount.put(segment, prevCount + 1);
                 }
 
             // build overlays
-            LinkedHashMap<SegmentModel, Integer> visitedCount = new LinkedHashMap<>(totalCount.size());
+            LinkedHashMap<Segment, Integer> visitedCount = new LinkedHashMap<>(totalCount.size());
             int basePolylineSize = 10;
             float dashScale = 100;
 
-            for (RouteModel route : activatedRoutes) {
+            for (Route route : activatedRoutes) {
                 ArrayList<Polyline> segments = new ArrayList<>();
 
-                for (SegmentModel segment : route.getSegments()) {
+                for (Segment segment : route.getSegments()) {
                     int timesVisited = visitedCount.get(segment) == null ? 0 : visitedCount.get(segment);
 
                     // get the polyline
@@ -183,10 +180,10 @@ public class MapManager {
             ItemizedIconOverlay stopoverlay = new ItemizedIconOverlay<>(context, new ArrayList<OverlayItem>(), null);
 
             // map each stop to the routes containing it
-            HashMap<StopModel, Collection<RouteModel>> stopsToRoutes = new LinkedHashMap<>();
-            for (RouteModel route : activatedRoutes) {
-                for (StopModel stop : route.getStops()) {
-                    Collection<RouteModel> existing = stopsToRoutes.get(stop);
+            HashMap<Stop, Collection<Route>> stopsToRoutes = new LinkedHashMap<>();
+            for (Route route : activatedRoutes) {
+                for (Stop stop : route.getStops()) {
+                    Collection<Route> existing = stopsToRoutes.get(stop);
                     if (existing == null)
                         existing = new HashSet<>();
                     existing.add(route);
@@ -195,9 +192,9 @@ public class MapManager {
             }
 
             // calculate & place marker items
-            for (StopModel stop : stopsToRoutes.keySet()) {
+            for (Stop stop : stopsToRoutes.keySet()) {
                 // get the routes for this stop
-                Collection<RouteModel> stopRoutes = stopsToRoutes.get(stop);
+                Collection<Route> stopRoutes = stopsToRoutes.get(stop);
                 int numRoutes = stopRoutes.size();
 
                 // get base marker drawable
@@ -207,7 +204,7 @@ public class MapManager {
                 Drawable[] arcs = new Drawable[numRoutes];
                 float sweep = 360f / numRoutes;
                 int i = 0;
-                for (RouteModel route : stopRoutes) {
+                for (Route route : stopRoutes) {
                     ShapeDrawable arc = new ShapeDrawable(new ArcShape(sweep * i, sweep));
                     arc.setIntrinsicWidth(30);
                     arc.setIntrinsicHeight(30);
@@ -245,25 +242,25 @@ public class MapManager {
             try {
                 // get a view into the realm
                 realm = Realm.getInstance(context);
-                activatedRoutes = realm.where(RouteModel.class).equalTo("activated", true).findAll();
+                activatedRoutes = realm.where(Route.class).equalTo("activated", true).findAll();
 
                 // pull segments and stops for routes that don't have them yet (recently added)
                 // TODO: figure out how to deduplicate these in Realm while maintaining relationships
                 realm.beginTransaction();
                 for (int i = 0; i < activatedRoutes.size(); i++) {
-                    RouteModel route = activatedRoutes.get(i);
+                    Route route = activatedRoutes.get(i);
 
                     // if route has no segments, fetch them all and add as relation to route
                     if (route.getSegments().size() == 0) {
-                        SegmentModel[] segments = TransLocAPI.getSegments(route);
-                        for (SegmentModel sm : segments)
+                        Segment[] segments = TransLocAPI.getSegments(route);
+                        for (Segment sm : segments)
                             route.getSegments().add(sm);
                     }
 
                     // if route has no stops, fetch them all and add as relation to route
                     if (route.getStops().size() == 0) {
-                        StopModel[] stops = TransLocAPI.getStops(route.getAgencyId());
-                        for (StopModel stop : stops) {
+                        Stop[] stops = TransLocAPI.getStops(route.getAgencyId());
+                        for (Stop stop : stops) {
 
                             //TODO: weed null results in TranslocAPI before returning
                             if (stop == null)
@@ -318,12 +315,12 @@ public class MapManager {
 
             Realm realm;
 
-            HashMap<RouteModel, List<Vehicle>> vehicles = new HashMap<>();
+            HashMap<Route, List<Vehicle>> vehicles = new HashMap<>();
             try {
                 realm = Realm.getInstance(context);
-                RealmResults<RouteModel> activated = realm.where(RouteModel.class).equalTo("activated", true).findAll();
+                RealmResults<Route> activated = realm.where(Route.class).equalTo("activated", true).findAll();
 
-                for (RouteModel route : activated){
+                for (Route route : activated){
                     List<Vehicle> v = TransLocAPI.getVehicles(route.getAgencyId(), route.getRouteId());
                     vehicles.put(route, v);
                 }
@@ -341,7 +338,7 @@ public class MapManager {
             ItemizedIconOverlay<OverlayItem> vehicleOverlay = new ItemizedIconOverlay<>(context, new ArrayList<OverlayItem>(), null);
 
             // build overlay
-            for (RouteModel route : vehicles.keySet()) {
+            for (Route route : vehicles.keySet()) {
                 // tint marker to match route color
                 Drawable vehicleMarker = DrawableCompat.wrap(context.getResources().getDrawable(R.drawable.ic_directions_bus_white_24dp));
                 DrawableCompat.setTint(vehicleMarker.mutate(), Color.parseColor("#" + route.getColor()));

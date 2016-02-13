@@ -20,15 +20,6 @@ public class SplashActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... params) {
-                // initialize a location manager
-                LocationManager.getInstance(getApplicationContext());
-                return null;
-            }
-        }.execute();
-
 
 
         // set content

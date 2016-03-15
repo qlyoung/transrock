@@ -142,4 +142,8 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
         mapManager.updateLocation(location);
     }
 
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+    }
 }

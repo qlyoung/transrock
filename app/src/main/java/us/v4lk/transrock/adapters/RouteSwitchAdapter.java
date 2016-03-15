@@ -22,6 +22,7 @@ public class RouteSwitchAdapter extends ArrayAdapter<Route> {
     /**
      * @param context application context
      * @param resource resource id for layout of desired list item
+     * @param routes array of routes to show in the list -- these should not be members of a realm
      */
     public RouteSwitchAdapter(Context context, int resource, Route[] routes) {
         super(context, resource);
@@ -51,10 +52,8 @@ public class RouteSwitchAdapter extends ArrayAdapter<Route> {
         TextView nameTextView = (TextView) convertView.findViewById(R.id.route_switch_item_text);
         nameTextView.setText(item.getLongName());
 
-        // set the switch's checked value and listener
+        // capture switch & set checked state to reflect realm record
         final Switch routeToggleSwitch = (Switch) convertView.findViewById(R.id.route_switch_item_switch);
-
-        // set checked state to reflect realm record
         routeToggleSwitch.setChecked(item.isSaved());
 
         // when the switch is toggled, update the corresponding realm record
@@ -62,7 +61,6 @@ public class RouteSwitchAdapter extends ArrayAdapter<Route> {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 item.setSaved(isChecked);
-                Log.d(item.getLongName(), String.valueOf(item.isSaved()));
             }
         });
 

@@ -26,8 +26,7 @@ import us.v4lk.transrock.model.Vehicle;
 import us.v4lk.transrock.util.Util;
 
 /**
- * Encapsulates the TransLoc API. Implements transparent caching.
- * TODO: implement the rest of the API object classes and call functions
+ * Endpoint for TransLoc API.
  */
 public class TransLocAPI {
 
@@ -38,8 +37,6 @@ public class TransLocAPI {
             SEGMENT_PATH = "/segments.json",
             VEHICLE_PATH = "/vehicles.json";
     private static final String DATA = "data";
-
-    /* API call methods */
 
     /**
      * Calls the api endpoint with the specified path.
@@ -186,7 +183,7 @@ public class TransLocAPI {
      * @param r route to fetch segments for
      * @return list of encoded polylines keyed by id
      */
-    public static Segment[] getSegments(Route route)
+    public static Segment[] getSegments(String agencyId, String routeId)
             throws NetworkErrorException, SocketTimeoutException, JSONException {
 
         StringBuilder builder = new StringBuilder();
@@ -194,10 +191,10 @@ public class TransLocAPI {
                 .append(SEGMENT_PATH)
                 .append("?")
                 .append("agencies=")
-                .append(route.getAgencyId())
+                .append(agencyId)
                 .append("&")
                 .append("routes=")
-                .append(route.getRouteId());
+                .append(routeId);
         String request = builder.toString();
 
         JSONObject response = callApi(request);
@@ -286,6 +283,40 @@ public class TransLocAPI {
             result.add(new Vehicle(vehicleArray.getJSONObject(i)));
 
         return result;
+    }
+
+    /** convenience methods that don't necessarily map exactly to API calls */
+
+    public static Segment[] getSegments(Route route)
+            throws NetworkErrorException, SocketTimeoutException, JSONException {
+        return getSegments(route.getAgencyId(), route.getRouteId());
+    }
+
+    public static Stop[] getStops(Route route)
+            throws NetworkErrorException, SocketTimeoutException, JSONException {
+
+        // build request parameter
+        StringBuilder builder = new StringBuilder();
+        builder.append(STOP_PATH).append("?").append("agencies=").append(route.getAgencyId());
+        String request = builder.toString();
+
+        // call api
+        JSONObject response = callApi(request);
+        JSONArray data = response.getJSONArray(DATA);
+
+        ArrayList<Stop> stops = new ArrayList<>();
+
+        for (int i = 0; i < data.length(); i++) {
+            JSONObject stop = data.getJSONObject(i);
+            boolean hasRoute = stop.getJSONArray("routes").join("|").contains(route.getRouteId());
+            if (hasRoute) {
+                Stop model = new Stop();
+                Stop.set(model, stop);
+                stops.add(model);
+            }
+        }
+
+        return stops.toArray(new Stop[stops.size()]);
     }
 
 }

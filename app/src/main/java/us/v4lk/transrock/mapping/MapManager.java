@@ -48,8 +48,6 @@ import us.v4lk.transrock.util.Util;
  */
 public class MapManager {
 
-    static int instanceCount = 0;
-
     Map map;
     Context context;
 
@@ -259,16 +257,9 @@ public class MapManager {
 
                     // if route has no stops, fetch them all and add as relation to route
                     if (route.getStops().size() == 0) {
-                        Stop[] stops = TransLocAPI.getStops(route.getAgencyId());
-                        for (Stop stop : stops) {
-
-                            //TODO: weed null results in TranslocAPI before returning
-                            if (stop == null)
-                                continue;
-
-                            // TODO: only add stops for route
+                        Stop[] stops = TransLocAPI.getStops(route);
+                        for (Stop stop : stops)
                             route.getStops().add(stop);
-                        }
                     }
                 }
                 realm.commitTransaction();
@@ -299,7 +290,6 @@ public class MapManager {
             super.onPostExecute(aVoid);
             map.invalidate();
             new UpdateVehiclesTask().execute();
-            instanceCount--;
         }
     }
 

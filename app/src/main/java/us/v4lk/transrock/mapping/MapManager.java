@@ -243,7 +243,6 @@ public class MapManager {
                 activatedRoutes = realm.where(Route.class).equalTo("activated", true).findAll();
 
                 // pull segments and stops for routes that don't have them yet (recently added)
-                // TODO: figure out how to deduplicate these in Realm while maintaining relationships
                 realm.beginTransaction();
                 for (int i = 0; i < activatedRoutes.size(); i++) {
                     Route route = activatedRoutes.get(i);

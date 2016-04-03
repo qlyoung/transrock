@@ -47,6 +47,7 @@ import us.v4lk.transrock.util.Util;
  */
 public class SelectRoutesActivity extends AppCompatActivity {
 
+    // view bindings for this activity's layout
     @Bind(R.id.addroute_bottomsheetlayout)
     BottomSheetLayout root;
     @Bind(R.id.addroute_agency_list)
@@ -59,6 +60,8 @@ public class SelectRoutesActivity extends AppCompatActivity {
     Toolbar toolbar;
     LocationManager locationManager;
 
+    // the two realms we will use. the local realm keeps track of changes that are made
+    // when the user leaves the activity, these changes are saved back to the global realm
     Realm localRealm, globalRealm;
 
     public void onAgencyItemClicked(View v) {
@@ -68,11 +71,14 @@ public class SelectRoutesActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // restore instance state, if any, and initialize this activity
         super.onCreate(savedInstanceState);
 
+        // set the root layout and bind views
         setContentView(R.layout.activity_add_routes);
         ButterKnife.bind(this);
 
+        // set the click action of each item in the list of agencies
         agencyList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -80,6 +86,7 @@ public class SelectRoutesActivity extends AppCompatActivity {
             }
         });
 
+        // bind our toolbar instance to serve as the action bar for this activity, and set some properties
         setSupportActionBar(toolbar);
         getSupportActionBar().setHomeButtonEnabled(true);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -87,14 +94,15 @@ public class SelectRoutesActivity extends AppCompatActivity {
         // build location manager
         locationManager = LocationManager.getInstance(this.getApplicationContext());
 
-        // initialize in-memory realm
+        // initialize the local realm
         RealmConfiguration.Builder builder = new RealmConfiguration.Builder(this);
         RealmConfiguration config = builder.name("selectroutes.realm").inMemory().build();
         localRealm = Realm.getInstance(config);
 
         // get a reference to global realm
         globalRealm = Realm.getDefaultInstance();
-        // copy routes from global realm to local realm
+
+        // make a copy of all routes objects to the local realm
         List<Route> fromRealm = globalRealm.copyFromRealm(globalRealm.allObjects(Route.class));
         localRealm.beginTransaction();
         localRealm.copyToRealmOrUpdate(fromRealm);
@@ -103,8 +111,10 @@ public class SelectRoutesActivity extends AppCompatActivity {
 
     @Override
     protected void onStart() {
+        // make a task to fetch agencies from transloc and populate the list
         PopulateListTask populateListTask = new PopulateListTask();
 
+        // if we're connected, execute
         if (Util.isConnected(this))
             populateListTask.execute();
         else
@@ -360,7 +370,7 @@ public class SelectRoutesActivity extends AppCompatActivity {
                 //realm.close();
             }
 
-            ArrayList<Agency> result = new ArrayList<>(stored.length + local.length + all.length);
+            ArrayList<Agency> result = new ArrayList<>(all.length);
 
             for (Agency agency : stored)
                 if (!result.contains(agency))
@@ -400,5 +410,4 @@ public class SelectRoutesActivity extends AppCompatActivity {
             showBodyError(messageStringResourceId[0]);
         }
     }
-
 }

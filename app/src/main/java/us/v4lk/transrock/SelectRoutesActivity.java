@@ -113,7 +113,11 @@ public class SelectRoutesActivity extends AppCompatActivity {
 
         // get a reference to global realm
         globalRealm = Realm.getDefaultInstance();
-
+        // copy routes from global realm to local realm
+        List<Route> fromRealm = globalRealm.copyFromRealm(globalRealm.allObjects(Route.class));
+        localRealm.beginTransaction();
+        localRealm.copyToRealmOrUpdate(fromRealm);
+        localRealm.commitTransaction();
     }
 
     @Override
@@ -255,7 +259,6 @@ public class SelectRoutesActivity extends AppCompatActivity {
 
                 // copy fetched routes to local realm if they do not already exist
                 localRealm.beginTransaction();
-
 
                 for (int i = 0; i < routes.length; i++) {
                     boolean alreadyInRealm = localRealm

@@ -22,7 +22,7 @@ public class RouteSwitchAdapter extends ArrayAdapter<Route> {
     /**
      * @param context application context
      * @param resource resource id for layout of desired list item
-     * @param routes array of routes to show in the list -- these should not be members of a realm
+     * @param routes array of routes to show in the list, members of the realm passed
      */
     public RouteSwitchAdapter(Context context, int resource, Route[] routes) {
         super(context, resource);

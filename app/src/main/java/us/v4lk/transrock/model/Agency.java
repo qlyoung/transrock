@@ -15,6 +15,9 @@ public class Agency extends RealmObject {
     @PrimaryKey
     private String agencyId;
 
+
+    private boolean active;
+
     private String
             longName,
             language,
@@ -106,6 +109,15 @@ public class Agency extends RealmObject {
         this.longitude = longitude;
     }
 
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+
     // JSON setter
     public static void set(Agency model, JSONObject agency) throws JSONException {
         // unpack returned object
@@ -121,5 +133,6 @@ public class Agency extends RealmObject {
         JSONObject position = agency.getJSONObject("position");
         model.setLatitude(position.getDouble("lat"));
         model.setLongitude(position.getDouble("lng"));
+        model.setActive(false);
     }
 }

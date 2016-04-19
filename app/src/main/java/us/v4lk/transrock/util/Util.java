@@ -49,7 +49,7 @@ public class Util {
      */
     public static boolean isOnline(int timeout) throws IllegalArgumentException {
         try {
-            return InetAddress.getByName("http://www.google.com/").isReachable(timeout);
+            return InetAddress.getByName("8.8.8.8").isReachable(timeout);
         } catch (UnknownHostException e) {
             return false;
         } catch (IOException e) {

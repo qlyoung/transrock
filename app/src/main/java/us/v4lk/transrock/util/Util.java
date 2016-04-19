@@ -17,22 +17,16 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Miscellaneous static helper functions & global vars
  */
 public class Util {
 
-    /* global constants */
     /**
      * Global network timeout.
      */
     public static final int GLOBAL_NETWORK_TIMEOUT = 3000;
-
-    /* global utility functions */
 
     /**
      * Checks to see if we are connected to some form of network.
@@ -55,47 +49,12 @@ public class Util {
      */
     public static boolean isOnline(int timeout) throws IllegalArgumentException {
         try {
-            return InetAddress.getByName("http://www.google.com/").isReachable(timeout);
+            return InetAddress.getByName("8.8.8.8").isReachable(timeout);
         } catch (UnknownHostException e) {
             return false;
         } catch (IOException e) {
             return false;
         }
-    }
-
-    /**
-     * Returns a list of the agencies that the specified routes belong to.
-     *
-     * @return list of unique integer agency ids
-     */
-    public static int[] getAgencyIds(TransrockRoute[] routes) {
-        // get unique ids
-        Set<Integer> ids = new HashSet<>();
-        for (TransrockRoute r : routes)
-            ids.add(r.agency_id);
-
-        // convert to int[]
-        int[] result = new int[ids.size()];
-        int i = 0;
-        for (Integer id : ids)
-            result[i++] = id;
-
-        return result;
-    }
-
-    public static int[] getAgencyIds(Collection<TransrockRoute> routes) {
-        // get unique ids
-        Set<Integer> ids = new HashSet<>();
-        for (TransrockRoute r : routes)
-            ids.add(r.agency_id);
-
-        // convert to int[]
-        int[] result = new int[ids.size()];
-        int i = 0;
-        for (Integer id : ids)
-            result[i++] = id;
-
-        return result;
     }
 
     /**
@@ -193,6 +152,7 @@ public class Util {
         return segmentPolyline;
     }
 
+    /** Converts Google Location object to GeoPoint */
     public static GeoPoint toGeoPoint(Location l) {
         return new GeoPoint(l.getLatitude(), l.getLongitude());
     }

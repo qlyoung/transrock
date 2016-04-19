@@ -1,4 +1,4 @@
-package us.v4lk.transrock.transloc.objects;
+package us.v4lk.transrock.model;
 
 import org.json.JSONArray;
 import org.json.JSONException;

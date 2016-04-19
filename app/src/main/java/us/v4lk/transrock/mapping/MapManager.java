@@ -33,11 +33,14 @@ import java.util.List;
 
 import butterknife.BindDrawable;
 import butterknife.ButterKnife;
+import io.realm.Realm;
+import io.realm.RealmResults;
 import us.v4lk.transrock.R;
+import us.v4lk.transrock.model.Route;
+import us.v4lk.transrock.model.Segment;
+import us.v4lk.transrock.model.Stop;
+import us.v4lk.transrock.model.Vehicle;
 import us.v4lk.transrock.transloc.TransLocAPI;
-import us.v4lk.transrock.transloc.objects.Stop;
-import us.v4lk.transrock.transloc.objects.Vehicle;
-import us.v4lk.transrock.util.TransrockRoute;
 import us.v4lk.transrock.util.Util;
 
 /**
@@ -46,7 +49,6 @@ import us.v4lk.transrock.util.Util;
 public class MapManager {
 
     Map map;
-    ArrayList<TransrockRoute> routes;
     Context context;
 
     /** whether to center the map on the user's location each time we get a location update */
@@ -57,7 +59,6 @@ public class MapManager {
 
     public MapManager(MapView map, Context context, View root) {
         this.context = context;
-        this.routes = new ArrayList<>();
 
         ButterKnife.bind(this, root);
 
@@ -74,22 +75,17 @@ public class MapManager {
     }
 
     /**
-     * Takes a list of TransrockRoutes and sets up the map to display
-     * all relevant information related to those routes.
-     * Executes asynchronously.
-     * @param routes
+     *
      */
-    public void setRoutes(Collection<TransrockRoute> routes) {
-        SetRoutesTask srt = new SetRoutesTask();
-        srt.execute(routes);
+    public void buildAndDraw() {
+        new BuildOverlaysTask().execute();
     }
 
     /**
      * Updates position markers for vehicles on all routes.
      */
     public void updateVehicles() {
-        UpdateVehiclesTask uvt = new UpdateVehiclesTask();
-        uvt.execute(routes);
+        new UpdateVehiclesTask().execute();
     }
     /**
      * Handles a change in user location
@@ -111,47 +107,47 @@ public class MapManager {
         map.centerAndZoomOnPosition(Util.toGeoPoint(loc), false);
     }
 
+    /**
+     * Sets whether the map will stay centered on the last known location.
+     * @param followMe whether the map should stay centered on the user's location
+     */
     public void setFollowMe(boolean followMe) {
         this.followMe = followMe;
     }
 
-    class SetRoutesTask extends AsyncTask<Collection<TransrockRoute>, Void, Void> {
 
-        private HashMap<String, Collection<Polyline>> routelines;
-        private ItemizedIconOverlay stopoverlay;
+    class BuildOverlaysTask extends AsyncTask<Void, Void, Void> {
 
-        @Override
-        protected Void doInBackground(Collection<TransrockRoute>... params) {
-            routes.clear();
-            routes.addAll(params[0]);
+        private RealmResults<Route> activatedRoutes;
+
+        public void buildSegments() {
+            HashMap<String, Collection<Polyline>> routelines = new HashMap<>();
 
             // calculate how many times each segment is reused across all routes
-            LinkedHashMap<String, Integer> totalCount = new LinkedHashMap<>(routes.size());
-            for (TransrockRoute route : routes)
-                for (String segment : route.segments) {
+            HashMap<Segment, Integer> totalCount = new LinkedHashMap<>(activatedRoutes.size());
+            for (Route route : activatedRoutes)
+                // for each segment in this route, increment that segment's global usage count
+                for (Segment segment : route.getSegments()) {
                     int prevCount = totalCount.get(segment) == null ? 0 : totalCount.get(segment);
                     totalCount.put(segment, prevCount + 1);
                 }
 
-            /* ------------ SEGMENTS --------------- */
-
             // build overlays
-            LinkedHashMap<String, Integer> visitedCount = new LinkedHashMap<>(totalCount.size());
+            LinkedHashMap<Segment, Integer> visitedCount = new LinkedHashMap<>(totalCount.size());
             int basePolylineSize = 10;
             float dashScale = 100;
-            routelines = new HashMap<>();
 
-            for (TransrockRoute route : routes) {
+            for (Route route : activatedRoutes) {
                 ArrayList<Polyline> segments = new ArrayList<>();
 
-                for (String segment : route.segments) {
+                for (Segment segment : route.getSegments()) {
                     int timesVisited = visitedCount.get(segment) == null ? 0 : visitedCount.get(segment);
 
                     // get the polyline
-                    Polyline p = Util.encodedPolylineToOverlay(segment, context);
+                    Polyline p = Util.encodedPolylineToOverlay(segment.getSegment(), context);
 
                     p.setWidth(basePolylineSize);
-                    p.setColor(Color.parseColor("#" + route.color));
+                    p.setColor(Color.parseColor("#" + route.getColor()));
 
                     // calculate the dash effect
                     float split = 1f / totalCount.get(segment);             // ratio of this line : all other lines
@@ -169,19 +165,23 @@ public class MapManager {
                     segments.add(p);
                 }
 
-                routelines.put(route.route_id, segments);
+                routelines.put(route.getRouteId(), segments);
             }
 
+            ArrayList<Polyline> allPolylines = new ArrayList<>();
+            for (Collection<Polyline> routeline : routelines.values())
+                allPolylines.addAll(routeline);
 
-            /* ------------ STOPS ----------------- */
-
-            stopoverlay = new ItemizedIconOverlay<OverlayItem>(context, new ArrayList<OverlayItem>(), null);
+            map.setRoutesOverlay(allPolylines);
+        }
+        public void buildStops() {
+            ItemizedIconOverlay stopoverlay = new ItemizedIconOverlay<>(context, new ArrayList<OverlayItem>(), null);
 
             // map each stop to the routes containing it
-            HashMap<Stop, Collection<TransrockRoute>> stopsToRoutes = new LinkedHashMap<>();
-            for (TransrockRoute route : routes) {
-                for (Stop stop : route.stops) {
-                    Collection<TransrockRoute> existing = stopsToRoutes.get(stop);
+            HashMap<Stop, Collection<Route>> stopsToRoutes = new LinkedHashMap<>();
+            for (Route route : activatedRoutes) {
+                for (Stop stop : route.getStops()) {
+                    Collection<Route> existing = stopsToRoutes.get(stop);
                     if (existing == null)
                         existing = new HashSet<>();
                     existing.add(route);
@@ -192,7 +192,7 @@ public class MapManager {
             // calculate & place marker items
             for (Stop stop : stopsToRoutes.keySet()) {
                 // get the routes for this stop
-                Collection<TransrockRoute> stopRoutes = stopsToRoutes.get(stop);
+                Collection<Route> stopRoutes = stopsToRoutes.get(stop);
                 int numRoutes = stopRoutes.size();
 
                 // get base marker drawable
@@ -202,30 +202,84 @@ public class MapManager {
                 Drawable[] arcs = new Drawable[numRoutes];
                 float sweep = 360f / numRoutes;
                 int i = 0;
-                for (TransrockRoute route : stopRoutes) {
+                for (Route route : stopRoutes) {
                     ShapeDrawable arc = new ShapeDrawable(new ArcShape(sweep * i, sweep));
                     arc.setIntrinsicWidth(30);
                     arc.setIntrinsicHeight(30);
-                    arc.getPaint().setColor(Color.parseColor("#" + route.color));
+                    arc.getPaint().setColor(Color.parseColor("#" + route.getColor()));
                     arcs[i++] = arc;
                 }
                 // set the result as the disk drawable
                 stopmarker.setDrawableByLayerId(R.id.disk_layer_drawable, new LayerDrawable(arcs));
 
                 // make new OverlayItem for this stop
-                GeoPoint stopMarkerLocation = new GeoPoint(stop.location.get(0), stop.location.get(1));
-                OverlayItem item = new OverlayItem(stop.name, stop.description, stopMarkerLocation);
+                GeoPoint stopMarkerLocation = new GeoPoint(stop.getLatitude(), stop.getLongitude());
+                OverlayItem item = new OverlayItem(stop.getName(), stop.getDescription(), stopMarkerLocation);
                 item.setMarker(stopmarker);
 
                 // add it to the overlay
                 stopoverlay.addItem(item);
             }
 
-            ArrayList<Polyline> allPolylines = new ArrayList<>();
-            for (Collection<Polyline> routeline : routelines.values())
-                allPolylines.addAll(routeline);
-            map.setRoutesOverlay(allPolylines);
             map.setStopsOverlay(stopoverlay);
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            map.clearVehiclesOverlay();
+            map.clearStopsOverlay();
+            map.invalidate();
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+
+            Realm realm = null;
+
+            try {
+                // get a view into the realm
+                realm = Realm.getInstance(context);
+                activatedRoutes = realm.where(Route.class).equalTo("activated", true).findAll();
+
+                // pull segments and stops for routes that don't have them yet (recently added)
+                realm.beginTransaction();
+                for (int i = 0; i < activatedRoutes.size(); i++) {
+                    Route route = activatedRoutes.get(i);
+
+                    // if route has no segments, fetch them all and add as relation to route
+                    if (route.getSegments().size() == 0) {
+                        Segment[] segments = TransLocAPI.getSegments(route);
+                        for (Segment sm : segments)
+                            route.getSegments().add(sm);
+                    }
+
+                    // if route has no stops, fetch them all and add as relation to route
+                    if (route.getStops().size() == 0) {
+                        Stop[] stops = TransLocAPI.getStops(route);
+                        for (Stop stop : stops)
+                            route.getStops().add(stop);
+                    }
+                }
+                realm.commitTransaction();
+
+                // build segments and stop overlays
+                buildSegments();
+                buildStops();
+
+            } catch (SocketTimeoutException e) {
+                // TODO: error here
+            } catch (JSONException e) {
+                // TODO: error here
+            } catch (NetworkErrorException e) {
+                // TODO: error here
+            } finally {
+                if (realm != null) {
+                    realm.refresh();
+                    realm.close();
+                }
+
+            }
 
             return null;
         }
@@ -233,20 +287,30 @@ public class MapManager {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            new UpdateVehiclesTask().execute(routes);
+            map.invalidate();
+            new UpdateVehiclesTask().execute();
         }
     }
 
-    class UpdateVehiclesTask extends AsyncTask<Collection<TransrockRoute>, Void, ItemizedIconOverlay> {
+    class UpdateVehiclesTask extends AsyncTask<Void, Void, ItemizedIconOverlay> {
 
         @Override
-        protected ItemizedIconOverlay doInBackground(Collection<TransrockRoute>... params) {
-            // fetch vehicles
-            HashMap<TransrockRoute, List<Vehicle>> vehicles = new HashMap<>();
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
 
+        @Override
+        protected ItemizedIconOverlay doInBackground(Void... params) {
+
+            Realm realm;
+
+            HashMap<Route, List<Vehicle>> vehicles = new HashMap<>();
             try {
-                for (TransrockRoute route : routes){
-                    List<Vehicle> v = TransLocAPI.getVehicles(route.agency_id, route.route_id);
+                realm = Realm.getInstance(context);
+                RealmResults<Route> activated = realm.where(Route.class).equalTo("activated", true).findAll();
+
+                for (Route route : activated){
+                    List<Vehicle> v = TransLocAPI.getVehicles(route.getAgencyId(), route.getRouteId());
                     vehicles.put(route, v);
                 }
             }
@@ -263,10 +327,10 @@ public class MapManager {
             ItemizedIconOverlay<OverlayItem> vehicleOverlay = new ItemizedIconOverlay<>(context, new ArrayList<OverlayItem>(), null);
 
             // build overlay
-            for (TransrockRoute route : vehicles.keySet()) {
+            for (Route route : vehicles.keySet()) {
                 // tint marker to match route color
                 Drawable vehicleMarker = DrawableCompat.wrap(context.getResources().getDrawable(R.drawable.ic_directions_bus_white_24dp));
-                DrawableCompat.setTint(vehicleMarker.mutate(), Color.parseColor("#" + route.color));
+                DrawableCompat.setTint(vehicleMarker.mutate(), Color.parseColor("#" + route.getColor()));
 
                 for (Vehicle vehicle : vehicles.get(route)) {
                     GeoPoint loc = new GeoPoint(vehicle.location.firstElement(), vehicle.location.lastElement());

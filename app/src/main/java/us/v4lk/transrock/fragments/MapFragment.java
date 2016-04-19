@@ -19,7 +19,6 @@ import org.osmdroid.views.MapView;
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.mapping.LocationManager;
 import us.v4lk.transrock.mapping.MapManager;
-import us.v4lk.transrock.util.RouteManager;
 import us.v4lk.transrock.util.SmartViewPager;
 
 /**
@@ -29,20 +28,13 @@ import us.v4lk.transrock.util.SmartViewPager;
  */
 public class MapFragment extends Fragment implements LocationListener, ViewPager.OnPageChangeListener {
 
-    /**
-     * location manager
-     */
     LocationManager locationManager;
-    /**
-     * map manager
-     */
     MapManager mapManager;
-    /**
-     * root view
-     */
     View root;
-    /** Handles messages & tasks on this thread's queue. */
+
+    /** Used to post tasks to be executed in the future.. */
     Handler handler;
+
     /** Time between vehicles updates, in milliseconds */
     int UPDATE_VEHICLES_INTERVAL = 3000;
 
@@ -69,10 +61,15 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
         mapManager = new MapManager(map, getActivity(), root);
 
         // get a reference to the location manager
-        locationManager = LocationManager.getInstance(this.getActivity().getApplicationContext());
+        locationManager = LocationManager.getInstance(getActivity().getApplicationContext());
 
         // get location updates
         locationManager.addLocationListener(this);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
     }
 
     @Override
@@ -86,8 +83,8 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
             mapManager.updateLocation(loc);
         }
 
-        // set the routes the map should draw
-        mapManager.setRoutes(RouteManager.getActivatedRoutes());
+        // build and draw routes
+        mapManager.buildAndDraw();
 
         // set a recurring task on the handler to update vehicles
         Runnable updateVehiclesRunnable = new Runnable() {
@@ -98,11 +95,6 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
             }
         };
         handler.post(updateVehiclesRunnable);
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
     }
 
     @Override
@@ -118,9 +110,6 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
                 Location loc = locationManager.getLocation();
                 if (loc != null) mapManager.updateLocation(loc);
                 break;
-            case R.id.map_menu_testing_button:
-                mapManager.updateVehicles();
-                break;
         }
 
         return true;
@@ -132,7 +121,7 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
 
         switch (position) {
             case SmartViewPager.MAP_PAGE:
-                mapManager.setRoutes(RouteManager.getActivatedRoutes());
+                mapManager.buildAndDraw();
             default:
                 break;
         }
@@ -153,5 +142,8 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
         mapManager.updateLocation(location);
     }
 
-
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+    }
 }

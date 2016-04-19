@@ -24,11 +24,13 @@ import us.v4lk.transrock.util.SmartViewPager;
  */
 public class MainActivity extends AppCompatActivity {
 
+    // view bindings for toolbar & fragment pager
     @Bind(R.id.main_toolbar)
     Toolbar toolbar;
     @Bind(R.id.fragment_pager)
     SmartViewPager pager;
 
+    // fragment binding
     @OnPageChange(R.id.fragment_pager)
     void onPageSelected(int position) {
         switch (position) {
@@ -43,26 +45,24 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * fragments this activity hosts
-     */
+    // fragments this activity hosts
     MapFragment mapFragment;
     RoutesFragment routeFragment;
 
-    /**
-     * the nav drawer
-     */
+    // the nav drawer, which is initialized programatically
     Drawer drawer;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // restore saved map & route fragments, if they exist
         if (savedInstanceState == null) {
             mapFragment = new MapFragment();
             routeFragment = new RoutesFragment();
         }
 
+        // set the layout and bind views to the members defined up top
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         setSupportActionBar(toolbar);
@@ -86,17 +86,23 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         pager.setAdapter(adapter);
-        pager.addOnPageChangeListener(routeFragment);
         pager.addOnPageChangeListener(mapFragment);
 
         // build drawer
         drawer = buildDrawer(R.id.drawer_container);
-        // set initial page and disable swiping for initial use
+
+        // set pager's initial page to the map fragment and disable swiping
         pager.setCurrentItem(SmartViewPager.MAP_PAGE);
         pager.setAllowSwiping(false);
 
     }
 
+    /**
+     * Builds the navigation drawer programatically
+     * @param rootView the resource id of the activity's root view,
+     *                 which must be
+     * @return
+     */
     private Drawer buildDrawer(int rootView) {
         // make drawer builder
         DrawerBuilder builder = new DrawerBuilder()
@@ -107,23 +113,26 @@ public class MainActivity extends AppCompatActivity {
                 .withActionBarDrawerToggleAnimated(true)
                 .withTranslucentStatusBar(false);
 
-        // make drawer items
+        // make drawer items that select the map or route fragment
         SecondaryDrawerItem mapItem = new SecondaryDrawerItem();
         mapItem.withIcon(R.drawable.ic_map_white_24dp);
         mapItem.withName(R.string.main_menu_transit_map);
+
         SecondaryDrawerItem routesItem = new SecondaryDrawerItem();
         routesItem.withIcon(R.drawable.ic_directions_bus_white_24dp);
         routesItem.withName(R.string.main_menu_routes);
 
-        // make item click listener
+        // make the click listener for the drawer that handles when menu items are clicked
         Drawer.OnDrawerItemClickListener listener = new Drawer.OnDrawerItemClickListener() {
             @Override
             public boolean onItemClick(AdapterView<?> adapterView, View view, int i, long l, IDrawerItem iDrawerItem) {
                 switch (i) {
                     case 0:
+                        // the action of the mapItem above
                         pager.setCurrentItem(SmartViewPager.MAP_PAGE);
                         break;
                     case 1:
+                        // the action of the routesItem above
                         pager.setCurrentItem(SmartViewPager.ROUTE_PAGE);
                         break;
                 }
@@ -135,6 +144,7 @@ public class MainActivity extends AppCompatActivity {
         builder.addDrawerItems(mapItem, routesItem);
         builder.withOnDrawerItemClickListener(listener);
 
+        // build menu and return
         return builder.build();
     }
 

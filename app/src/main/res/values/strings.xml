@@ -25,6 +25,7 @@
     <string name="error_network_timeout">Network timed out.</string>
     <string name="error_network_unknown">Network error.</string>
     <string name="error_bad_parse">Received unreadable response from server.</string>
+    <string name="error_no_routes">No routes found.</string>
 
     <!-- action menu strings -->
     <string name="map_menu_center_location_title">Center map on my location</string>

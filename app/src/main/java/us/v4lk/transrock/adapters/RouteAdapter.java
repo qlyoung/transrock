@@ -13,51 +13,58 @@ import android.widget.TextView;
 
 import com.pkmmte.view.CircularImageView;
 
+import io.realm.Realm;
 import us.v4lk.transrock.R;
-import us.v4lk.transrock.util.TransrockRoute;
+import us.v4lk.transrock.model.Route;
 import us.v4lk.transrock.util.Util;
 
 /**
  * Adapts TransrockRoute --> layout/route_list_item.
  */
-public class TransrockRouteAdapter extends ArrayAdapter<TransrockRoute> {
+public class RouteAdapter extends ArrayAdapter<Route> {
+
+    /** Interfaces between data and views for list of routes in RoutesFragment */
+    Realm realm;
 
     /**
      * @param context application context.
      * @param resource resource id for list item layout
+     * @param realm the realm that this adapter's dataset is stored in
      */
-    public TransrockRouteAdapter(Context context, int resource) {
+    public RouteAdapter(Context context, int resource, Realm realm) {
         super(context, resource);
+        this.realm = realm;
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
+        final Route item = getItem(position);
+
         // capture layout inflater
         LayoutInflater inflater = LayoutInflater.from(getContext());
-        final TransrockRoute transrockRoute = getItem(position);
 
         // inflate new view if necessary
         if (convertView == null)
             convertView = inflater.inflate(R.layout.route_list_item, null);
         else {
-            // clear listener from switch so we can use setChecked to set initial check state
-            // without initiating random shit
+            // important to null out old listener before changing checked value, otherwise the old listener
+            // will get called and the wrong record will be updated!
             Switch routeActivationSwitch = (Switch) convertView.findViewById(R.id.route_list_item_switch);
             routeActivationSwitch.setOnCheckedChangeListener(null);
         }
 
         // badge
         CircularImageView badge = (CircularImageView) convertView.findViewById(R.id.route_list_item_badge);
-        Bitmap color = Util.colorToBitmap(Color.parseColor("#" + transrockRoute.color), 50, 50);
+        Bitmap color = Util.colorToBitmap(Color.parseColor("#" + item.getColor()), 50, 50);
         badge.setImageBitmap(color);
 
         // long name
         TextView longName = (TextView) convertView.findViewById(R.id.route_list_item_longname);
-        longName.setText(transrockRoute.long_name);
+        longName.setText(item.getLongName());
 
         // short name if present (hidden otherwise)
         TextView shortName = (TextView) convertView.findViewById(R.id.route_list_item_shortname);
-        String sn = transrockRoute.short_name;
+        String sn = item.getShortName();
         if (!sn.isEmpty())
             shortName.setText(sn);
         else
@@ -65,12 +72,13 @@ public class TransrockRouteAdapter extends ArrayAdapter<TransrockRoute> {
 
         // activation switch
         final Switch routeActivationSwitch = (Switch) convertView.findViewById(R.id.route_list_item_switch);
-        routeActivationSwitch.setChecked(transrockRoute.isActivated());
+        routeActivationSwitch.setChecked(item.isActivated());
         routeActivationSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                // change activation state
-                transrockRoute.setActivated(isChecked);
+                realm.beginTransaction();
+                item.setActivated(isChecked);
+                realm.commitTransaction();
             }
         });
 
@@ -84,17 +92,6 @@ public class TransrockRouteAdapter extends ArrayAdapter<TransrockRoute> {
         });
 
         return convertView;
-    }
-
-    /**
-     * @return all data backing this adapter, ordered by position
-     */
-    public TransrockRoute[] getAll() {
-        TransrockRoute[] all = new TransrockRoute[this.getCount()];
-        for (int i = 0; i < this.getCount(); i++)
-            all[i] = this.getItem(i);
-
-        return all;
     }
 
 }

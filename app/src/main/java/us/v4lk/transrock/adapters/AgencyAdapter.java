@@ -10,10 +10,12 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
+import io.realm.Realm;
+import io.realm.RealmResults;
 import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
 import us.v4lk.transrock.R;
-import us.v4lk.transrock.transloc.objects.Agency;
-import us.v4lk.transrock.util.RouteManager;
+import us.v4lk.transrock.model.Agency;
+import us.v4lk.transrock.model.Route;
 import us.v4lk.transrock.util.Util;
 
 /**
@@ -62,10 +64,11 @@ public class AgencyAdapter extends ArrayAdapter<Agency> implements StickyListHea
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        // capture inflater
-        LayoutInflater inflater = LayoutInflater.from(getContext());
+        Agency item = getItem(position);
+        Realm realm = Realm.getDefaultInstance();
 
         // inflate new view if necessary
+        LayoutInflater inflater = LayoutInflater.from(getContext());
         if (convertView == null)
             convertView = inflater.inflate(R.layout.agency_list_item, null);
 
@@ -76,16 +79,16 @@ public class AgencyAdapter extends ArrayAdapter<Agency> implements StickyListHea
 
         // set badge and text views
         int color = getContext().getResources().getColor(R.color.color_agency_badge);
-        //TODO: this operation is O(n * m) where n = num saved routes and m = num agencies
-        //TODO: for e.g. 10 saved agencies this comes out to around 500 comparisons and 50 arraylist creations
-        //TODO: need to do this ONLY for activated routes; all others should be 0
-        String numSavedRoutes = String.valueOf(RouteManager.getRoutesByAgency(getItem(position).agency_id).length);
+        long numRoutesForAgency = realm.where(Route.class).equalTo("agencyId", item.getAgencyId()).count();
+        String numSavedRoutes = String.valueOf(numRoutesForAgency);
         badge.setImageBitmap(Util.colorToBitmap(color, 50, 50));
         badgeText.setText(numSavedRoutes);
-        text.setText(getItem(position).long_name);
+        text.setText(getItem(position).getLongName());
 
         // tag list item with the object it is sourced from
         convertView.setTag(getItem(position));
+
+        realm.close();
 
         return convertView;
     }

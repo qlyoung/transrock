@@ -12,8 +12,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.flipboard.bottomsheet.BottomSheetLayout;
@@ -55,30 +57,42 @@ public class SelectRoutesActivity extends AppCompatActivity {
     // view bindings for this activity's layout
     @Bind(R.id.addroute_bottomsheetlayout)
     BottomSheetLayout root;
-    @Bind(R.id.addroute_agency_list)
-    StickyListHeadersListView agencyList;
-    @Bind(R.id.addroute_body_progressbar)
-    ProgressBar bodyProgressBar;
     @Bind(R.id.addroute_toolbar_progressbar)
     ProgressBar toolbarProgressBar;
     @Bind(R.id.addroute_toolbar)
     Toolbar toolbar;
+
+    @Bind(R.id.addroute_agency_pane)
+    RelativeLayout agencyPane;
+    @Bind(R.id.addroute_agency_list)
+    StickyListHeadersListView agencyList;
+    @Bind(R.id.addroute_agency_progressbar)
+    ProgressBar agencyProgressBar;
+
+    @Bind(R.id.addroute_error_pane)
+    RelativeLayout errorPane;
+    @Bind(R.id.addroute_error_textview)
+    TextView errorTextView;
+    @Bind(R.id.addroute_error_button)
+    Button errorButton;
+
     LocationManager locationManager;
 
     // the two realms we will use. the local realm keeps track of changes that are made
     // when the user leaves the activity, these changes are saved back to the global realm
     Realm localRealm, globalRealm;
+    // the configuration for the local realm, needed to instantiate the realm in different threads
     RealmConfiguration localconfig;
 
     /**
      * When an item in the agency list is clicked, show a bottom sheet with its
      * routes so the user can select which ones they want to use.
-     * @param v the view clicked
+     * @param v the view that was clicked
      */
     public void onAgencyItemClicked(View v) {
         // list items representing agencies should have the corresponding Agency as their tag
         Agency agency = (Agency) v.getTag();
-        showRouteBottomSheet(agency.getAgencyId());
+        new ShowRouteListTask().execute(agency.getAgencyId());
     }
 
     @Override
@@ -87,7 +101,7 @@ public class SelectRoutesActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         // set the root layout and bind views
-        setContentView(R.layout.activity_add_routes);
+        setContentView(R.layout.activity_select_routes);
         ButterKnife.bind(this);
 
         // set the click action of each item in the list of agencies
@@ -100,7 +114,6 @@ public class SelectRoutesActivity extends AppCompatActivity {
 
         // bind our toolbar view to serve as the action bar for this activity, and set some properties
         setSupportActionBar(toolbar);
-        getSupportActionBar().setHomeButtonEnabled(true);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         // build location manager
@@ -124,7 +137,7 @@ public class SelectRoutesActivity extends AppCompatActivity {
     protected void onStart() {
         // make a task to fetch agencies from TransLoc and populate the list
         PopulateListTask populateListTask = new PopulateListTask();
-        populateListTask.execute(agencyList);
+        populateListTask.execute();
 
         super.onStart();
     }
@@ -134,10 +147,14 @@ public class SelectRoutesActivity extends AppCompatActivity {
 
         // get all saved routes
         RealmResults<Route> savedRoutes = localRealm.where(Route.class).equalTo("saved", true).findAll();
+
         // get the agencies they belong to
         Set<Agency> savedAgencies = new HashSet<>();
-        for (Route route : savedRoutes)
-            savedAgencies.add(localRealm.where(Agency.class).equalTo("agencyId", route.getAgencyId()).findFirst());
+        for (Route route : savedRoutes) {
+            Agency agency = localRealm.where(Agency.class).equalTo("agencyId", route.getAgencyId()).findFirst();
+            if (agency != null)
+                savedAgencies.add(agency);
+        }
 
         // activate those agencies in the local realm
         localRealm.beginTransaction();
@@ -196,105 +213,7 @@ public class SelectRoutesActivity extends AppCompatActivity {
         super.onBackPressed();
     }
 
-    /**
-     * Shows a bottom sheet with the routes for the specified agency.
-     *
-     * This is an asynchronous method. It will create an AsyncTask that fetches route records for
-     * the specified agency from the TransLoc API. After the records are fetched, it will use the
-     * synchronous overload to display them.
-     *
-     * While fetching is in progress, the activity's indeterminate progress bar is shown.
-     *
-     * If fetching the routes fails, a popup will be displayed with a message describing the error
-     * and the progress bar will be hidden.
-     *
-     * @param agencyId the agency whose routes should be displayed in the bottom sheet
-     */
-    private void showRouteBottomSheet(String agencyId) {
-        // if sheet is already showing, do nothing
-        if (root.isSheetShowing()) return;
 
-        // this AsyncTask will fetch the routes and call the other overload when it finishes.
-        AsyncTask<String, Integer, Route[]> fetchRoutes = new AsyncTask<String, Integer, Route[]>() {
-
-            @Override
-            protected void onPreExecute() {
-                // before doing anything, check if we're connected
-                if (!Util.isConnected(SelectRoutesActivity.this)) {
-                    showPopupError(R.string.error_network_disconnected);
-                    this.cancel(true);
-                } else
-                    toolbarProgressBar.setVisibility(View.VISIBLE);
-            }
-
-            @Override
-            protected Route[] doInBackground(String... params) {
-                String agencyId = params[0];
-                Route[] routes = null;
-
-                try {
-                    // try to fetch all routes from the TransLoc API
-                    routes = TransLocAPI.getRoutes(agencyId);
-                } catch (SocketTimeoutException e) {
-                    publishProgress(R.string.error_network_timeout);
-                    this.cancel(true);
-                } catch (NetworkErrorException e) {
-                    publishProgress(R.string.error_network_unknown);
-                    this.cancel(true);
-                } catch (JSONException e) {
-                    publishProgress(R.string.error_bad_parse);
-                    this.cancel(true);
-                }
-
-                return routes;
-            }
-
-            @Override
-            protected void onPostExecute(Route[] routes) {
-                // if no routes were returned, say so
-                if (routes.length == 0) {
-                    showPopupError(R.string.error_no_routes);
-                    return;
-                }
-
-                // copy fetched routes to local realm if they do not already exist
-                localRealm.beginTransaction();
-
-                for (int i = 0; i < routes.length; i++) {
-                    boolean alreadyInRealm = localRealm
-                                                .where(Route.class)
-                                                .equalTo("routeId", routes[i].getRouteId())
-                                                .count() > 0;
-
-                    if (!alreadyInRealm)
-                        routes[i] = localRealm.copyToRealm(routes[i]);
-                }
-                localRealm.commitTransaction();
-
-                // fetch all matching routes from local realm & show sheet
-                Route[] result = localRealm
-                                    .where(Route.class)
-                                    .equalTo("agencyId", routes[0].getAgencyId())
-                                    .findAll()
-                                    .toArray(new Route[0]);
-
-                showRouteBottomSheet(result);
-                toolbarProgressBar.setVisibility(View.INVISIBLE);
-            }
-
-            @Override
-            protected void onProgressUpdate(Integer... values) {
-                showPopupError(values[0]);
-            }
-
-            @Override
-            protected void onCancelled(Route[] routes) {
-                // hide the toolbar progress bar
-                toolbarProgressBar.setVisibility(View.INVISIBLE);
-            }
-        };
-        fetchRoutes.execute(agencyId);
-    }
 
     /**
      * Programatically creates & displays a bottom sheet with a list of toggleable routes.
@@ -308,36 +227,7 @@ public class SelectRoutesActivity extends AppCompatActivity {
      * @param routes The routes to show.
      */
     private void showRouteBottomSheet(Route[] routes) {
-        // if sheet is already showing, do nothing
-        if (root.isSheetShowing()) return;
 
-        // inflate bottom sheet content view
-        View bottomSheet = getLayoutInflater().inflate(R.layout.bottomsheet_list, root, false);
-
-        // capture & set the title
-        TextView v = (TextView) bottomSheet.findViewById(R.id.bottomsheet_title);
-        v.setText(R.string.routes);
-
-        // bind given routes to the ListView's adapter and bind the adapter to the view.
-        ListView routeList = (ListView) bottomSheet.findViewById(R.id.bottomsheet_list);
-        RouteSwitchAdapter adapter = new RouteSwitchAdapter(SelectRoutesActivity.this,
-                                                            R.layout.route_switch_item,
-                                                            routes);
-        routeList.setAdapter(adapter);
-
-        // show bottom sheet
-        localRealm.beginTransaction();
-        root.showWithSheetView(bottomSheet);
-
-        // add a change listener to close the transaction with the sheet is dismissed
-        root.getSheetView().addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
-            @Override
-            public void onViewAttachedToWindow(View v) { }
-            @Override
-            public void onViewDetachedFromWindow(View v) {
-                localRealm.commitTransaction();
-            }
-        });
     }
 
     /**
@@ -346,13 +236,14 @@ public class SelectRoutesActivity extends AppCompatActivity {
      *
      * @param errorStringResource The id of the string resource defining the message to display.
      */
-    private void showBodyError(int errorStringResource) {
+    private void showErrorPane(int errorStringResource, View.OnClickListener buttonListener) {
         // make sure spinner is hidden
-        bodyProgressBar.setVisibility(View.GONE);
-        // capture error message view
-        TextView emv = (TextView) findViewById(R.id.addroute_error);
-        emv.setText(errorStringResource);
-        emv.setVisibility(View.VISIBLE);
+        agencyPane.setVisibility(View.GONE);
+
+        // set the error message, bind button click listener, show error pane
+        errorTextView.setText(errorStringResource);
+        errorButton.setOnClickListener(buttonListener);
+        errorPane.setVisibility(View.VISIBLE);
     }
 
     /**
@@ -386,13 +277,21 @@ public class SelectRoutesActivity extends AppCompatActivity {
      * activity is set to a message describing the error. Any errors will result in the cancellation
      * of the task and the list will not be populated.
      */
-    private class PopulateListTask extends AsyncTask<StickyListHeadersListView, Integer, Void> {
-        StickyListHeadersListView list;
+    private class PopulateListTask extends AsyncTask<Void, Integer, Void> {
 
         @Override
-        protected Void doInBackground(StickyListHeadersListView... params) {
-            list = params[0];
+        protected void onPreExecute() {
+            // hide the error pane if it is visible
+            errorPane.setVisibility(View.GONE);
 
+            // unhide the agency pane and set it to the spinner
+            agencyPane.setVisibility(View.VISIBLE);
+            agencyList.setVisibility(View.GONE);
+            agencyProgressBar.setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
             // get last location, if known
             Location loc = locationManager.getLocation();
 
@@ -416,13 +315,17 @@ public class SelectRoutesActivity extends AppCompatActivity {
             } catch (SocketTimeoutException e) {
                 publishProgress(R.string.error_network_timeout);
                 this.cancel(true);
+                return null;
             } catch (NetworkErrorException e) {
                 publishProgress(R.string.error_network_unknown);
                 this.cancel(true);
+                return null;
             } catch (JSONException e) {
                 publishProgress(R.string.error_bad_parse);
                 this.cancel(true);
+                return null;
             } finally {
+                // will execute even if we returned in a catch block
                 local.close();
                 global.close();
             }
@@ -450,15 +353,150 @@ public class SelectRoutesActivity extends AppCompatActivity {
                     numLocal);
 
             // bind this adapter to the view
-            list.setAdapter(adapter);
+            agencyList.setAdapter(adapter);
 
-            // hide body progress spinner
-            bodyProgressBar.setVisibility(View.GONE);
+            // hide spinner and show list
+            agencyProgressBar.setVisibility(View.GONE);
+            agencyList.setVisibility(View.VISIBLE);
         }
 
         @Override
         protected void onProgressUpdate(Integer... messageStringResourceId) {
-            showBodyError(messageStringResourceId[0]);
+            View.OnClickListener retryListener = new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    new PopulateListTask().execute();
+                }
+            };
+
+            showErrorPane(messageStringResourceId[0], retryListener);
+        }
+
+    }
+
+    /**
+     * Shows a bottom sheet with the routes for the specified agency.
+     *
+     * This AsyncTask fetches route records for the specified agency from the TransLoc API. After
+     * the records are fetched, it will use the showBottomSheet() method to display them.
+     *
+     * While fetching is in progress, the activity's indeterminate progress bar is shown.
+     *
+     * If fetching the routes fails, a popup will be displayed with a message describing the error
+     * and the progress bar will be hidden.
+     *
+     */
+    private class ShowRouteListTask extends AsyncTask<String, Integer, Void> {
+        private String agencyId;
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            if (root.isSheetShowing()) return;
+
+            // before doing anything, check if we're connected
+            if (!Util.isConnected(SelectRoutesActivity.this)) {
+                showPopupError(R.string.error_network_disconnected);
+                this.cancel(true);
+                return;
+            } else
+                toolbarProgressBar.setVisibility(View.VISIBLE);
+
+        }
+
+        /**
+         * @param params the id of the agency to show routes for
+         * @return nothing
+         */
+        @Override
+        protected Void doInBackground(String... params) {
+            agencyId = params[0];
+            Route[] routes;
+
+            Realm local = Realm.getInstance(localconfig);
+
+            try {
+                // try to fetch all routes from the TransLoc API
+                routes = TransLocAPI.getRoutes(agencyId);
+            } catch (SocketTimeoutException e) {
+                publishProgress(R.string.error_network_timeout);
+                this.cancel(true);
+                return null;
+            } catch (NetworkErrorException e) {
+                publishProgress(R.string.error_network_unknown);
+                this.cancel(true);
+                return null;
+            } catch (JSONException e) {
+                publishProgress(R.string.error_bad_parse);
+                this.cancel(true);
+                return null;
+            }
+
+            // if no routes were returned, say so
+            if (routes == null || routes.length == 0) {
+                publishProgress(R.string.error_no_routes);
+                this.cancel(true);
+                return null;
+            }
+
+            // copy fetched routes to local realm if they do not already exist
+            local.beginTransaction();
+            for (int i = 0; i < routes.length; i++) {
+                boolean alreadyInRealm = local
+                        .where(Route.class)
+                        .equalTo("routeId", routes[i].getRouteId())
+                        .count() > 0;
+
+                if (!alreadyInRealm)
+                    routes[i] = local.copyToRealm(routes[i]);
+            }
+            local.commitTransaction();
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            // fetch all matching routes from local realm & show sheet
+            Route[] result = localRealm
+                    .where(Route.class)
+                    .equalTo("agencyId", agencyId)
+                    .findAll()
+                    .toArray(new Route[0]);
+
+            // if sheet is already showing, do nothing
+            if (root.isSheetShowing()) return;
+
+            // inflate bottom sheet content view
+            View bottomSheet = getLayoutInflater().inflate(R.layout.bottomsheet_list, root, false);
+
+            // capture & set the title
+            TextView v = (TextView) bottomSheet.findViewById(R.id.bottomsheet_title);
+            v.setText(R.string.routes);
+
+            // bind given routes to the ListView's adapter and bind the adapter to the view.
+            ListView routeList = (ListView) bottomSheet.findViewById(R.id.bottomsheet_list);
+            RouteSwitchAdapter adapter = new RouteSwitchAdapter(SelectRoutesActivity.this,
+                                                                R.layout.route_switch_item,
+                                                                result,
+                                                                localRealm);
+            routeList.setAdapter(adapter);
+
+            // show bottom sheet
+            root.showWithSheetView(bottomSheet);
+
+            toolbarProgressBar.setVisibility(View.INVISIBLE);
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            showPopupError(values[0]);
+        }
+
+        @Override
+        protected void onCancelled(Void aVoid) {
+            // hide the toolbar progress bar
+            toolbarProgressBar.setVisibility(View.INVISIBLE);
         }
     }
 

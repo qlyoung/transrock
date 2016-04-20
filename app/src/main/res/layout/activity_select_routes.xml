@@ -1,0 +1,86 @@
+<com.flipboard.bottomsheet.BottomSheetLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="us.v4lk.transrock.SelectRoutesActivity"
+    android:id="@+id/addroute_bottomsheetlayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/addroute_toolbar"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            style="@style/TransrockActionBarStyle" />
+
+        <ProgressBar
+            android:id="@+id/addroute_toolbar_progressbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/addroute_toolbar"
+            android:layout_marginTop="-7dp"
+            android:indeterminate="true"
+            android:indeterminateBehavior="cycle"
+            android:visibility="gone"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal" />
+
+        <RelativeLayout
+            android:id="@+id/addroute_agency_pane"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@id/addroute_toolbar">
+
+            <se.emilsjolander.stickylistheaders.StickyListHeadersListView
+                android:id="@+id/addroute_agency_list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingLeft="@dimen/spec_activity_horizontal_margin"
+                android:paddingRight="@dimen/spec_activity_horizontal_margin"
+                android:divider="@null" />
+
+            <ProgressBar
+                android:id="@+id/addroute_agency_progressbar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:indeterminate="true" />
+
+        </RelativeLayout>
+
+
+        <RelativeLayout
+            android:id="@+id/addroute_error_pane"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@id/addroute_toolbar"
+            android:visibility="invisible">
+
+            <Button
+                android:id="@+id/addroute_error_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:gravity="center"
+                android:text="@string/retry"/>
+
+            <TextView
+                android:id="@+id/addroute_error_textview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@id/addroute_error_button"
+                android:layout_centerHorizontal="true"
+                android:layout_margin="15dp"
+                android:text="@string/error_indeterminate"
+                android:textSize="18sp"
+                android:textIsSelectable="false"
+                android:gravity="center_horizontal" />
+
+
+        </RelativeLayout>
+
+
+    </RelativeLayout>
+
+</com.flipboard.bottomsheet.BottomSheetLayout>

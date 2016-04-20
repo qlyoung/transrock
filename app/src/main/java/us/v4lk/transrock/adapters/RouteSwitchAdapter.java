@@ -10,6 +10,7 @@ import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import io.realm.Realm;
 import us.v4lk.transrock.R;
 import us.v4lk.transrock.model.Route;
 
@@ -19,16 +20,20 @@ import us.v4lk.transrock.model.Route;
  */
 public class RouteSwitchAdapter extends ArrayAdapter<Route> {
 
+    Realm backingRealm;
+
     /**
      * @param context application context
      * @param resource resource id for layout of desired list item
      * @param routes array of routes to show in the list, members of the realm passed
+     * @param realm the realm that the backing Agency objects are part of
      */
-    public RouteSwitchAdapter(Context context, int resource, Route[] routes) {
+    public RouteSwitchAdapter(Context context, int resource, Route[] routes, Realm realm) {
         super(context, resource);
 
         this.clear();
         this.addAll(routes);
+        this.backingRealm = realm;
     }
 
     @Override
@@ -60,7 +65,9 @@ public class RouteSwitchAdapter extends ArrayAdapter<Route> {
         routeToggleSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                backingRealm.beginTransaction();
                 item.setSaved(isChecked);
+                backingRealm.commitTransaction();
             }
         });
 

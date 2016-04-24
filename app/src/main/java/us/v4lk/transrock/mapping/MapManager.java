@@ -302,11 +302,10 @@ public class MapManager {
         @Override
         protected ItemizedIconOverlay doInBackground(Void... params) {
 
-            Realm realm;
+            Realm realm = Realm.getInstance(context);
 
             HashMap<Route, List<Vehicle>> vehicles = new HashMap<>();
             try {
-                realm = Realm.getInstance(context);
                 RealmResults<Route> activated = realm.where(Route.class).equalTo("activated", true).findAll();
 
                 for (Route route : activated){

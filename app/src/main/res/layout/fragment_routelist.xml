@@ -13,17 +13,16 @@
         android:paddingBottom="15dp"
         android:text="@string/no_routes"
         android:textIsSelectable="false"
-        android:textSize="@dimen/abc_text_size_medium_material"
+        android:textSize="16sp"
         android:visibility="gone" />
 
     <ListView
-        android:id="@+id/routelist"
+        android:id="@+id/routelist_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:divider="@null"
         android:paddingEnd="@dimen/spec_activity_horizontal_margin"
         android:paddingStart="@dimen/spec_activity_horizontal_margin" />
-
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/routelist_addroute_fab"
@@ -33,8 +32,6 @@
         android:layout_centerHorizontal="true"
         android:layout_margin="24dp"
         android:src="@drawable/ic_add_white_24dp"
-        app:elevation="9dp"
-        app:layout_behavior="us.v4lk.transrock.util.FloatingActionButtonBehavior" />
-
+        app:elevation="9dp" />
 
 </RelativeLayout>

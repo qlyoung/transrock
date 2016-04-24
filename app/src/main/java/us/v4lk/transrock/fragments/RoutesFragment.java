@@ -28,7 +28,7 @@ import us.v4lk.transrock.util.SmartViewPager;
  */
 public class RoutesFragment extends Fragment implements ViewPager.OnPageChangeListener {
 
-    @Bind(R.id.routelist)
+    @Bind(R.id.routelist_list)
     ListView routeList;
     @Bind(R.id.routelist_addroute_fab)
     FloatingActionButton fab;

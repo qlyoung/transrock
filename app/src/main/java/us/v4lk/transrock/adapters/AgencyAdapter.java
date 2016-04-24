@@ -11,6 +11,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 import io.realm.Realm;
+import io.realm.RealmConfiguration;
 import io.realm.RealmResults;
 import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
 import us.v4lk.transrock.R;
@@ -34,6 +35,9 @@ public class AgencyAdapter extends ArrayAdapter<Agency> implements StickyListHea
         HEADER_ID_LOCAL = 1,
         HEADER_ID_ALL = 2;
 
+    /** A reference to the Activity's realm, so we can update the count of active agencies in getView() */
+    Realm localRealm;
+
     /**
      * This adapter asks for numActive and numLocal agencies, which it uses
      * to setup section headers. Setting either or both to 0 will hide the
@@ -46,12 +50,15 @@ public class AgencyAdapter extends ArrayAdapter<Agency> implements StickyListHea
      * @param numActive number of active agencies
      * @param numLocal number of local agencies
      */
-    public AgencyAdapter(Context context, int resource, Agency[] agencies, int numActive, int numLocal) {
+    public AgencyAdapter(Context context, int resource, Agency[] agencies, int numActive, int numLocal, Realm localRealm) {
         super(context, resource, agencies);
 
         // build list of active & local agencies to reference later for headers
         active = new ArrayList<>(numActive);
         local = new ArrayList<>(numLocal);
+
+        // keep a reference to the local realm for statistics purposes
+        this.localRealm = localRealm;
 
         if (agencies != null) {
             int i = 0;
@@ -65,7 +72,6 @@ public class AgencyAdapter extends ArrayAdapter<Agency> implements StickyListHea
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         Agency item = getItem(position);
-        Realm realm = Realm.getDefaultInstance();
 
         // inflate new view if necessary
         LayoutInflater inflater = LayoutInflater.from(getContext());
@@ -79,16 +85,17 @@ public class AgencyAdapter extends ArrayAdapter<Agency> implements StickyListHea
 
         // set badge and text views
         int color = getContext().getResources().getColor(R.color.color_agency_badge);
-        long numRoutesForAgency = realm.where(Route.class).equalTo("agencyId", item.getAgencyId()).count();
-        String numSavedRoutes = String.valueOf(numRoutesForAgency);
+        int numActiveRoutes = (int) localRealm
+                                        .where(Route.class)
+                                        .equalTo("agencyId", item.getAgencyId())
+                                        .equalTo("saved", true).count();
+        String numSavedRoutes = String.valueOf(numActiveRoutes);
         badge.setImageBitmap(Util.colorToBitmap(color, 50, 50));
         badgeText.setText(numSavedRoutes);
         text.setText(getItem(position).getLongName());
 
         // tag list item with the object it is sourced from
         convertView.setTag(getItem(position));
-
-        realm.close();
 
         return convertView;
     }

@@ -15,7 +15,6 @@ public class Agency extends RealmObject {
     @PrimaryKey
     private String agencyId;
 
-
     private boolean active;
 
     private String

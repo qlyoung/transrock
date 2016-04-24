@@ -92,7 +92,7 @@ public class SelectRoutesActivity extends AppCompatActivity {
     public void onAgencyItemClicked(View v) {
         // list items representing agencies should have the corresponding Agency as their tag
         Agency agency = (Agency) v.getTag();
-        new ShowRouteListTask().execute(agency.getAgencyId());
+        new ShowRouteListTask(v).execute();
     }
 
     @Override
@@ -339,7 +339,8 @@ public class SelectRoutesActivity extends AppCompatActivity {
                     R.layout.agency_list_item,
                     agencies,
                     numActive,
-                    numLocal
+                    numLocal,
+                    localRealm
             );
 
             // bind this adapter to the view
@@ -376,8 +377,14 @@ public class SelectRoutesActivity extends AppCompatActivity {
      * and the progress bar will be hidden.
      *
      */
-    private class ShowRouteListTask extends AsyncTask<String, Integer, Void> {
+    private class ShowRouteListTask extends AsyncTask<Void, Integer, Void> {
         private String agencyId;
+        private View agencyItemView;
+
+        public ShowRouteListTask(View agencyItemView) {
+            this.agencyItemView = agencyItemView;
+            this.agencyId = ((Agency) agencyItemView.getTag()).getAgencyId();
+        }
 
         @Override
         protected void onPreExecute() {
@@ -399,10 +406,8 @@ public class SelectRoutesActivity extends AppCompatActivity {
          * @return nothing
          */
         @Override
-        protected Void doInBackground(String... params) {
-            agencyId = params[0];
+        protected Void doInBackground(Void... params) {
             Route[] routes;
-
             Realm local = Realm.getInstance(localconfig);
 
             try {
@@ -474,6 +479,22 @@ public class SelectRoutesActivity extends AppCompatActivity {
 
             // show bottom sheet
             root.showWithSheetView(bottomSheet);
+            root.getSheetView().addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+                @Override
+                public void onViewAttachedToWindow(View v) { }
+
+                @Override
+                public void onViewDetachedFromWindow(View v) {
+                    // update badge route counter on agency view on sheet dismissal
+                    TextView badgeCounter = (TextView) agencyItemView.findViewById(R.id.agency_list_item_badge_text);
+                    int numActiveRoutes = (int) localRealm
+                                                    .where(Route.class)
+                                                    .equalTo("agencyId", agencyId)
+                                                    .equalTo("saved", true).count();
+
+                    badgeCounter.setText(String.valueOf(numActiveRoutes));
+                }
+            });
 
             toolbarProgressBar.setVisibility(View.INVISIBLE);
         }

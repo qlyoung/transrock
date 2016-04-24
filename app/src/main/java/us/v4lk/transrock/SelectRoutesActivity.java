@@ -136,7 +136,7 @@ public class SelectRoutesActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         // make a task to fetch agencies from TransLoc and populate the list
-        PopulateListTask populateListTask = new PopulateListTask();
+        PopulateAgencyListTask populateListTask = new PopulateAgencyListTask();
         populateListTask.execute();
 
         super.onStart();
@@ -170,6 +170,12 @@ public class SelectRoutesActivity extends AppCompatActivity {
         globalRealm.commitTransaction();
 
         super.onPause();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        // Todo: save local realm & restore in onCreate
+        super.onSaveInstanceState(outState);
     }
 
     @Override
@@ -211,23 +217,6 @@ public class SelectRoutesActivity extends AppCompatActivity {
         }
 
         super.onBackPressed();
-    }
-
-
-
-    /**
-     * Programatically creates & displays a bottom sheet with a list of toggleable routes.
-     *
-     * A transaction is started in the local realm before the view itself is displayed. When the
-     * switches on each item each item of the list are toggled, the corresponding field in the Route
-     * object is updated. These objects should be part of the local realm. When the sheet is
-     * dismissed, either by pressing the back button or by swiping it down off the screen, the
-     * transaction is committed.
-     *
-     * @param routes The routes to show.
-     */
-    private void showRouteBottomSheet(Route[] routes) {
-
     }
 
     /**
@@ -277,7 +266,7 @@ public class SelectRoutesActivity extends AppCompatActivity {
      * activity is set to a message describing the error. Any errors will result in the cancellation
      * of the task and the list will not be populated.
      */
-    private class PopulateListTask extends AsyncTask<Void, Integer, Void> {
+    private class PopulateAgencyListTask extends AsyncTask<Void, Integer, Void> {
 
         @Override
         protected void onPreExecute() {
@@ -350,7 +339,8 @@ public class SelectRoutesActivity extends AppCompatActivity {
                     R.layout.agency_list_item,
                     agencies,
                     numActive,
-                    numLocal);
+                    numLocal
+            );
 
             // bind this adapter to the view
             agencyList.setAdapter(adapter);
@@ -365,7 +355,7 @@ public class SelectRoutesActivity extends AppCompatActivity {
             View.OnClickListener retryListener = new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    new PopulateListTask().execute();
+                    new PopulateAgencyListTask().execute();
                 }
             };
 

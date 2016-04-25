@@ -297,7 +297,10 @@ public class SelectRoutesActivity extends AppCompatActivity {
             global.refresh();
             try {
                 // get all agency records from the TransLoc API
-                ArrayList<Agency> agencies = new ArrayList<Agency>(Arrays.asList(TransLocAPI.getAgencies()));
+                String url = TransLocAPI2.agencies();
+                JsonObject response = Ion.with(SelectRoutesActivity.this).load(url).setHeader(TransLocAPI2.API_KEY_HEADER, TransLocAPI2.API_KEY).asJsonObject().get();
+                JSONObject re = new JSONObject(response.toString());
+                ArrayList<Agency> agencies = new ArrayList<Agency>(Arrays.asList(TransLocAPI2.buildAgencies(re)));
 
                 // add them to our local realm, and then update these records to reflect the state
                 // of any corresponding records we have on disk
@@ -305,20 +308,23 @@ public class SelectRoutesActivity extends AppCompatActivity {
                 local.copyToRealmOrUpdate(agencies);
                 local.copyToRealmOrUpdate(global.where(Agency.class).equalTo("active", true).findAll());
                 local.commitTransaction();
-
-            } catch (SocketTimeoutException e) {
-                publishProgress(R.string.error_network_timeout);
-                this.cancel(true);
-                return null;
-            } catch (NetworkErrorException e) {
+            }
+            catch (ExecutionException e) {
                 publishProgress(R.string.error_network_unknown);
                 this.cancel(true);
                 return null;
-            } catch (JSONException e) {
+            }
+            catch (InterruptedException e) {
+                publishProgress(R.string.error_network_unknown);
+                this.cancel(true);
+                return null;
+            }
+            catch (JSONException e) {
                 publishProgress(R.string.error_bad_parse);
                 this.cancel(true);
                 return null;
-            } finally {
+            }
+            finally {
                 // will execute even if we returned in a catch block
                 local.close();
                 global.close();

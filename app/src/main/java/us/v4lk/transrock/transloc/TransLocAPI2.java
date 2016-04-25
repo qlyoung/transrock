@@ -1,9 +1,6 @@
 package us.v4lk.transrock.transloc;
 
-import com.android.volley.Request;
 import com.android.volley.Response;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.google.gson.JsonObject;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -18,6 +15,7 @@ import us.v4lk.transrock.model.Agency;
 import us.v4lk.transrock.model.Route;
 import us.v4lk.transrock.model.Segment;
 import us.v4lk.transrock.model.Stop;
+import us.v4lk.transrock.model.Vehicle;
 
 /**
  * Endpoint for TransLoc API.
@@ -32,6 +30,8 @@ public class TransLocAPI2 {
             SEGMENT_PATH = "/segments.json",
             VEHICLE_PATH = "/vehicles.json";
     private static final String DATA = "data";
+    public static final String API_KEY_HEADER = "X-Mashape-Key";
+    public static final String API_KEY = "HVy1utpe5Smsh8QVRRAES2GQu4pdp1Qx9gYjsnAoiFVQ0DZcXz";
 
     public static String apiRequest(String relativeUrl) {
         return ROOT + relativeUrl;
@@ -217,6 +217,26 @@ public class TransLocAPI2 {
         }
 
         return stops.toArray(new Stop[stops.size()]);
+    }
+
+    public static Vehicle[] buildVehicles(JSONObject response) throws JSONException {
+        // extract data block from response
+        JSONObject data = response.getJSONObject(DATA);
+        JSONArray names = data.names();
+
+        // extract json vehicle array if it exists
+        JSONArray vehicleArray = null;
+        if (names != null)
+            vehicleArray = data.getJSONArray(data.names().getString(0));
+
+        // array to hold vehicles, or empty array if there are none
+        Vehicle[] vehicles = new Vehicle[vehicleArray == null ? 0 : vehicleArray.length()];
+
+        // pull out the vehicles and put them in an array
+        for (int i = 0; i < vehicles.length; i++)
+            vehicles[i] = new Vehicle(vehicleArray.getJSONObject(i));
+
+        return vehicles;
     }
 
 }

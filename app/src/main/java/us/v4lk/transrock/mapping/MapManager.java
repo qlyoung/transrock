@@ -18,6 +18,9 @@ import android.view.View;
 import com.android.volley.Response;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.JsonRequest;
+import com.android.volley.toolbox.RequestFuture;
+import com.google.gson.JsonObject;
+import com.koushikdutta.ion.Ion;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -35,6 +38,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import butterknife.BindDrawable;
 import butterknife.ButterKnife;
@@ -136,7 +140,6 @@ public class MapManager {
      *         location when calling setLocation()
      */
     public boolean isFollowMe() { return this.followMe; }
-
 
     class BuildOverlaysTask extends AsyncTask<Void, Void, Void> {
 
@@ -322,19 +325,24 @@ public class MapManager {
             Realm realm = Realm.getInstance(context);
 
             // list of vehicles associated by route
-            HashMap<Route, List<Vehicle>> vehicles = new HashMap<>();
+            HashMap<Route, Vehicle[]> vehicles = new HashMap<>();
             try {
                 RealmResults<Route> activated = realm.where(Route.class).equalTo("activated", true).findAll();
 
                 for (Route route : activated){
-                    List<Vehicle> v = TransLocAPI.getVehicles(route.getAgencyId(), route.getRouteId());
-                    vehicles.put(route, v);
+                    String url = TransLocAPI2.vehicles(route.getAgencyId(), route.getRouteId());
+                    // TODO: see if we can reimplement this asynchronously and eliminate the asynctask
+                    JsonObject response = Ion.with(context).load(url).setHeader(TransLocAPI2.API_KEY_HEADER, TransLocAPI2.API_KEY).asJsonObject().get();
+                    // TODO: switch to using Gson for this instead of converting to JSONObject
+                    JSONObject js = new JSONObject(response.toString());
+                    Vehicle[] vs = TransLocAPI2.buildVehicles(js);
+                    vehicles.put(route, vs);
                 }
             }
-            catch (SocketTimeoutException e) {
+            catch (InterruptedException e) {
 
             }
-            catch (NetworkErrorException e) {
+            catch (ExecutionException e) {
 
             }
             catch (JSONException e) {

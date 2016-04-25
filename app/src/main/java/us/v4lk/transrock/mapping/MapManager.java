@@ -15,7 +15,12 @@ import android.support.v4.graphics.drawable.DrawableCompat;
 import android.view.MotionEvent;
 import android.view.View;
 
+import com.android.volley.Response;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.JsonRequest;
+
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.osmdroid.bonuspack.overlays.Polyline;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
@@ -41,6 +46,7 @@ import us.v4lk.transrock.model.Segment;
 import us.v4lk.transrock.model.Stop;
 import us.v4lk.transrock.model.Vehicle;
 import us.v4lk.transrock.transloc.TransLocAPI;
+import us.v4lk.transrock.transloc.TransLocAPI2;
 import us.v4lk.transrock.util.Util;
 
 /**
@@ -50,6 +56,7 @@ public class MapManager {
 
     Map map;
     Context context;
+    Realm globalRealm;
 
     /** whether to center the map on the user's location each time we get a location update */
     boolean followMe = true;
@@ -72,6 +79,9 @@ public class MapManager {
         TouchOverlay touchOverlay = new TouchOverlay(map.getContext());
         touchOverlay.setEnabled(true);
         map.getOverlayManager().add(touchOverlay);
+
+        // get a handle on the realm
+        globalRealm = Realm.getInstance(context);
     }
 
     /**
@@ -87,11 +97,14 @@ public class MapManager {
     public void updateVehicles() {
         new UpdateVehiclesTask().execute();
     }
+
     /**
-     * Handles a change in user location
+     * Sets the position of the user location marker.
+     * If isFollowMe() return true, then the map will automatically center
+     * on this new location.
      * @param loc the new location
      */
-    public void updateLocation(Location loc) {
+    public void setLocation(Location loc) {
         GeoPoint location = Util.toGeoPoint(loc);
         map.setLocationMarkerPosition(location);
         map.setLocationMarkerOn(true);
@@ -108,12 +121,21 @@ public class MapManager {
     }
 
     /**
-     * Sets whether the map will stay centered on the last known location.
-     * @param followMe whether the map should stay centered on the user's location
+     * Sets or unsets follow-me mode. If set to true, the map will
+     * automatically center on the location provided to setLocation() every
+     * time that method is called.
+     * @param followMe whether the map will automatically center on locations
+     *                 set with setLocation
      */
     public void setFollowMe(boolean followMe) {
         this.followMe = followMe;
     }
+
+    /**
+     * @return Whether or not the map should automatically center on the user's
+     *         location when calling setLocation()
+     */
+    public boolean isFollowMe() { return this.followMe; }
 
 
     class BuildOverlaysTask extends AsyncTask<Void, Void, Void> {
@@ -295,15 +317,11 @@ public class MapManager {
     class UpdateVehiclesTask extends AsyncTask<Void, Void, ItemizedIconOverlay> {
 
         @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-        @Override
         protected ItemizedIconOverlay doInBackground(Void... params) {
-
+            // get an instance of the global persisted realm for this thread
             Realm realm = Realm.getInstance(context);
 
+            // list of vehicles associated by route
             HashMap<Route, List<Vehicle>> vehicles = new HashMap<>();
             try {
                 RealmResults<Route> activated = realm.where(Route.class).equalTo("activated", true).findAll();
@@ -313,16 +331,17 @@ public class MapManager {
                     vehicles.put(route, v);
                 }
             }
-            catch (NetworkErrorException e) {
+            catch (SocketTimeoutException e) {
 
             }
-            catch (SocketTimeoutException e) {
+            catch (NetworkErrorException e) {
 
             }
             catch (JSONException e) {
 
             }
 
+            // overlay for vehicles
             ItemizedIconOverlay<OverlayItem> vehicleOverlay = new ItemizedIconOverlay<>(context, new ArrayList<OverlayItem>(), null);
 
             // build overlay

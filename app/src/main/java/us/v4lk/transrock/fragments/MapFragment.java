@@ -28,11 +28,14 @@ import us.v4lk.transrock.util.SmartViewPager;
  */
 public class MapFragment extends Fragment implements LocationListener, ViewPager.OnPageChangeListener {
 
+    /** Wrapper for Google Location API */
     LocationManager locationManager;
+    /** Wrapper for Map */
     MapManager mapManager;
+    /** The root layout of this Activity */
     View root;
 
-    /** Used to post tasks to be executed in the future.. */
+    /** Used to post tasks to be executed in the future, i.e. vehicle updates */
     Handler handler;
 
     /** Time between vehicles updates, in milliseconds */
@@ -68,11 +71,6 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
-    }
-
-    @Override
     public void onResume() {
         super.onResume();
 
@@ -80,7 +78,7 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
         Location loc = locationManager.getLocation();
         if (loc != null) {
             mapManager.setMapPosition(loc);
-            mapManager.updateLocation(loc);
+            mapManager.setLocation(loc);
         }
 
         // build and draw routes
@@ -108,7 +106,7 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
             case R.id.map_menu_center_location:
                 mapManager.setFollowMe(true);
                 Location loc = locationManager.getLocation();
-                if (loc != null) mapManager.updateLocation(loc);
+                if (loc != null) mapManager.setLocation(loc);
                 break;
         }
 
@@ -139,7 +137,7 @@ public class MapFragment extends Fragment implements LocationListener, ViewPager
     /* play services location api callback */
     @Override
     public void onLocationChanged(Location location) {
-        mapManager.updateLocation(location);
+        mapManager.setLocation(location);
     }
 
     @Override

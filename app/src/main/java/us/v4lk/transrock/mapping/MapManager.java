@@ -340,13 +340,19 @@ public class MapManager {
                 }
             }
             catch (InterruptedException e) {
-
+                // TODO: display an error
+                this.cancel(true);
+                return null;
             }
             catch (ExecutionException e) {
-
+                // TODO: display an error
+                this.cancel(true);
+                return null;
             }
             catch (JSONException e) {
-
+                // TODO: display an error
+                this.cancel(true);
+                return null;
             }
 
             // overlay for vehicles

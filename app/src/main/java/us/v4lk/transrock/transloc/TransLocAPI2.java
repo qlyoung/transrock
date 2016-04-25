@@ -1,7 +1,5 @@
 package us.v4lk.transrock.transloc;
 
-import com.android.volley.Response;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -39,8 +37,6 @@ public class TransLocAPI2 {
 
     /**
      * Request builder to get all agencies
-     * @param responseListener
-     * @param errorListener
      * @return the request
      */
     public static String agencies() {
@@ -49,17 +45,16 @@ public class TransLocAPI2 {
 
     /**
      * Request builder to get all routes for the specified agencies.
-     * @param responseListener
-     * @param errorListener
      * @param agencyIds
      * @return the request
      */
     public static String routes(String... agencyIds) {
-        StringBuilder builder = new StringBuilder();
-        builder.append(ROUTE_PATH).append("?agencies=");
+        StringBuilder builder = new StringBuilder(ROUTE_PATH)
+                                            .append("?agencies=");
         for (String i : agencyIds)
             builder.append(i).append(',');
         builder.deleteCharAt(builder.length() - 1); // delete trailing comma
+
         String url = builder.toString();
 
         return apiRequest(url);
@@ -67,61 +62,51 @@ public class TransLocAPI2 {
 
     /**
      * Request builder to get all segments for the specified route
-     * @param responseListener
-     * @param errorListener
      * @param agencyId
      * @param routeId
      * @return the request
      */
     public static String segments(String agencyId, String routeId) {
-        StringBuilder builder = new StringBuilder();
-        builder
-                .append(SEGMENT_PATH)
-                .append("?")
-                .append("agencies=")
-                .append(agencyId)
-                .append("&")
-                .append("routes=")
-                .append(routeId);
-        String url = builder.toString();
+        String url = SEGMENT_PATH
+                        .concat("?")
+                        .concat("agencies=")
+                        .concat(agencyId)
+                        .concat("&")
+                        .concat("routes=")
+                        .concat(routeId);
 
         return apiRequest(url);
     }
 
     /**
      * Request builder to get all stops for the specified agency
-     * @param responseListener
-     * @param errorListener
      * @param agencyId
      * @return the request
      */
     public static String stops(String agencyId) {
         // build request parameter
-        StringBuilder builder = new StringBuilder();
-        builder.append(STOP_PATH).append("?").append("agencies=").append(agencyId);
-        String url = builder.toString();
+        String url = STOP_PATH
+                        .concat("?")
+                        .concat("agencies=")
+                        .concat(agencyId);
 
         return apiRequest(url);
     }
 
     /**
      * Request builder to get all vehicles for the specified agency
-     * @param responseListener
-     * @param errorListener
      * @param agencyId
      * @param routeId
      * @return the request
      */
     public static String vehicles(String agencyId, String routeId) {
-        StringBuilder builder = new StringBuilder();
-        builder
-                .append(VEHICLE_PATH)
-                .append("?")
-                .append("agencies=").append(agencyId)
-                .append("&")
-                .append("routes=")
-                .append(routeId);
-        String url = builder.toString();
+        String url = VEHICLE_PATH
+                        .concat("?")
+                        .concat("agencies=")
+                        .concat(agencyId)
+                        .concat("&")
+                        .concat("routes=")
+                        .concat(routeId);
 
         return apiRequest(url);
     }
@@ -219,6 +204,37 @@ public class TransLocAPI2 {
         return stops.toArray(new Stop[stops.size()]);
     }
 
+    /**
+     * Builds an array of Stop objects from the API response, returning only those Stops
+     * that belong to the specified route.
+     * @param response
+     * @return the stops
+     * @throws JSONException
+     */
+    public static Stop[] buildStops(JSONObject response, String routeId) throws JSONException {
+        JSONArray data = response.getJSONArray(DATA);
+
+        ArrayList<Stop> stops = new ArrayList<>();
+
+        for (int i = 0; i < data.length(); i++) {
+            JSONObject stop = data.getJSONObject(i);
+            boolean hasRoute = stop.getJSONArray("routes").join("|").contains(routeId);
+            if (hasRoute) {
+                Stop model = new Stop();
+                Stop.set(model, stop);
+                stops.add(model);
+            }
+        }
+
+        return stops.toArray(new Stop[stops.size()]);
+    }
+
+    /**
+     * Builds an array of Vehicle objects from the API response.
+     * @param response
+     * @return the vehicles
+     * @throws JSONException
+     */
     public static Vehicle[] buildVehicles(JSONObject response) throws JSONException {
         // extract data block from response
         JSONObject data = response.getJSONObject(DATA);

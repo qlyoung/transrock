@@ -1,6 +1,5 @@
 package us.v4lk.transrock.mapping;
 
-import android.accounts.NetworkErrorException;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -15,10 +14,6 @@ import android.support.v4.graphics.drawable.DrawableCompat;
 import android.view.MotionEvent;
 import android.view.View;
 
-import com.android.volley.Response;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.JsonRequest;
-import com.android.volley.toolbox.RequestFuture;
 import com.google.gson.JsonObject;
 import com.koushikdutta.ion.Ion;
 
@@ -31,13 +26,11 @@ import org.osmdroid.views.overlay.ItemizedIconOverlay;
 import org.osmdroid.views.overlay.Overlay;
 import org.osmdroid.views.overlay.OverlayItem;
 
-import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import butterknife.BindDrawable;
@@ -49,7 +42,6 @@ import us.v4lk.transrock.model.Route;
 import us.v4lk.transrock.model.Segment;
 import us.v4lk.transrock.model.Stop;
 import us.v4lk.transrock.model.Vehicle;
-import us.v4lk.transrock.transloc.TransLocAPI;
 import us.v4lk.transrock.transloc.TransLocAPI2;
 import us.v4lk.transrock.util.Util;
 
@@ -58,8 +50,11 @@ import us.v4lk.transrock.util.Util;
  */
 public class MapManager {
 
+    /** The map */
     Map map;
+    /** The owning activity context */
     Context context;
+    /** The global realm */
     Realm globalRealm;
 
     /** whether to center the map on the user's location each time we get a location update */
@@ -259,29 +254,36 @@ public class MapManager {
 
         @Override
         protected Void doInBackground(Void... params) {
-
-            Realm realm = null;
+            // get a view into the Realm
+            Realm realm = Realm.getInstance(context);
+            activatedRoutes = realm.where(Route.class).equalTo("activated", true).findAll();
 
             try {
-                // get a view into the realm
-                realm = Realm.getInstance(context);
-                activatedRoutes = realm.where(Route.class).equalTo("activated", true).findAll();
-
                 // pull segments and stops for routes that don't have them yet (recently added)
                 realm.beginTransaction();
                 for (int i = 0; i < activatedRoutes.size(); i++) {
                     Route route = activatedRoutes.get(i);
 
-                    // if route has no segments, fetch them all and add as relation to route
+                    // if route has no segments
                     if (route.getSegments().size() == 0) {
-                        Segment[] segments = TransLocAPI.getSegments(route);
+                        // fetch them all
+                        String url = TransLocAPI2.segments(route.getAgencyId(), route.getRouteId());
+                        JsonObject response = Ion.with(context).load(url).setHeader(TransLocAPI2.API_KEY_HEADER, TransLocAPI2.API_KEY).asJsonObject().get();
+                        JSONObject re = new JSONObject(response.toString());
+                        Segment[] segments = TransLocAPI2.buildSegments(re);
+
+                        // and add them to the route
                         for (Segment sm : segments)
                             route.getSegments().add(sm);
                     }
 
                     // if route has no stops, fetch them all and add as relation to route
                     if (route.getStops().size() == 0) {
-                        Stop[] stops = TransLocAPI.getStops(route);
+                        String url = TransLocAPI2.stops(route.getAgencyId());
+                        JsonObject response = Ion.with(context).load(url).setHeader(TransLocAPI2.API_KEY_HEADER, TransLocAPI2.API_KEY).asJsonObject().get();
+                        JSONObject re = new JSONObject(response.toString());
+                        Stop[] stops = TransLocAPI2.buildStops(re, route.getRouteId());
+
                         for (Stop stop : stops)
                             route.getStops().add(stop);
                     }
@@ -292,20 +294,25 @@ public class MapManager {
                 buildSegments();
                 buildStops();
 
-            } catch (SocketTimeoutException e) {
-                // TODO: error here
+            } catch (InterruptedException e) {
+                // TODO: display an error
+                this.cancel(true);
+                return null;
+            } catch (ExecutionException e) {
+                // TODO: display an error
+                this.cancel(true);
+                return null;
             } catch (JSONException e) {
-                // TODO: error here
-            } catch (NetworkErrorException e) {
-                // TODO: error here
+                // TODO: display an error
+                this.cancel(true);
+                return null;
             } finally {
                 if (realm != null) {
-                    realm.refresh();
+                    if (realm.isInTransaction())
+                        realm.cancelTransaction();
                     realm.close();
                 }
-
             }
-
             return null;
         }
 
@@ -313,7 +320,6 @@ public class MapManager {
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
             map.invalidate();
-            new UpdateVehiclesTask().execute();
         }
     }
 
@@ -334,9 +340,10 @@ public class MapManager {
                     // TODO: see if we can reimplement this asynchronously and eliminate the asynctask
                     JsonObject response = Ion.with(context).load(url).setHeader(TransLocAPI2.API_KEY_HEADER, TransLocAPI2.API_KEY).asJsonObject().get();
                     // TODO: switch to using Gson for this instead of converting to JSONObject
-                    JSONObject js = new JSONObject(response.toString());
-                    Vehicle[] vs = TransLocAPI2.buildVehicles(js);
-                    vehicles.put(route, vs);
+                    JSONObject re = new JSONObject(response.toString());
+                    Vehicle[] vs = TransLocAPI2.buildVehicles(re);
+
+                    vehicles.put(realm.copyFromRealm(route), vs);
                 }
             }
             catch (InterruptedException e) {
@@ -372,6 +379,7 @@ public class MapManager {
             }
 
             map.setVehiclesOverlay(vehicleOverlay);
+            realm.close();
             return vehicleOverlay;
         }
 

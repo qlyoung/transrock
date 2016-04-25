@@ -19,8 +19,11 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.flipboard.bottomsheet.BottomSheetLayout;
+import com.google.gson.JsonObject;
+import com.koushikdutta.ion.Ion;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
@@ -28,6 +31,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -42,6 +46,7 @@ import us.v4lk.transrock.mapping.LocationManager;
 import us.v4lk.transrock.model.Agency;
 import us.v4lk.transrock.model.Route;
 import us.v4lk.transrock.transloc.TransLocAPI;
+import us.v4lk.transrock.transloc.TransLocAPI2;
 import us.v4lk.transrock.util.Util;
 
 /**
@@ -412,20 +417,27 @@ public class SelectRoutesActivity extends AppCompatActivity {
 
             try {
                 // try to fetch all routes from the TransLoc API
-                routes = TransLocAPI.getRoutes(agencyId);
-            } catch (SocketTimeoutException e) {
-                publishProgress(R.string.error_network_timeout);
-                this.cancel(true);
-                return null;
-            } catch (NetworkErrorException e) {
+                String url = TransLocAPI2.routes(agencyId);
+                JsonObject response = Ion.with(SelectRoutesActivity.this).load(url).setHeader(TransLocAPI2.API_KEY_HEADER, TransLocAPI2.API_KEY).asJsonObject().get();
+                JSONObject re = new JSONObject(response.toString());
+                routes = TransLocAPI2.buildRoutes(re).get(agencyId);
+            }
+            catch (ExecutionException e) {
                 publishProgress(R.string.error_network_unknown);
                 this.cancel(true);
                 return null;
-            } catch (JSONException e) {
+            }
+            catch (InterruptedException e) {
+                publishProgress(R.string.error_network_unknown);
+                this.cancel(true);
+                return null;
+            }
+            catch (JSONException e) {
                 publishProgress(R.string.error_bad_parse);
                 this.cancel(true);
                 return null;
             }
+
 
             // if no routes were returned, say so
             if (routes == null || routes.length == 0) {

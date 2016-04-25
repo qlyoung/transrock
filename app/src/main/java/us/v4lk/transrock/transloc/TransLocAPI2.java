@@ -43,7 +43,7 @@ public class TransLocAPI2 {
      * @param errorListener
      * @return the request
      */
-    public static String agencies(Response.Listener<JSONObject> responseListener, Response.ErrorListener errorListener) {
+    public static String agencies() {
         return apiRequest(AGENCY_PATH);
     }
 
